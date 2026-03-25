@@ -202,6 +202,8 @@ function renderBirthdayDashboard() {
     });
 }
 
+let editingRewardThreshold = null;
+
 function renderRewardDashboard() {
     const list = document.getElementById('admin-reward-list');
     if (!list) return;
@@ -220,17 +222,91 @@ function renderRewardDashboard() {
         item.style.background = 'rgba(255,255,255,0.05)';
         item.style.padding = '10px';
         item.style.borderRadius = '8px';
-        item.innerHTML = `
-            <div style="flex:1">
-                <strong>${reward.threshold} Stempel:</strong> ${reward.icon} ${reward.title}
-                <div style="font-size:0.8rem; color:var(--text-muted);">${reward.desc}</div>
-            </div>
-            <button class="icon-btn-small" onclick="deleteReward(${reward.threshold})" title="Löschen" style="background: hsla(0, 80%, 60%, 0.2); border: 1px solid hsla(0, 80%, 60%, 0.5); color: #ff6b6b; margin-left:10px;">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
-            </button>
-        `;
+        item.style.flexWrap = 'wrap';
+        item.style.gap = '10px';
+        
+        if (editingRewardThreshold === reward.threshold) {
+            // Edit Mode UI
+            item.innerHTML = `
+                <div style="display:flex; gap:10px; width:100%; flex-wrap: wrap;">
+                    <input type="number" id="edit-req-thresh" value="${reward.threshold}" placeholder="Stempel" style="flex:1; min-width:80px; padding: 6px; border-radius: 6px; border: 1px solid var(--glass-border); background: rgba(0,0,0,0.3); color: white;">
+                    <input type="text" id="edit-req-icon" value="${reward.icon}" placeholder="Emoji" style="flex:1; min-width:60px; padding: 6px; border-radius: 6px; border: 1px solid var(--glass-border); background: rgba(0,0,0,0.3); color: white;">
+                    <input type="text" id="edit-req-title" value="${reward.title}" placeholder="Titel" style="flex:2; min-width:120px; padding: 6px; border-radius: 6px; border: 1px solid var(--glass-border); background: rgba(0,0,0,0.3); color: white;">
+                    <input type="text" id="edit-req-desc" value="${reward.desc}" placeholder="Beschreibung" style="flex:3; min-width:140px; padding: 6px; border-radius: 6px; border: 1px solid var(--glass-border); background: rgba(0,0,0,0.3); color: white;">
+                    <div style="display:flex; gap:5px;">
+                        <button class="add-stamp-btn" onclick="saveEditReward(${reward.threshold})" style="width:auto; padding: 6px 12px; background:var(--success);">Speichern</button>
+                        <button class="icon-btn-small" onclick="cancelEditReward()" style="background: hsla(0, 80%, 60%, 0.2); border: 1px solid hsla(0, 80%, 60%, 0.5); color: #ff6b6b; padding: 6px 12px; border-radius:6px;">Abbrechen</button>
+                    </div>
+                </div>
+            `;
+        } else {
+            // View Mode UI
+            item.innerHTML = `
+                <div style="flex:1; min-width: 250px;">
+                    <strong>${reward.threshold} Stempel:</strong> ${reward.icon} ${reward.title}
+                    <div style="font-size:0.8rem; color:var(--text-muted);">${reward.desc}</div>
+                </div>
+                <div style="display:flex; gap:8px;">
+                    <button class="icon-btn-small" onclick="startEditReward(${reward.threshold})" title="Bearbeiten" style="background: hsla(210, 80%, 60%, 0.2); border: 1px solid hsla(210, 80%, 60%, 0.5); color: #60a5fa;">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg>
+                    </button>
+                    <button class="icon-btn-small" onclick="deleteReward(${reward.threshold})" title="Löschen" style="background: hsla(0, 80%, 60%, 0.2); border: 1px solid hsla(0, 80%, 60%, 0.5); color: #ff6b6b;">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                    </button>
+                </div>
+            `;
+        }
         list.appendChild(item);
     });
+}
+
+function startEditReward(threshold) {
+    editingRewardThreshold = parseInt(threshold, 10);
+    renderRewardDashboard();
+}
+
+function cancelEditReward() {
+    editingRewardThreshold = null;
+    renderRewardDashboard();
+}
+
+async function saveEditReward(oldThreshold) {
+    const threshInput = document.getElementById('edit-req-thresh');
+    const iconInput = document.getElementById('edit-req-icon');
+    const titleInput = document.getElementById('edit-req-title');
+    const descInput = document.getElementById('edit-req-desc');
+
+    const newThreshold = parseInt(threshInput.value, 10);
+    const newIcon = iconInput.value.trim() || "🎁";
+    const newTitle = titleInput.value.trim();
+    const newDesc = descInput.value.trim();
+
+    if (isNaN(newThreshold) || newThreshold <= 0 || !newTitle) {
+        alert("Bitte eine gültige Stempelanzahl und einen Titel eingeben.");
+        return;
+    }
+
+    // Check if new threshold conflicts with an existing reward (that is NOT the one we are editing)
+    if (newThreshold !== oldThreshold && REWARDS.find(r => r.threshold === newThreshold)) {
+        alert(`Es gibt bereits eine Belohnung für ${newThreshold} Stempel! Bitte wähle eine andere Anzahl.`);
+        return;
+    }
+
+    // Create updated array
+    const updatedArray = REWARDS.map(r => {
+        if (r.threshold === oldThreshold) {
+            return { threshold: newThreshold, icon: newIcon, title: newTitle, desc: newDesc };
+        }
+        return r;
+    });
+
+    const success = await saveRewardsAPI(updatedArray);
+    if (success) {
+        editingRewardThreshold = null;
+        renderRewardDashboard();
+    } else {
+        alert("Fehler beim Speichern der Änderungen.");
+    }
 }
 
 async function saveRewardsAPI(newRewardsArray) {
@@ -296,11 +372,18 @@ async function createNewReward() {
     btn.disabled = false;
 }
 
-async function deleteReward(threshold) {
+async function deleteReward(thresholdStr) {
+    const threshold = parseInt(thresholdStr, 10);
     if (!confirm(`Belohnung für ${threshold} Stempel wirklich löschen?`)) return;
+    
     const updatedArray = REWARDS.filter(r => r.threshold !== threshold);
+    
     const success = await saveRewardsAPI(updatedArray);
-    if (!success) alert("Fehler beim Löschen.");
+    if (!success) {
+        alert("Fehler beim Löschen. Möglicherweise keine Verbindung.");
+    } else {
+        showStatus("Belohnung erfolgreich gelöscht.", "success");
+    }
 }
 
 function renderAdminList() {
