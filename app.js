@@ -1,7 +1,7 @@
 const API_URL = "https://stempelkarte.sb-nmsstadt.workers.dev/api";
-const PIN_ADMIN = "0000"; 
-const PIN_STAMP = "1234"; 
-const PIN_SUPERVISOR = "1234"; 
+const PIN_ADMIN = "8520"; 
+const PIN_STAMP = "1590"; 
+const PIN_SUPERVISOR = "1590"; 
 
 const MAX_STAMPS = 60;
 const STAMPS_PER_LEVEL = 20;
