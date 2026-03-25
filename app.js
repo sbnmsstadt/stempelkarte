@@ -333,9 +333,9 @@ function renderRewards(student) {
                     <div class="reward-progress-bar" style="width: ${progress}%"></div>
                 </div>
             </div>
-            <div style="text-align:right; display:flex; flex-direction:column; align-items:flex-end; justify-content:center; min-width:80px;">
-                <div style="font-size: 0.65rem; font-weight: 900; color: var(--text-muted); margin-bottom: 4px; letter-spacing: 0.05em;">
-                    ${reward.threshold} STEMPEL
+            <div style="text-align:right; display:flex; flex-direction:column; align-items:flex-end; justify-content:center; min-width:100px;">
+                <div style="font-size: 0.65rem; font-weight: 900; color: var(--text-muted); margin-bottom: 4px; letter-spacing: 0.05em; text-transform: uppercase;">
+                    ${reward.threshold} ${reward.unit || 'STEMPEL'}
                 </div>
                 ${actionHTML}
             </div>
