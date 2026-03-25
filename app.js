@@ -238,6 +238,17 @@ function renderRewards(student) {
     }
     const freeStamps = stamps - usedStamps;
 
+    // --- NEW: Group Reward Donation Button ---
+    const donateBtn = document.getElementById('group-contribute-btn');
+    if (donateBtn) {
+        if (!isSupervisor && freeStamps >= 1) {
+            donateBtn.classList.remove('hidden');
+        } else {
+            donateBtn.classList.add('hidden');
+        }
+    }
+    // ------------------------------------------
+
     REWARDS.forEach(reward => {
         const item = document.createElement('div');
         const isReached = freeStamps >= reward.threshold;
@@ -562,17 +573,17 @@ async function addStamp() {
 // Community Goal
 async function updateCommunityGoal() {
     try {
-        // First load settings to get current target
-        let target = 500;
-        const setRes = await fetch(`${API_URL}/settings`);
-        if (setRes.ok) {
+        const [stRes, setRes] = await Promise.all([
+            fetch(`${API_URL}/students`),
+            fetch(`${API_URL}/settings`)
+        ]);
+        
+        if (stRes.ok && setRes.ok) {
+            const allStudents = await stRes.json();
             const settings = await setRes.json();
-            target = settings.communityTarget || 500;
-        }
-
-        const response = await fetch(`${API_URL}/students`);
-        if (response.ok) {
-            const allStudents = await response.json();
+            
+            // 1. Community Goal
+            const target = settings.communityTarget || 500;
             const total = allStudents.reduce((sum, s) => sum + (s.stamps || 0), 0);
             const progress = Math.min(100, (total / target) * 100);
             
@@ -581,6 +592,20 @@ async function updateCommunityGoal() {
             if (bar && text) {
                 bar.style.width = `${progress}%`;
                 text.innerText = `${total} / ${target}`;
+            }
+
+            // 2. Group Reward (Filmtag)
+            const gHome = document.getElementById('group-reward-home');
+            const gTitle = document.getElementById('group-reward-title-home');
+            const gStatus = document.getElementById('group-reward-status-home');
+            const gBar = document.getElementById('group-reward-bar-home');
+
+            if (settings.groupReward && gHome) {
+                gHome.style.display = 'block';
+                gTitle.innerText = `${settings.groupReward.icon || '🎬'} ${settings.groupReward.title}`;
+                gStatus.innerText = `${settings.groupReward.current} / ${settings.groupReward.target}`;
+                const gProgress = Math.min(100, (settings.groupReward.current / settings.groupReward.target) * 100);
+                gBar.style.width = `${gProgress}%`;
             }
         }
     } catch (err) {
@@ -791,4 +816,28 @@ function confirmActivity() {
     }
     // Don't close overlay here, let openStampPin with skipOverlay handle the flow
     openStampPin(true);
+}
+
+async function contributeGroupReward() {
+    if (!currentStudent) return;
+    if (!confirm("Möchtest du 1 Stempel für das Gruppen-Ziel spenden?")) return;
+    
+    try {
+        const res = await fetch(`${API_URL}/students/${currentStudent.id}/group-contribute`, {
+            method: 'POST'
+        });
+        
+        if (res.ok) {
+             const updated = await res.json();
+             currentStudent = updated;
+             alert("Danke für deine Spende! 🎬✨");
+             showDetail(currentStudent);
+             updateCommunityGoal();
+        } else {
+             const msg = await res.text();
+             alert(msg || "Fehler bei der Spende.");
+        }
+    } catch (err) {
+        alert("Fehler bei der Verbindung.");
+    }
 }

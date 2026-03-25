@@ -50,7 +50,11 @@ export default {
                     { label: "Projekt", emoji: "🚀" },
                     { label: "Sonstiges", emoji: "🌟" }
                 ];
-                const settings = settingsRaw ? JSON.parse(settingsRaw) : { communityTarget: 500, activities: defaultActivities };
+                const settings = settingsRaw ? JSON.parse(settingsRaw) : { 
+                    communityTarget: 500, 
+                    activities: defaultActivities,
+                    groupReward: { title: "Filmtag", target: 8, current: 0, icon: "🎬" }
+                };
                 return new Response(JSON.stringify(settings), {
                     headers: { ...corsHeaders, "Content-Type": "application/json" }
                 });
@@ -59,6 +63,18 @@ export default {
             if (path === "/api/settings" && method === "PUT") {
                 const settings = await request.json();
                 await env.DATABASE.put("settings", JSON.stringify(settings));
+                return new Response(JSON.stringify(settings), {
+                    headers: { ...corsHeaders, "Content-Type": "application/json" }
+                });
+            }
+
+            if (path === "/api/settings/group-reset" && method === "POST") {
+                const settingsRaw = await env.DATABASE.get("settings");
+                let settings = JSON.parse(settingsRaw || "{}");
+                if (settings.groupReward) {
+                    settings.groupReward.current = 0;
+                    await env.DATABASE.put("settings", JSON.stringify(settings));
+                }
                 return new Response(JSON.stringify(settings), {
                     headers: { ...corsHeaders, "Content-Type": "application/json" }
                 });
@@ -225,6 +241,49 @@ export default {
                 return new Response(JSON.stringify(students[index]), {
                     headers: { ...corsHeaders, "Content-Type": "application/json" }
                 });
+            }
+
+            // Handle Group Contribution
+            if (path.includes("/group-contribute") && method === "POST") {
+                const pathParts = path.split("/");
+                const id = pathParts[3];
+                const studentsRaw = await env.DATABASE.get("students");
+                let students = JSON.parse(studentsRaw || "[]");
+                const index = students.findIndex(s => String(s.id) === String(id));
+
+                if (index !== -1) {
+                    const student = students[index];
+                    // Calculate free stamps
+                    let usedStamps = student.usedStamps || 0;
+                    if (usedStamps === 0 && student.redemptions) {
+                         Object.entries(student.redemptions).forEach(([t, s]) => {
+                            if (s === 'completed') usedStamps += parseInt(t);
+                         });
+                    }
+                    const freeStamps = student.stamps - usedStamps;
+
+                    if (freeStamps >= 1) {
+                        // Deduct from student (increase usedStamps)
+                        student.usedStamps = usedStamps + 1;
+                        if (!student.history) student.history = [];
+                        student.history.push({ date: new Date().toISOString().split('T')[0], reason: "Spende für Gruppen-Ziel" });
+                        
+                        // Increment settings
+                        const settingsRaw = await env.DATABASE.get("settings");
+                        let settings = JSON.parse(settingsRaw || "{}");
+                        if (!settings.groupReward) settings.groupReward = { title: "Filmtag", target: 8, current: 0, icon: "🎬" };
+                        settings.groupReward.current = (settings.groupReward.current || 0) + 1;
+                        
+                        await env.DATABASE.put("students", JSON.stringify(students));
+                        await env.DATABASE.put("settings", JSON.stringify(settings));
+                        
+                        return new Response(JSON.stringify(student), {
+                            headers: { ...corsHeaders, "Content-Type": "application/json" }
+                        });
+                    }
+                    return new Response("Nicht genügend Stempel", { status: 400, headers: corsHeaders });
+                }
+                return new Response("Schüler nicht gefunden", { status: 404, headers: corsHeaders });
             }
 
             if (path.startsWith("/api/students/") && method === "DELETE") {

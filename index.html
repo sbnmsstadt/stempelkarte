@@ -34,6 +34,17 @@
                         <div id="community-progress-bar" class="reward-progress-bar" style="width: 0%; border-radius:6px; background:linear-gradient(90deg, var(--primary), var(--accent));"></div>
                     </div>
                 </div>
+
+                <!-- NEW: Group Reward (Filmtag) Progress -->
+                <div id="group-reward-home" style="margin-top:1.5rem; text-align:left; display:none;">
+                    <div style="display:flex; justify-content:space-between; font-size:0.8rem; font-weight:700; margin-bottom:8px;">
+                        <span id="group-reward-title-home">🎬 Filmtag</span>
+                        <span id="group-reward-status-home" style="color:var(--accent);">0 / 8</span>
+                    </div>
+                    <div class="reward-progress-bg" style="height:10px; border-radius:5px;">
+                        <div id="group-reward-bar-home" class="reward-progress-bar" style="width: 0%; border-radius:5px; background:var(--accent);"></div>
+                    </div>
+                </div>
                 
                 <div style="margin-top:2.5rem; border-top:1px solid var(--glass-border); padding-top:1.5rem;">
                     <button class="icon-btn" onclick="openSupervisorPin()" style="width:100%; display:flex; align-items:center; justify-content:center; gap:10px;">
@@ -112,6 +123,12 @@
 
                 <button id="add-stamp-button" class="add-stamp-btn hidden" onclick="openStampPin()">
                     Neuer Stempel
+                </button>
+
+                <!-- Group Donation Button -->
+                <button id="group-contribute-btn" class="add-stamp-btn hidden" onclick="contributeGroupReward()" 
+                    style="margin-top:10px; background:linear-gradient(135deg, var(--accent), #f59e0b); font-size:0.9rem; padding:0.8rem;">
+                    🎬 1 Stempel spenden
                 </button>
 
                 <div id="badge-container" class="badge-list"></div>

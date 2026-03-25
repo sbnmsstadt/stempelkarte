@@ -464,6 +464,23 @@ async function loadSettings() {
                 const text = settings.activities.map(a => `${a.emoji} ${a.label}`).join('\n');
                 document.getElementById('setting-activities').value = text;
             }
+
+            if (settings.groupReward) {
+                document.getElementById('setting-group-title').value = settings.groupReward.title || "Filmtag";
+                document.getElementById('setting-group-target').value = settings.groupReward.target || 8;
+                
+                // Update Dashboard Card
+                document.getElementById('group-reward-title-display').innerText = `${settings.groupReward.icon || '🎬'} ${settings.groupReward.title}`;
+                document.getElementById('group-reward-status').innerText = `${settings.groupReward.current} / ${settings.groupReward.target} Stempel`;
+                const progress = Math.min(100, (settings.groupReward.current / settings.groupReward.target) * 100);
+                document.getElementById('group-reward-bar').style.width = `${progress}%`;
+                
+                if (settings.groupReward.current >= settings.groupReward.target) {
+                    document.getElementById('group-reward-approve-btn').classList.remove('hidden');
+                } else {
+                    document.getElementById('group-reward-approve-btn').classList.add('hidden');
+                }
+            }
         }
     } catch (err) {}
 }
@@ -471,6 +488,8 @@ async function loadSettings() {
 async function saveSettings() {
     const target = parseInt(document.getElementById('setting-community-target').value);
     const activitiesText = document.getElementById('setting-activities').value;
+    const groupTitle = document.getElementById('setting-group-title').value;
+    const groupTarget = parseInt(document.getElementById('setting-group-target').value);
     
     if (isNaN(target) || target <= 0) {
         alert("Bitte ein gültiges Ziel eingeben.");
@@ -491,18 +510,43 @@ async function saveSettings() {
         });
 
     try {
+        // Get current current-value to not overwrite it
+        const res = await fetch(`${API_URL}/settings`);
+        const oldSettings = await res.json();
+        const currentProgress = oldSettings.groupReward ? oldSettings.groupReward.current : 0;
+
         const response = await fetch(`${API_URL}/settings`, {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ 
                 communityTarget: target,
-                activities: activities 
+                activities: activities,
+                groupReward: {
+                    title: groupTitle,
+                    target: groupTarget,
+                    current: currentProgress,
+                    icon: "🎬"
+                }
             })
         });
         if (response.ok) {
             alert("Einstellungen gespeichert!");
+            loadSettings();
         }
     } catch (err) {
         alert("Fehler beim Speichern.");
+    }
+}
+
+async function approveGroupReward() {
+    if (!confirm("Gruppen-Belohnung (z.B. Filmtag) jetzt genehmigen und Fortschritt zurücksetzen?")) return;
+    try {
+        const response = await fetch(`${API_URL}/settings/group-reset`, { method: 'POST' });
+        if (response.ok) {
+            alert("Belohnung genehmigt! Fortschritt wurde zurückgesetzt.");
+            loadSettings();
+        }
+    } catch (err) {
+        alert("Fehler beim Zurücksetzen.");
     }
 }
