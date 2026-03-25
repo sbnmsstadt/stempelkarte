@@ -1,0 +1,348 @@
+const API_URL = "https://stempelkarte.sb-nmsstadt.workers.dev/api";
+const PIN_ADMIN = "0000"; 
+const PIN_STAMP = "1234"; 
+const PIN_SUPERVISOR = "1234"; 
+
+const MAX_STAMPS = 60;
+const STAMPS_PER_LEVEL = 20;
+
+const REWARDS = [
+    { threshold: 4, icon: "🥨", title: "Snack-Box", desc: "Wähle einen Snack aus." },
+    { threshold: 8, icon: "💍", title: "Armband/Anhänger", desc: "Such dir einen Schmuck aus." },
+    { threshold: 20, icon: "🍿", title: "Level 1: Filmtag", desc: "Popcorn inklusive!" },
+    { threshold: 40, icon: "🎮", title: "Level 2: Extra-Spielzeit", desc: "15 Min an der Konsole/Spiel." },
+    { threshold: 60, icon: "👑", title: "Level 3: VIP Woche", desc: "Entscheide über die Spiele!" }
+];
+
+let students = [];
+let currentStudent = null;
+let enteredPin = "";
+let pinCallback = null;
+let isSupervisor = false;
+let isDirectLink = false;
+let syncInterval = null;
+
+// Initialize
+document.addEventListener('DOMContentLoaded', () => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const idParam = urlParams.get('id');
+    
+    if (idParam) {
+        isDirectLink = true;
+        loginWithId(idParam);
+    } else {
+        const savedId = localStorage.getItem('studentId');
+        if (savedId) {
+            loginWithId(savedId);
+        }
+    }
+});
+
+function toggleRules() {
+    document.querySelectorAll('.view').forEach(v => v.classList.add('hidden'));
+    document.getElementById('view-rules').classList.remove('hidden');
+}
+
+function startSync() {
+    stopSync();
+    syncInterval = setInterval(() => {
+        if (document.visibilityState === 'visible' && currentStudent && !isSupervisor) {
+            silentSync();
+        }
+    }, 5000);
+}
+
+function stopSync() {
+    if (syncInterval) clearInterval(syncInterval);
+}
+
+async function silentSync() {
+    if (!currentStudent) return;
+    try {
+        const response = await fetch(`${API_URL}/students/${currentStudent.id}`);
+        if (response.ok) {
+            const freshData = await response.json();
+            if (freshData.stamps !== currentStudent.stamps) {
+                currentStudent = freshData;
+                updateStampDisplay(currentStudent);
+                renderRewards(currentStudent.stamps);
+            }
+        }
+    } catch (err) {
+        console.error("Sync error:", err);
+    }
+}
+
+async function loginWithId(id = null) {
+    const idInput = document.getElementById('student-id-input');
+    const studentId = (id || (idInput ? idInput.value.trim() : "")).toLowerCase();
+    
+    if (!studentId) {
+        if (!id) alert("Bitte dein Kürzel eingeben.");
+        return;
+    }
+
+    try {
+        const response = await fetch(`${API_URL}/students/${studentId}`);
+        if (response.ok) {
+            currentStudent = await response.json();
+            localStorage.setItem('studentId', currentStudent.id);
+            showDetail(currentStudent);
+        } else {
+            if (!id && idInput) alert("Kürzel nicht gefunden.");
+            localStorage.removeItem('studentId');
+        }
+    } catch (err) {
+        console.error("Fetch error:", err);
+    }
+}
+
+function logout() {
+    localStorage.removeItem('studentId');
+    stopSync();
+    showHome();
+}
+
+function showHome() {
+    isSupervisor = false;
+    isDirectLink = false;
+    stopSync();
+    document.querySelectorAll('.view').forEach(v => v.classList.add('hidden'));
+    document.getElementById('view-home').classList.remove('hidden');
+}
+
+function showList() {
+    if (!isSupervisor) return;
+    stopSync();
+    document.querySelectorAll('.view').forEach(v => v.classList.add('hidden'));
+    document.getElementById('view-list').classList.remove('hidden');
+    fetchStudents();
+}
+
+async function fetchStudents() {
+    try {
+        const response = await fetch(`${API_URL}/students`);
+        if (response.ok) {
+            students = await response.json();
+            renderStudentList();
+        }
+    } catch (err) {
+        console.error("API error:", err);
+    }
+}
+
+function renderStudentList() {
+    const container = document.getElementById('student-container');
+    container.innerHTML = '';
+
+    students.forEach((s, index) => {
+        const card = document.createElement('div');
+        card.className = 'glass-card student-item';
+        card.onclick = () => showDetail(s);
+        card.innerHTML = `
+            <div class="student-info">
+                <div class="avatar">${s.name.charAt(0)}</div>
+                <div class="student-name">${s.name}</div>
+            </div>
+            <div class="stamp-count">${s.stamps} / ${MAX_STAMPS}</div>
+        `;
+        container.appendChild(card);
+    });
+}
+
+function showDetail(student) {
+    currentStudent = student;
+    document.querySelectorAll('.view').forEach(v => v.classList.add('hidden'));
+    document.getElementById('view-detail').classList.remove('hidden');
+    
+    document.getElementById('detail-name').innerText = student.name;
+    document.getElementById('detail-avatar').innerText = student.name.charAt(0);
+    
+    const addBtn = document.getElementById('add-stamp-button');
+    const logoutBtn = document.getElementById('logout-btn');
+    const backBtn = document.querySelector('.supervisor-back');
+
+    if (isSupervisor) {
+        addBtn.classList.remove('hidden');
+        logoutBtn.classList.add('hidden');
+        backBtn.classList.remove('hidden');
+        stopSync();
+    } else {
+        addBtn.classList.add('hidden');
+        logoutBtn.classList.remove('hidden');
+        backBtn.classList.add('hidden');
+        startSync();
+    }
+
+    updateStampDisplay(student);
+    renderRewards(student.stamps);
+}
+
+function renderRewards(stamps) {
+    const list = document.getElementById('reward-list');
+    if (!list) return;
+    list.innerHTML = '';
+    
+    REWARDS.forEach(reward => {
+        const item = document.createElement('div');
+        const isUnlocked = stamps >= reward.threshold;
+        const progress = Math.min(100, (stamps / reward.threshold) * 100);
+        
+        item.className = `glass-card reward-item ${isUnlocked ? 'unlocked' : ''}`;
+        item.innerHTML = `
+            <div class="reward-icon">${reward.icon}</div>
+            <div style="flex:1">
+                <div class="reward-title">${reward.title}</div>
+                <div class="reward-desc">${reward.desc}</div>
+                <div class="reward-progress-bg">
+                    <div class="reward-progress-bar" style="width: ${progress}%"></div>
+                </div>
+            </div>
+            <div class="reward-status">
+                ${isUnlocked ? '✅' : `${reward.threshold}`}
+            </div>
+        `;
+        list.appendChild(item);
+    });
+}
+
+function goBack() {
+    if (isDirectLink) return;
+    if (isSupervisor) {
+        showList();
+    } else {
+        showHome();
+    }
+}
+
+function updateStampDisplay(student) {
+    const mainGrid = document.getElementById('stamp-grid');
+    const text = document.getElementById('detail-stamps-text');
+    if (!mainGrid) return;
+    mainGrid.innerHTML = '';
+    text.innerText = `${student.stamps} von ${MAX_STAMPS} Stempel gesammelt`;
+
+    // Create 3 levels
+    for (let l = 1; l <= 3; l++) {
+        const levelContainer = document.createElement('div');
+        levelContainer.className = 'level-group';
+        
+        const start = (l - 1) * STAMPS_PER_LEVEL + 1;
+        const end = l * STAMPS_PER_LEVEL;
+        const isUnlocked = student.stamps >= (l - 1) * STAMPS_PER_LEVEL;
+        const isCompleted = student.stamps >= end;
+
+        levelContainer.innerHTML = `
+            <div class="level-header ${isUnlocked ? 'active' : ''}">
+                <span>Level ${l}</span>
+                <span class="level-range">${start}-${end}</span>
+            </div>
+            <div class="stamp-grid-20"></div>
+        `;
+
+        const grid = levelContainer.querySelector('.stamp-grid-20');
+        for (let i = start; i <= end; i++) {
+            const slot = document.createElement('div');
+            slot.className = `stamp-slot ${i <= student.stamps ? 'filled' : ''}`;
+            slot.innerText = i <= student.stamps ? '★' : '';
+            grid.appendChild(slot);
+        }
+        mainGrid.appendChild(levelContainer);
+    }
+}
+
+// PIN Overlay
+function openPinOverlay(callback, title = "PIN") {
+    document.getElementById('pin-overlay').classList.add('active');
+    document.querySelector('#pin-overlay h3').innerText = title;
+    enteredPin = "";
+    pinCallback = callback;
+    updatePinDisplay();
+}
+
+function openSupervisorPin() {
+    openPinOverlay((pin) => {
+        if (pin === PIN_SUPERVISOR) {
+            isSupervisor = true;
+            showList();
+            return true;
+        }
+        return false;
+    }, "Betreuer Login");
+}
+
+function openAdminPin() {
+    openPinOverlay((pin) => {
+        if (pin === PIN_ADMIN) {
+            window.location.href = 'admin.html';
+            return true;
+        }
+        return false;
+    }, "Admin-PIN");
+}
+
+function openStampPin() {
+    openPinOverlay((pin) => {
+        if (pin === PIN_STAMP) {
+            addStamp();
+            return true;
+        }
+        return false;
+    }, "Stempel vergeben");
+}
+
+function closePinOverlay() {
+    document.getElementById('pin-overlay').classList.remove('active');
+}
+
+function addPin(num) {
+    if (enteredPin.length < 4) {
+        enteredPin += num;
+        updatePinDisplay();
+        if (enteredPin.length === 4) {
+            setTimeout(validatePin, 200);
+        }
+    }
+}
+
+function clearPin() {
+    enteredPin = "";
+    updatePinDisplay();
+}
+
+function updatePinDisplay() {
+    const display = document.getElementById('pin-display');
+    display.innerText = "•".repeat(enteredPin.length);
+}
+
+function validatePin() {
+    if (typeof pinCallback !== 'function') return;
+    const success = pinCallback(enteredPin);
+    if (success) {
+        closePinOverlay();
+    } else {
+        alert("Falscher PIN!");
+        clearPin();
+    }
+}
+
+async function addStamp() {
+    if (!currentStudent) return;
+    if (currentStudent.stamps < MAX_STAMPS) {
+        const newCount = currentStudent.stamps + 1;
+        try {
+            const response = await fetch(`${API_URL}/students/${currentStudent.id}`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ stamps: newCount })
+            });
+            if (response.ok) {
+                currentStudent.stamps = newCount;
+                updateStampDisplay(currentStudent);
+                renderRewards(currentStudent.stamps);
+            }
+        } catch (err) {
+            alert("Fehler beim Speichern.");
+        }
+    }
+}

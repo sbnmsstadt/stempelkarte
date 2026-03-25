@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin - Nachmittagsbetreuung</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div id="app">
+        <main id="view-admin" class="view">
+            <button class="back-btn" onclick="window.location.href='index.html'">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+                Zurück zur App
+            </button>
+            
+            <header>
+                <h1>Admin-Bereich</h1>
+                <p class="subtitle">Schüler & Geburtstage verwalten</p>
+            </header>
+
+            <!-- Dashboards Area -->
+            <div style="display: grid; grid-template-columns: 1fr; gap: 1rem; margin-bottom: 1.5rem;">
+                <!-- Redemption Requests -->
+                <div class="glass-card" style="margin-bottom: 0; border-color: var(--accent);">
+                    <h3 style="display:flex; align-items:center; gap:8px;">
+                        🎁 Einlösungs-Anfragen
+                    </h3>
+                    <div id="redemption-dashboard" style="margin-top: 10px; font-size: 0.9rem; color: var(--text-muted);">
+                        Lade Anfragen...
+                    </div>
+                </div>
+
+                <!-- Birthday Dashboard -->
+                <div class="glass-card" style="margin-bottom: 0; border-color: var(--primary-light);">
+                    <h3 style="display:flex; align-items:center; gap:8px;">
+                        🎂 Baldige Geburtstage
+                    </h3>
+                    <div id="birthday-dashboard" style="margin-top: 10px; font-size: 0.9rem; color: var(--text-muted);">
+                        Lade Geburtstage...
+                    </div>
+                </div>
+            </div>
+
+            <div class="glass-card">
+                <h3>Neuen Schüler anlegen</h3>
+                <div style="display:flex; gap:10px; margin-top:1rem; flex-wrap: wrap;">
+                    <input type="text" id="new-student-name" placeholder="Name" style="flex:1; min-width:120px; padding: 10px; border-radius: 8px; border: 1px solid var(--glass-border); background: rgba(255,255,255,0.05); color: white;">
+                    <input type="date" id="new-student-birthday" title="Geburtsdatum (optional)" style="flex:1; min-width:140px; padding: 10px; border-radius: 8px; border: 1px solid var(--glass-border); background: rgba(255,255,255,0.05); color: white; color-scheme: dark;">
+                    <button id="add-btn" class="add-stamp-btn" style="width:auto; padding: 10px 20px;">Hinzufügen</button>
+                </div>
+                <p id="status-msg" style="font-size: 0.8rem; margin-top: 10px; display:none;"></p>
+            </div>
+
+            <div id="admin-student-list" class="student-list">
+                <div class="glass-card" style="text-align:center">Lade Schüler...</div>
+            </div>
+        </main>
+    </div>
+
+    <script src="admin.js"></script>
+</body>
+</html>

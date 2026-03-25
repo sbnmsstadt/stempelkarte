@@ -1,0 +1,195 @@
+export default {
+  async fetch(request, env) {
+    const url = new URL(request.url);
+    const path = url.pathname;
+    const method = request.method;
+
+    const corsHeaders = {
+      "Access-Control-Allow-Origin": "*",
+      "Access-Control-Allow-Methods": "GET, POST, PATCH, DELETE, OPTIONS",
+      "Access-Control-Allow-Headers": "Content-Type",
+    };
+
+    if (method === "OPTIONS") {
+      return new Response(null, { headers: corsHeaders });
+    }
+
+    if (!env.DATABASE) {
+      return new Response("KV Namespace 'DATABASE' is not bound. Please check your Cloudflare settings.", { 
+        status: 500, 
+        headers: corsHeaders 
+      });
+    }
+
+    try {
+      if (path === "/api/students" && method === "GET") {
+        const studentsRaw = await env.DATABASE.get("students");
+        const students = studentsRaw ? JSON.parse(studentsRaw) : [];
+        return new Response(JSON.stringify(students), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" }
+        });
+      }
+
+      if (path.startsWith("/api/students/") && method === "GET") {
+        const id = path.split("/").pop();
+        const studentsRaw = await env.DATABASE.get("students");
+        const students = JSON.parse(studentsRaw || "[]");
+        const student = students.find(s => String(s.id) === String(id));
+        
+        if (!student) return new Response("Not Found", { status: 404, headers: corsHeaders });
+        return new Response(JSON.stringify(student), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" }
+        });
+      }
+
+      if (path === "/api/students" && method === "POST") {
+        const { name, birthday } = await request.json();
+        const studentsRaw = await env.DATABASE.get("students");
+        let students = studentsRaw ? JSON.parse(studentsRaw) : [];
+        
+        // Generate 3-letter ID from name
+        let baseId = name.toLowerCase().replace(/[^a-z]/g, '').substring(0, 3);
+        if (baseId.length < 3) baseId = name.toLowerCase().substring(0, 3);
+        
+        // Ensure uniqueness (add number if needed)
+        let finalId = baseId;
+        let counter = 1;
+        while (students.some(s => s.id === finalId)) {
+          finalId = baseId + counter;
+          counter++;
+        }
+
+        const newStudent = { id: finalId, name: name, stamps: 0, birthday: birthday || null, redemptions: {} };
+        students.push(newStudent);
+        await env.DATABASE.put("students", JSON.stringify(students));
+        
+        return new Response(JSON.stringify(newStudent), {
+          status: 201,
+          headers: { ...corsHeaders, "Content-Type": "application/json" }
+        });
+      }
+
+      if (path.startsWith("/api/students/") && method === "PATCH") {
+        const pathParts = path.split("/");
+        
+        // Handle normal student patch
+        if (pathParts.length === 4) {
+          const id = pathParts[3];
+          const { stamps } = await request.json();
+          const studentsRaw = await env.DATABASE.get("students");
+          let students = JSON.parse(studentsRaw || "[]");
+          
+          const index = students.findIndex(s => String(s.id) === String(id));
+          if (index === -1) return new Response("Not Found", { status: 404, headers: corsHeaders });
+          
+          if (stamps !== undefined) students[index].stamps = stamps;
+          
+          await env.DATABASE.put("students", JSON.stringify(students));
+          return new Response(JSON.stringify(students[index]), {
+            headers: { ...corsHeaders, "Content-Type": "application/json" }
+          });
+        }
+      }
+
+      // Handle Redeem Endpoints
+      if (path.includes("/redeem") && (method === "POST" || method === "PATCH")) {
+        const pathParts = path.split("/");
+        const id = pathParts[3];
+        const { threshold, status } = await request.json();
+        const studentsRaw = await env.DATABASE.get("students");
+        let students = JSON.parse(studentsRaw || "[]");
+        
+        const index = students.findIndex(s => String(s.id) === String(id));
+        if (index === -1) return new Response("Not Found", { status: 404, headers: corsHeaders });
+        
+        if (!students[index].redemptions) students[index].redemptions = {};
+        
+        if (method === "POST") {
+          // Request a redemption (student)
+          students[index].redemptions[threshold] = "pending";
+        } else if (method === "PATCH") {
+          // Confirm a redemption (admin)
+          students[index].redemptions[threshold] = status || "completed";
+        }
+        
+        await env.DATABASE.put("students", JSON.stringify(students));
+        return new Response(JSON.stringify(students[index]), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" }
+        });
+      }
+
+      if (path.startsWith("/api/students/") && method === "DELETE") {
+        const id = path.split("/").pop();
+        const studentsRaw = await env.DATABASE.get("students");
+        let students = JSON.parse(studentsRaw || "[]");
+        
+        students = students.filter(s => String(s.id) !== String(id));
+        await env.DATABASE.put("students", JSON.stringify(students));
+        return new Response(null, { status: 204, headers: corsHeaders });
+      }
+
+      return new Response("Not Found", { status: 404, headers: corsHeaders });
+    } catch (err) {
+      return new Response(err.message, { status: 500, headers: corsHeaders });
+    }
+  },
+
+  async scheduled(event, env, ctx) {
+    if (!env.DATABASE || !env.TELEGRAM_TOKEN || !env.TELEGRAM_CHAT_ID) {
+      console.error("Missing DB or Telegram credentials");
+      return;
+    }
+
+    try {
+      const studentsRaw = await env.DATABASE.get("students");
+      if (!studentsRaw) return;
+      const students = JSON.parse(studentsRaw);
+      
+      const today = new Date();
+      // Calculate start and end of the current week (Monday to Sunday)
+      const day = today.getDay() || 7; 
+      const monday = new Date(today);
+      monday.setDate(today.getDate() - day + 1);
+      monday.setHours(0,0,0,0);
+      
+      const sunday = new Date(monday);
+      sunday.setDate(monday.getDate() + 6);
+      sunday.setHours(23,59,59,999);
+
+      let birthdayKids = [];
+
+      for (const s of students) {
+        if (!s.birthday) continue;
+        
+        // Parse YYYY-MM-DD
+        const parts = s.birthday.split('-');
+        if (parts.length === 3) {
+          const bMonth = parseInt(parts[1], 10) - 1;
+          const bDay = parseInt(parts[2], 10);
+          
+          const thisYearBday = new Date(today.getFullYear(), bMonth, bDay);
+          
+          if (thisYearBday >= monday && thisYearBday <= sunday) {
+            birthdayKids.push(s.name);
+          }
+        }
+      }
+
+      if (birthdayKids.length > 0) {
+        const names = birthdayKids.join(", ");
+        const message = `🎂 ACHTUNG! Diese Woche haben folgende Schüler Geburtstag:\n\n🎉 ${names}\n\nBitte nicht vergessen zu gratulieren!`;
+        
+        await fetch(`https://api.telegram.org/bot${env.TELEGRAM_TOKEN}/sendMessage`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            chat_id: env.TELEGRAM_CHAT_ID,
+            text: message
+          })
+        });
+      }
+    } catch (err) {
+      console.error("Scheduled task error:", err);
+    }
+  }
+};
