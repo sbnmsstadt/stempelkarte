@@ -513,6 +513,26 @@
         /* Redemptions */
         .card.redemptions-card { border-color: rgba(245,158,11,0.25); }
         .card.redemptions-card .card-title { color: #fcd34d; }
+        .card.redemptions-card .card-content {
+            overflow: hidden;
+        }
+
+        /* Scroll wrap for redemption items */
+        .redemptions-scroll-wrap {
+            flex: 1;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .redemptions-scroll-inner {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .redemptions-scroll-inner.scrolling {
+            animation: scrollDown linear infinite;
+        }
 
         .redemption-item {
             display: flex;
@@ -791,8 +811,12 @@
                     <div class="card-icon">🎁</div>
                     <div class="card-title">Offene Anfragen</div>
                 </div>
-                <div class="card-content" id="redemption-list">
-                    <div class="empty-state"><div class="empty-icon">✅</div><span>Alles erledigt!</span></div>
+                <div class="card-content">
+                    <div class="redemptions-scroll-wrap">
+                        <div class="redemptions-scroll-inner" id="redemption-list">
+                            <div class="empty-state"><div class="empty-icon">✅</div><span>Alles erledigt!</span></div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>

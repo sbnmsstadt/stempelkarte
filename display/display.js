@@ -234,17 +234,31 @@ function renderRedemptions() {
 
     if (pending.length === 0) {
         el.innerHTML = `<div class="empty-state"><div class="empty-icon">✅</div><span>Alles erledigt!</span></div>`;
+        el.classList.remove('scrolling');
+        el.style.animationDuration = '';
         return;
     }
 
-    el.innerHTML = pending.map((p,i) => `
-        <div class="redemption-item fade-in" style="animation-delay:${i*0.07}s">
-            <div class="redemption-avatar">${p.student.avatar||p.student.name.charAt(0)}</div>
+    const makeItem = (p) => `
+        <div class="redemption-item">
+            <div class="redemption-avatar">${p.student.avatar || p.student.name.charAt(0)}</div>
             <div>
                 <div class="redemption-name">${p.student.name}</div>
                 <div class="redemption-reward">${p.rewardName}</div>
             </div>
-        </div>`).join('');
+        </div>`;
+
+    if (pending.length > 2) {
+        // Duplicate for seamless loop
+        el.innerHTML = [...pending, ...pending].map(makeItem).join('');
+        el.classList.add('scrolling');
+        const duration = Math.max(8, pending.length * 3);
+        el.style.animationDuration = `${duration}s`;
+    } else {
+        el.innerHTML = pending.map(makeItem).join('');
+        el.classList.remove('scrolling');
+        el.style.animationDuration = '';
+    }
 }
 
 // ── VIP ────────────────────────────────────────
