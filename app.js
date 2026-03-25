@@ -336,6 +336,19 @@ function updateStampDisplay(student) {
 
     // Auto-scroll to current level
     const currentLevel = Math.min(3, Math.floor(student.stamps / STAMPS_PER_LEVEL) + 1);
+    
+    // Glitter Explosion (Confetti) Logic
+    const milestones = [20, 40, 60];
+    milestones.forEach(m => {
+        if (student.stamps >= m) {
+            const key = `confetti_${student.id}_${m}`;
+            if (!localStorage.getItem(key)) {
+                fireConfetti();
+                localStorage.setItem(key, 'true');
+            }
+        }
+    });
+
     setTimeout(() => {
         const target = mainGrid.querySelector(`.level-group[data-level="${currentLevel}"]`);
         if (target) {
@@ -346,6 +359,29 @@ function updateStampDisplay(student) {
             });
         }
     }, 100);
+}
+
+function fireConfetti() {
+    const duration = 3 * 1000;
+    const animationEnd = Date.now() + duration;
+    const defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 0 };
+
+    function randomInRange(min, max) {
+      return Math.random() * (max - min) + min;
+    }
+
+    const interval = setInterval(function() {
+      const timeLeft = animationEnd - Date.now();
+
+      if (timeLeft <= 0) {
+        return clearInterval(interval);
+      }
+
+      const particleCount = 50 * (timeLeft / duration);
+      // since particles fall down, start a bit higher than random
+      confetti(Object.assign({}, defaults, { particleCount, origin: { x: randomInRange(0.1, 0.3), y: Math.random() - 0.2 } }));
+      confetti(Object.assign({}, defaults, { particleCount, origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 } }));
+    }, 250);
 }
 
 // PIN Overlay
