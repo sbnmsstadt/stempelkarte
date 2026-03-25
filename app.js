@@ -311,7 +311,7 @@ function renderRewards(student) {
             } else if (status === 'completed') {
                 // Only allow re-redemption if student has enough free (blue) stamps
                 if (freeStamps >= reward.threshold) {
-                    actionHTML = `<button class="redeem-btn" onclick="requestRedemption(${reward.threshold})">Nochmal einlösen</button>`;
+                    actionHTML = `<button class="redeem-btn" onclick="requestRedemption(${reward.threshold})">Nochmal</button>`;
                 } else {
                     actionHTML = '<span class="reward-status success">Eingelöst ✅</span>';
                 }
@@ -319,7 +319,7 @@ function renderRewards(student) {
                 actionHTML = `<button class="redeem-btn" onclick="requestRedemption(${reward.threshold})">Einlösen</button>`;
             }
         } else {
-            actionHTML = `<span class="reward-status">${reward.threshold} Stempel</span>`;
+            actionHTML = `<span class="reward-status" style="font-size:0.7rem; opacity:0.5;">Gesperrt 🔒</span>`;
         }
 
         item.innerHTML = `
@@ -331,7 +331,10 @@ function renderRewards(student) {
                     <div class="reward-progress-bar" style="width: ${progress}%"></div>
                 </div>
             </div>
-            <div style="text-align:right;">
+            <div style="text-align:right; display:flex; flex-direction:column; align-items:flex-end; justify-content:center; min-width:80px;">
+                <div style="font-size: 0.65rem; font-weight: 900; color: var(--text-muted); margin-bottom: 4px; letter-spacing: 0.05em;">
+                    ${reward.threshold} STEMPEL
+                </div>
                 ${actionHTML}
             </div>
         `;
