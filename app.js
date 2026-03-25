@@ -102,6 +102,14 @@ async function silentSync() {
                 // Also update home screen if needed (community goal)
                 updateCommunityGoal(); 
             }
+
+            // Check for group celebration trigger
+            if (freshSettings.celebration && freshSettings.celebration.active) {
+                const lastId = localStorage.getItem('lastCelebrationId');
+                if (lastId !== String(freshSettings.celebration.id)) {
+                    showCelebration(freshSettings.celebration);
+                }
+            }
         }
     } catch (err) {
         console.error("Sync error:", err);
@@ -654,6 +662,46 @@ async function updateCommunityGoal(providedStudents = null, providedSettings = n
     } catch (err) {
         console.error("Fehler beim Community-Goal Update", err);
     }
+}
+
+// Celebration (Confetti)
+function showCelebration(data) {
+    localStorage.setItem('lastCelebrationId', data.id);
+    document.getElementById('celebration-text').innerText = `Herzlichen Glückwunsch! Der ${data.title || 'Filmtag'} wurde genehmigt! 🍿🎬`;
+    
+    // Switch to celebration view
+    document.querySelectorAll('.view').forEach(v => v.classList.add('hidden'));
+    document.getElementById('view-celebration').classList.remove('hidden');
+    
+    fireConfetti();
+}
+
+function fireConfetti() {
+    const duration = 5 * 1000;
+    const animationEnd = Date.now() + duration;
+    const defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 10001 };
+
+    function randomInRange(min, max) {
+        return Math.random() * (max - min) + min;
+    }
+
+    const interval = setInterval(function() {
+        const timeLeft = animationEnd - Date.now();
+
+        if (timeLeft <= 0) {
+            return clearInterval(interval);
+        }
+
+        const particleCount = 50 * (timeLeft / duration);
+        // since particles fall down, start a bit higher than random
+        confetti(Object.assign({}, defaults, { particleCount, origin: { x: randomInRange(0.1, 0.3), y: Math.random() - 0.2 } }));
+        confetti(Object.assign({}, defaults, { particleCount, origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 } }));
+    }, 250);
+}
+
+function closeCelebration() {
+    document.getElementById('view-celebration').classList.add('hidden');
+    showHome();
 }
 
 // Streak Calculation

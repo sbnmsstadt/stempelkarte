@@ -91,8 +91,18 @@ export default {
                 });
 
                 if (settings.groupReward) {
+                    // Reset progress but keep other settings
                     settings.groupReward.current = 0;
                     settings.groupReward.active = false;
+                    settings.groupReward.contributedToCurrent = [];
+                    
+                    // Trigger Celebration
+                    settings.celebration = {
+                        id: Date.now(),
+                        title: settings.groupReward.title || "Filmtag",
+                        active: true
+                    };
+
                     await env.DATABASE.put("settings", JSON.stringify(settings));
                 }
                 
