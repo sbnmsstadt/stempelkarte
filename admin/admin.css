@@ -322,3 +322,23 @@ input[type="text"], input[type="number"], input[type="date"] {
     text-align: center;
     padding: 4px !important;
 }
+
+.reward-admin-item.inactive {
+    background: rgba(255,255,255,0.02);
+}
+
+.toggle-btn {
+    padding: 6px 12px;
+    border-radius: 8px;
+    border: none;
+    font-weight: 800;
+    font-size: 0.75rem;
+    cursor: pointer;
+    background: rgba(255,255,255,0.1);
+    color: white;
+}
+
+.toggle-btn.active {
+    background: var(--success);
+    color: white;
+}

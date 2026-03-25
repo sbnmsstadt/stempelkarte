@@ -30,6 +30,14 @@ export default {
           { threshold: 60, icon: "👑", title: "Level 3: VIP Woche", desc: "Entscheide über die Spiele!" }
       ];
 
+      // DEBUG: Test Telegram
+      if (path === "/api/debug/test-telegram") {
+        const success = await sendTelegramMessage(env, "Test-Nachricht vom Stempelkarten-System! ✅\n\nDein Bot ist richtig konfiguriert.");
+        return new Response(JSON.stringify({ success, message: success ? "Test gesendet!" : "Fehler beim Senden. Prüfe deine Secrets!" }), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" }
+        });
+      }
+
       if (path === "/api/rewards" && method === "GET") {
         const rewardsRaw = await env.DATABASE.get("rewards");
         const rewards = rewardsRaw ? JSON.parse(rewardsRaw) : DEFAULT_REWARDS;
@@ -133,6 +141,15 @@ export default {
         if (method === "POST") {
           // Request a redemption (student)
           students[index].redemptions[threshold] = "pending";
+          
+          // TELEGRAM NOTIFICATION
+          const rewardsRaw = await env.DATABASE.get("rewards");
+          const rewards = rewardsRaw ? JSON.parse(rewardsRaw) : DEFAULT_REWARDS;
+          const reward = rewards.find(r => r.threshold === parseInt(threshold));
+          const rewardName = reward ? reward.title : `Belohnung (${threshold} Stempel)`;
+          
+          await sendTelegramMessage(env, `🎁 NEUE ANFRAGE!\n\nSchüler: ${students[index].name}\nBelohnung: ${rewardName}\n\nBitte im Admin-Dashboard bestätigen.`);
+          
         } else if (method === "PATCH") {
           // Confirm a redemption (admin)
           students[index].redemptions[threshold] = status || "completed";
@@ -187,12 +204,10 @@ export default {
       for (const s of students) {
         if (!s.birthday) continue;
         
-        // Parse YYYY-MM-DD
         const parts = s.birthday.split('-');
         if (parts.length === 3) {
           const bMonth = parseInt(parts[1], 10) - 1;
           const bDay = parseInt(parts[2], 10);
-          
           const thisYearBday = new Date(today.getFullYear(), bMonth, bDay);
           
           if (thisYearBday >= monday && thisYearBday <= sunday) {
@@ -204,18 +219,29 @@ export default {
       if (birthdayKids.length > 0) {
         const names = birthdayKids.join(", ");
         const message = `🎂 ACHTUNG! Diese Woche haben folgende Schüler Geburtstag:\n\n🎉 ${names}\n\nBitte nicht vergessen zu gratulieren!`;
-        
-        await fetch(`https://api.telegram.org/bot${env.TELEGRAM_TOKEN}/sendMessage`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            chat_id: env.TELEGRAM_CHAT_ID,
-            text: message
-          })
-        });
+        await sendTelegramMessage(env, message);
       }
     } catch (err) {
       console.error("Scheduled task error:", err);
     }
   }
 };
+
+async function sendTelegramMessage(env, text) {
+  if (!env.TELEGRAM_TOKEN || !env.TELEGRAM_CHAT_ID) return false;
+  try {
+    const response = await fetch(`https://api.telegram.org/bot${env.TELEGRAM_TOKEN}/sendMessage`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        chat_id: env.TELEGRAM_CHAT_ID,
+        text: text
+      })
+    });
+    return response.ok;
+  } catch (err) {
+    console.error("Telegram error:", err);
+    return false;
+  }
+}
+
