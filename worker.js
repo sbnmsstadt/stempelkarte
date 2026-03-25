@@ -383,6 +383,33 @@ export default {
                 return new Response(null, { status: 204, headers: corsHeaders });
             }
 
+            // VIP Status toggle
+            if (path.includes("/vip") && method === "PATCH") {
+                const id = path.split("/")[3];
+                const { active, reason } = await request.json();
+                const studentsRaw = await env.DATABASE.get("students");
+                let students = JSON.parse(studentsRaw || "[]");
+                const index = students.findIndex(s => String(s.id) === String(id));
+                if (index === -1) return new Response("Not Found", { status: 404, headers: corsHeaders });
+
+                students[index].vip = {
+                    active: !!active,
+                    grantedAt: active ? new Date().toISOString().split('T')[0] : null,
+                    reason: reason || ""
+                };
+
+                if (!students[index].history) students[index].history = [];
+                students[index].history.push({
+                    date: new Date().toISOString().split('T')[0],
+                    reason: active ? `⭐ VIP-Status erhalten${reason ? ': ' + reason : ''}` : "VIP-Status entfernt"
+                });
+
+                await env.DATABASE.put("students", JSON.stringify(students));
+                return new Response(JSON.stringify(students[index]), {
+                    headers: { ...corsHeaders, "Content-Type": "application/json" }
+                });
+            }
+
             return new Response("Not Found", { status: 404, headers: corsHeaders });
         } catch (err) {
             return new Response(err.message, { status: 500, headers: corsHeaders });

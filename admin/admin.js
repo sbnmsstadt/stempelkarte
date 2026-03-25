@@ -402,12 +402,16 @@ function renderAdminList(filter = "") {
     filtered.forEach(student => {
         const item = document.createElement('div');
         item.className = 'glass-card admin-student-item';
+        const isVip = student.vip && student.vip.active;
+        const fullCards = Math.floor(student.stamps / 20);
+        const vipEligible = fullCards >= 1;
+
         item.innerHTML = `
             <div class="student-info">
-                <div class="avatar">${student.avatar || student.name.charAt(0)}</div>
+                <div class="avatar" style="${isVip ? 'box-shadow: 0 0 12px gold; border: 2px solid gold;' : ''}">${student.avatar || student.name.charAt(0)}</div>
                 <div>
-                    <div style="font-weight:700; font-size:1.1rem">${student.name}</div>
-                    <div class="subtitle" style="font-size:0.75rem">ID: ${student.id}</div>
+                    <div style="font-weight:700; font-size:1.1rem">${student.name} ${isVip ? '<span style="color:gold; font-size:0.7rem; font-weight:900; letter-spacing:0.1em; background:rgba(255,215,0,0.15); border:1px solid gold; border-radius:6px; padding:2px 6px;">⭐ VIP</span>' : ''}</div>
+                    <div class="subtitle" style="font-size:0.75rem">ID: ${student.id} · ${fullCards} volle Karte(n)</div>
                     ${student.birthday ? `<div style="font-size:0.75rem">🎂 ${formatDate(student.birthday)}</div>` : ''}
                 </div>
             </div>
@@ -416,7 +420,10 @@ function renderAdminList(filter = "") {
                     <input type="number" class="admin-stamp-input" value="${student.stamps}" onchange="updateStamps('${student.id}', this.value)">
                     <span class="subtitle" style="margin-left:8px">Stempel</span>
                 </div>
-                <div class="admin-button-group">
+                <div class="admin-button-group" style="flex-wrap:wrap; justify-content:flex-end;">
+                    ${vipEligible ? `<button onclick="toggleVip('${student.id}', ${!isVip})" class="icon-btn-small" style="padding:4px 8px; font-size:0.7rem; font-weight:800; ${isVip ? 'color:gold; border-color:gold;' : 'color:var(--text-muted);'}" title="${isVip ? 'VIP entziehen' : 'VIP vergeben'}">
+                        ⭐ ${isVip ? 'VIP' : 'VIP?'}
+                    </button>` : ''}
                     <button class="icon-btn-small" onclick="copyLink('${student.id}')" title="Link"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></button>
                     <button class="icon-btn-small" onclick="deleteStudent('${student.id}')" style="color:#ff6b6b"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg></button>
                 </div>
@@ -427,6 +434,29 @@ function renderAdminList(filter = "") {
 }
 
 function formatDate(s) { const [y,m,d] = s.split('-'); return `${d}.${m}.${y}`; }
+
+async function toggleVip(id, activate) {
+    let reason = '';
+    if (activate) {
+        reason = prompt('VIP-Grund (optional, z.B. "1 volle Karte erreicht"):') || '';
+    } else {
+        if (!confirm(`VIP-Status entziehen?`)) return;
+    }
+    try {
+        const res = await fetch(`${API_URL}/students/${id}/vip`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ active: activate, reason })
+        });
+        if (res.ok) {
+            await fetchStudents();
+        } else {
+            alert('Fehler beim Ändern des VIP-Status.');
+        }
+    } catch (err) {
+        alert('Verbindungsfehler.');
+    }
+}
 
 function copyLink(id) {
     const link = `${window.location.origin}${window.location.pathname.replace('admin/index.html', 'index.html')}?id=${id}`;

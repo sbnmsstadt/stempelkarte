@@ -579,6 +579,29 @@ input[type="number"] {
     color: var(--text-muted);
 }
 
+.vip-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    background: linear-gradient(135deg, rgba(255,215,0,0.2), rgba(255,165,0,0.15));
+    border: 1px solid gold;
+    color: gold;
+    font-size: 0.65rem;
+    font-weight: 900;
+    letter-spacing: 0.1em;
+    padding: 3px 8px;
+    border-radius: 8px;
+    text-transform: uppercase;
+    vertical-align: middle;
+    box-shadow: 0 0 8px rgba(255,215,0,0.3);
+    animation: vipPulse 2s ease-in-out infinite;
+}
+
+@keyframes vipPulse {
+    0%, 100% { box-shadow: 0 0 8px rgba(255,215,0,0.3); }
+    50% { box-shadow: 0 0 16px rgba(255,215,0,0.6); }
+}
+
 .history-reason {
     font-size: 0.85rem;
     font-weight: 600;

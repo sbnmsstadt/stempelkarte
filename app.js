@@ -205,7 +205,10 @@ function showDetail(student) {
     const streak = calculateStreak(student.history || []);
     const streakHTML = streak > 1 ? `<span class="fire-icon">🔥 ${streak} Tage</span>` : '';
     
-    document.getElementById('detail-name').innerHTML = `${student.name} ${streakHTML}`;
+    const vipBadge = (student.vip && student.vip.active) 
+        ? `<span class="vip-badge">⭐ VIP</span>` 
+        : '';
+    document.getElementById('detail-name').innerHTML = `${student.name} ${streakHTML} ${vipBadge}`;
     document.getElementById('detail-avatar').innerText = avatar;
     
     const addBtn = document.getElementById('add-stamp-button');
