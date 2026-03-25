@@ -37,7 +37,6 @@ let pinCallback = null;
 let isSupervisor = false;
 let isDirectLink = false;
 let syncInterval = null;
-let lastRedemptionCount = null;
 
 document.addEventListener('DOMContentLoaded', async () => {
     await fetchRewards();
@@ -96,17 +95,7 @@ async function silentSync() {
             const settingsChanged = JSON.stringify(freshSettings.groupReward) !== JSON.stringify(SETTINGS.groupReward);
 
             if (studentChanged || settingsChanged) {
-                // Check if a new Filmtag approval appeared
-                if (lastRedemptionCount !== null && freshData.redemptions && freshData.redemptions.length > lastRedemptionCount) {
-                    const latest = freshData.redemptions[freshData.redemptions.length - 1];
-                    const text = typeof latest === 'string' ? latest : latest.text;
-                    if (text && text.includes("Filmtag genehmigt")) {
-                        triggerCelebration();
-                    }
-                }
-                
                 currentStudent = freshData;
-                lastRedemptionCount = freshData.redemptions ? freshData.redemptions.length : 0;
                 SETTINGS = freshSettings;
                 updateStampDisplay(currentStudent);
                 renderRewards(currentStudent);
@@ -132,10 +121,8 @@ async function loginWithId(id = null) {
         const response = await fetch(`${API_URL}/students/${studentId}`);
         if (response.ok) {
             currentStudent = await response.json();
-            lastRedemptionCount = currentStudent.redemptions ? currentStudent.redemptions.length : 0;
             localStorage.setItem('studentId', currentStudent.id);
-            showHome();
-            startSync();
+            showDetail(currentStudent);
         } else {
             if (!id && idInput) alert("Kürzel nicht gefunden.");
             localStorage.removeItem('studentId');
@@ -255,19 +242,49 @@ function renderRewards(student) {
     list.innerHTML = '';
     
     const stamps = student.stamps;
-    const redemptions = Array.isArray(student.redemptions) ? student.redemptions : [];
+    const redemptions = student.redemptions || {};
     
-    // Compute total "used" stamps
+    // Compute total "used" stamps (how many were spent)
+    // Preference: student.usedStamps from server, Fallback: sum of all confirmed thresholds
     let usedStamps = student.usedStamps || 0;
+    if (usedStamps === 0 && student.redemptions) {
+        Object.entries(redemptions).forEach(([t, s]) => {
+            if (s === 'completed') usedStamps += parseInt(t);
+        });
+    }
     const freeStamps = stamps - usedStamps;
+
+    // --- NEW: Group Reward Donation Button (Conditional) ---
+    const donateBtn = document.getElementById('group-contribute-btn');
+    const donateStatus = document.getElementById('group-reward-detail-status');
+    if (donateBtn) {
+        const isGroupActive = SETTINGS.groupReward && SETTINGS.groupReward.active;
+        const isFull = isGroupActive && SETTINGS.groupReward.current >= SETTINGS.groupReward.target;
+        
+        if (!isSupervisor && isGroupActive && !isFull && freeStamps >= 1) {
+            donateBtn.classList.remove('hidden');
+        } else {
+            donateBtn.classList.add('hidden');
+        }
+        
+        // NEW: Live Status Text
+        if (donateStatus) {
+            if (isGroupActive) {
+                donateStatus.classList.remove('hidden');
+                donateStatus.innerText = `${SETTINGS.groupReward.title || 'Filmtag'} Stand: ${SETTINGS.groupReward.current} / ${SETTINGS.groupReward.target} Stempel`;
+            } else {
+                donateStatus.classList.add('hidden');
+            }
+        }
+    }
+    // ------------------------------------------
 
     REWARDS.forEach(reward => {
         const item = document.createElement('div');
         const isReached = freeStamps >= reward.threshold;
+        const progress = Math.min(100, (freeStamps / reward.threshold) * 100);
         
-        // Find existing status in the array
-        const existing = redemptions.find(r => r.text.includes(`(${reward.threshold} Stempel)`) || (reward.title.toLowerCase().includes("filmtag") && r.text.toLowerCase().includes("filmtag")));
-        const status = existing ? (existing.status === 'REDEEM_PENDING' ? 'pending' : 'completed') : undefined;
+        const status = redemptions[reward.threshold]; // undefined, 'pending', 'completed'
         
         item.className = `glass-card reward-item ${isReached ? 'unlocked' : ''} ${status === 'completed' ? 'redeemed' : ''}`;
         
@@ -276,6 +293,7 @@ function renderRewards(student) {
             if (status === 'pending') {
                 actionHTML = '<span class="reward-status warning">Angefragt ⏳</span>';
             } else if (status === 'completed') {
+                // Only allow re-redemption if student has enough free (blue) stamps
                 if (freeStamps >= reward.threshold) {
                     actionHTML = `<button class="redeem-btn" onclick="requestRedemption(${reward.threshold})">Nochmal einlösen</button>`;
                 } else {
@@ -843,40 +861,26 @@ function confirmActivity() {
     openStampPin(true);
 }
 
-// Celebration Logic
-function triggerCelebration() {
-    const view = document.getElementById('view-celebration');
-    if (!view) return;
+async function contributeGroupReward() {
+    if (!currentStudent) return;
+    if (!confirm("Möchtest du 1 Stempel für das Gruppen-Ziel spenden?")) return;
     
-    view.classList.remove('hidden');
-    
-    // Confetti Cannon!
-    const duration = 5 * 1000;
-    const animationEnd = Date.now() + duration;
-    const defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 2000 };
-
-    function randomInRange(min, max) {
-        return Math.random() * (max - min) + min;
-    }
-
-    const interval = setInterval(function() {
-        const timeLeft = animationEnd - Date.now();
-
-        if (timeLeft <= 0) {
-            return clearInterval(interval);
+    try {
+        const res = await fetch(`${API_URL}/students/${currentStudent.id}/group-contribute`, {
+            method: 'POST'
+        });
+        
+        if (res.ok) {
+             const updated = await res.json();
+             currentStudent = updated;
+             alert("Danke für deine Spende! 🎬✨");
+             showDetail(currentStudent);
+             updateCommunityGoal();
+        } else {
+             const msg = await res.text();
+             alert(msg || "Fehler bei der Spende.");
         }
-
-        const particleCount = 50 * (timeLeft / duration);
-        confetti({ ...defaults, particleCount, origin: { x: randomInRange(0.1, 0.3), y: Math.random() - 0.2 } });
-        confetti({ ...defaults, particleCount, origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 } });
-    }, 250);
+    } catch (err) {
+        alert("Fehler bei der Verbindung.");
+    }
 }
-
-function closeCelebration() {
-    document.getElementById('view-celebration').classList.add('hidden');
-    showHome();
-}
-
-window.showHistory = showHistory;
-window.hideHistory = hideHistory;
-window.updateStampReason = updateStampReason;

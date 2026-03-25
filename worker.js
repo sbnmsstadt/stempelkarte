@@ -80,18 +80,13 @@ export default {
                 const today = new Date().toISOString().split('T')[0];
                 let changed = false;
 
-                // Update all students who have a pending "Filmtag" request
+                // Update all donors
                 students.forEach(s => {
-                    if (Array.isArray(s.redemptions)) {
-                        s.redemptions.forEach(r => {
-                            if (r.text.toLowerCase().includes("filmtag") && r.status === "REDEEM_PENDING") {
-                                r.status = "completed";
-                                r.dateCompleted = new Date().toISOString();
-                                if (!s.history) s.history = [];
-                                s.history.push({ date: today, reason: `${settings.groupReward?.title || 'Filmtag'} genehmigt ✅` });
-                                changed = true;
-                            }
-                        });
+                    if (s.contributedToCurrent) {
+                        if (!s.history) s.history = [];
+                        s.history.push({ date: today, reason: `${settings.groupReward?.title || 'Filmtag'} genehmigt ✅` });
+                        s.contributedToCurrent = false;
+                        changed = true;
                     }
                 });
 
@@ -238,124 +233,49 @@ export default {
 
                 if (!students[index].redemptions) students[index].redemptions = {};
 
-                // Calculate free stamps
-                let usedStamps = students[index].usedStamps || 0;
-                if (usedStamps === 0 && students[index].redemptions) {
-                    Object.entries(students[index].redemptions).forEach(([t, s]) => {
-                        if (s === 'completed') usedStamps += parseInt(t);
-                    });
-                }
-                const freeStamps = students[index].stamps - usedStamps;
-
-                const rewardsRaw = await env.DATABASE.get("rewards");
-                const rewards = rewardsRaw ? JSON.parse(rewardsRaw) : DEFAULT_REWARDS;
-                const reward = rewards.find(r => r.threshold === parseInt(threshold));
-                const rewardName = reward ? reward.title : `Belohnung (${threshold} Stempel)`;
-
                 if (method === "POST") {
                     // Request a redemption (student)
-                    // --- MODIFIED: Filmtag logic (cumulative requests) ---
-                    if (rewardName.toLowerCase().includes("filmtag")) {
-                        const settingsRaw = await env.DATABASE.get("settings");
-                        let settings = JSON.parse(settingsRaw || "{}");
-                        if (settings.groupReward) {
-                            // Increment group reward current by 1 for each request
-                            settings.groupReward.current = (settings.groupReward.current || 0) + 1;
-                            // Reset the student's stamp immediately for the request
-                            if (freeStamps >= 1) {
-                                students[index].usedStamps = usedStamps + 1;
-                                // Use an array for redemptions to track multiple requests
-                                if (!Array.isArray(students[index].redemptions)) {
-                                    students[index].redemptions = [];
-                                }
-                                students[index].redemptions.push({ 
-                                    text: `🎁 ${rewardName} (Anfrage)`, 
-                                    date: new Date().toISOString(),
-                                    status: "REDEEM_PENDING"
-                                });
-                                await env.DATABASE.put("students", JSON.stringify(students));
-                                await env.DATABASE.put("settings", JSON.stringify(settings));
-                            } else {
-                                return new Response("Nicht genügend Stempel für Filmtag-Spende", { status: 400, headers: corsHeaders });
-                            }
-                        }
-                    } else if (freeStamps >= parseInt(threshold)) {
-                        // Standard Reward Logic
-                        students[index].usedStamps = usedStamps + parseInt(threshold);
-                        // Use an array for redemptions to track multiple requests
-                        if (!Array.isArray(students[index].redemptions)) {
-                            students[index].redemptions = [];
-                        }
-                        students[index].redemptions.push({ 
-                            text: `🎁 ${rewardName} (Anfrage)`, 
-                            date: new Date().toISOString(),
-                            status: "REDEEM_PENDING"
-                        });
-                        await env.DATABASE.put("students", JSON.stringify(students));
-                    } else {
-                        return new Response("Nicht genügend Stempel für diese Belohnung", { status: 400, headers: corsHeaders });
-                    }
+                    students[index].redemptions[threshold] = "pending";
 
-                    // TELEGRAM NOTIFICATION (moved here to be after stamp deduction)
+                    // TELEGRAM NOTIFICATION
+                    const rewardsRaw = await env.DATABASE.get("rewards");
+                    const rewards = rewardsRaw ? JSON.parse(rewardsRaw) : DEFAULT_REWARDS;
+                    const reward = rewards.find(r => r.threshold === parseInt(threshold));
+                    const rewardName = reward ? reward.title : `Belohnung (${threshold} Stempel)`;
+
                     await sendTelegramMessage(env, `🎁 NEUE ANFRAGE!\n\nSchüler: ${students[index].name}\nBelohnung: ${rewardName}\n\nBitte im Admin-Dashboard bestätigen.`);
 
                 } else if (method === "PATCH") {
                     // Confirm a redemption (admin) — mark as completed so stamp card stays checked
-                    // This part needs to be adapted if redemptions become an array
-                    // For now, assuming `status` is passed to update a specific pending redemption
-                    // This logic might need further refinement based on how the frontend identifies which pending redemption to confirm.
-                    // For simplicity, let's assume `threshold` identifies the redemption to update.
-                    if (Array.isArray(students[index].redemptions)) {
-                        const redemptionToUpdate = students[index].redemptions.find(
-                            r => r.text.includes(`(${threshold} Stempel)`) && r.status === "REDEEM_PENDING"
-                        );
-                        if (redemptionToUpdate) {
-                            redemptionToUpdate.status = "completed";
-                            redemptionToUpdate.dateCompleted = new Date().toISOString(); // Add completion date
-                        } else {
-                            // Fallback if not found, or if it's a legacy object redemption
-                            students[index].redemptions[threshold] = "completed";
-                        }
-                    } else {
-                        // Original object-based redemption
-                        students[index].redemptions[threshold] = "completed";
-                    }
+                    students[index].redemptions[threshold] = "completed";
 
-                    // Migration/Initialization for usedStamps (this logic is now handled in POST for new requests)
-                    // This block is primarily for ensuring usedStamps is correct for older entries or if POST logic changes.
-                    // The `usedStamps` should already be updated in the POST request.
-                    // This part might need to be removed or adjusted if `usedStamps` is strictly managed by POST.
-                    // For now, let's ensure it's correct.
-                    let sum = 0;
-                    if (Array.isArray(students[index].redemptions)) {
-                        students[index].redemptions.forEach(r => {
-                            if (r.status === "completed" && r.text.includes("Stempel")) {
-                                const match = r.text.match(/\((\d+) Stempel\)/);
-                                if (match) sum += parseInt(match[1]);
-                            }
-                            // For Filmtag, each request counts as 1 stamp for the student's usedStamps
-                            if (r.status === "completed" && r.text.includes("Filmtag")) {
-                                sum += 1;
-                            }
-                        });
-                    } else { // Legacy object format
+                    // Migration/Initialization for usedStamps
+                    if (students[index].usedStamps === undefined) {
+                        let sum = 0;
                         for (const [t, s] of Object.entries(students[index].redemptions)) {
                             if (s === "completed") sum += parseInt(t);
                         }
+                        students[index].usedStamps = sum;
+                    } else {
+                        // Already initialized, just increment
+                        students[index].usedStamps = students[index].usedStamps + parseInt(threshold);
                     }
-                    students[index].usedStamps = sum;
 
                     // --- NEW: If reward title is "Filmtag", activate/increment group progress ---
-                    // This logic is now handled in the POST request for Filmtag.
-                    // This block should only confirm the status, not increment the group reward again.
-                    // The `active` flag is also removed as per instruction.
-                    // The group reward `current` is incremented in the POST request.
-                    // So, this block for groupReward can be removed or simplified if it's only for legacy.
-                    // For now, let's keep it minimal if it's still needed for some reason.
-                    // The instruction is to remove active check and donor tracking.
-                    // The `groupReward.active` is no longer set here.
-                    // The `groupReward.current` is incremented in POST.
-                    // So, this block can be removed.
+                    const rewardsRaw = await env.DATABASE.get("rewards");
+                    const rewards = rewardsRaw ? JSON.parse(rewardsRaw) : DEFAULT_REWARDS;
+                    const reward = rewards.find(r => r.threshold === parseInt(threshold));
+                    const rewardName = reward ? reward.title : `Belohnung (${threshold} Stempel)`;
+
+                    if (rewardName.toLowerCase().includes("filmtag")) {
+                        const settingsRaw = await env.DATABASE.get("settings");
+                        let settings = JSON.parse(settingsRaw || "{}");
+                        if (settings.groupReward) {
+                            settings.groupReward.current = (settings.groupReward.current || 0) + parseInt(threshold);
+                            settings.groupReward.active = true;
+                            await env.DATABASE.put("settings", JSON.stringify(settings));
+                        }
+                    }
                 }
 
                 await env.DATABASE.put("students", JSON.stringify(students));
@@ -383,6 +303,36 @@ export default {
                     }
                     const freeStamps = student.stamps - usedStamps;
 
+                    // NEW: Check if group reward is ACTIVE
+                    const settingsRaw = await env.DATABASE.get("settings");
+                    let settings = JSON.parse(settingsRaw || "{}");
+                    
+                    if (!settings.groupReward || !settings.groupReward.active) {
+                        return new Response("Gruppen-Belohnung ist aktuell nicht aktiv (muss erst gestartet werden)", { status: 400, headers: corsHeaders });
+                    }
+
+                    if (settings.groupReward.current >= settings.groupReward.target) {
+                        return new Response("Ziel bereits erreicht! Es können keine weiteren Stempel gespendet werden.", { status: 400, headers: corsHeaders });
+                    }
+
+                    if (freeStamps >= 1) {
+                        // Deduct from student (increase usedStamps)
+                        student.usedStamps = usedStamps + 1;
+                        student.contributedToCurrent = true; // Mark as donor
+
+                        if (!student.history) student.history = [];
+                        student.history.push({ date: new Date().toISOString().split('T')[0], reason: `Spende für ${settings.groupReward.title}` });
+                        
+                        settings.groupReward.current = (settings.groupReward.current || 0) + 1;
+                        
+                        await env.DATABASE.put("students", JSON.stringify(students));
+                        await env.DATABASE.put("settings", JSON.stringify(settings));
+                        
+                        return new Response(JSON.stringify(student), {
+                            headers: { ...corsHeaders, "Content-Type": "application/json" }
+                        });
+                    }
+                    return new Response("Nicht genügend Stempel", { status: 400, headers: corsHeaders });
                 }
                 return new Response("Schüler nicht gefunden", { status: 404, headers: corsHeaders });
             }
