@@ -181,6 +181,14 @@
                 <!-- Dynamically filled by app.js -->
             </div>
 
+            <div style="margin-bottom:1.5rem;">
+                <label style="font-size:0.75rem; color:var(--text-muted); font-weight:700; display:block; margin-bottom:10px; letter-spacing:0.05em;">ANZAHL DER STEMPEL:</label>
+                <div style="display:flex; gap:10px;">
+                    <button id="count-1" class="count-btn active" onclick="setStampCount(1)">1 Stempel</button>
+                    <button id="count-2" class="count-btn" onclick="setStampCount(2)">2 Stempel</button>
+                </div>
+            </div>
+
             <input type="text" id="custom-activity" placeholder="Eigene Beschreibung..." 
                 style="width:100%; padding:10px; border-radius:10px; border:1px solid var(--glass-border); background:rgba(255,255,255,0.05); color:white; margin-bottom:1.5rem;">
 

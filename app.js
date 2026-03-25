@@ -14,6 +14,7 @@ let ACTIVITIES = [];
 let SETTINGS = {};
 
 let REWARDS = [];
+let selectedStampCount = 1;
 
 async function fetchRewards() {
     try {
@@ -541,13 +542,13 @@ function openStampPin(skipOverlay = false) {
 
     // If already in supervisor mode, we don't need the PIN again
     if (isSupervisor) {
-        addStamp();
+        addStamp(selectedStampCount);
         return;
     }
 
     openPinOverlay((pin) => {
         if (pin === PIN_STAMP) {
-            addStamp();
+            addStamp(selectedStampCount);
             return true;
         }
         return false;
@@ -589,10 +590,11 @@ function validatePin() {
     }
 }
 
-async function addStamp() {
+async function addStamp(count = 1) {
     if (!currentStudent) return;
+    const finalCount = Math.min(MAX_STAMPS, currentStudent.stamps + count);
     if (currentStudent.stamps < MAX_STAMPS) {
-        const newCount = currentStudent.stamps + 1;
+        const newCount = finalCount;
         try {
             const response = await fetch(`${API_URL}/students/${currentStudent.id}`, {
                 method: 'PATCH',
@@ -869,6 +871,7 @@ function renderHistory(history) {
 async function openActivityOverlay() {
     document.getElementById('activity-overlay').classList.add('active');
     document.getElementById('custom-activity').value = '';
+    setStampCount(1); // Reset to 1 by default
     
     // Load from server settings
     try {
@@ -920,6 +923,14 @@ function confirmActivity() {
     }
     // Don't close overlay here, let openStampPin with skipOverlay handle the flow
     openStampPin(true);
+}
+
+function setStampCount(n) {
+    selectedStampCount = n;
+    const btn1 = document.getElementById('count-1');
+    const btn2 = document.getElementById('count-2');
+    if (btn1) btn1.classList.toggle('active', n === 1);
+    if (btn2) btn2.classList.toggle('active', n === 2);
 }
 
 async function contributeGroupReward() {

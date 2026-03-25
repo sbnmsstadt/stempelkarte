@@ -223,6 +223,36 @@ h1 {
     border-color: var(--primary-light);
 }
 
+/* Compact Activity Picker */
+#activity-list.emoji-grid {
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+}
+#activity-list .avatar-item {
+    font-size: 1.25rem;
+    padding: 10px;
+    border-radius: 10px;
+}
+
+/* Count selection buttons */
+.count-btn {
+    flex: 1;
+    padding: 12px;
+    border-radius: 12px;
+    border: 1px solid var(--glass-border);
+    background: rgba(255,255,255,0.05);
+    color: white;
+    font-weight: 800;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+.count-btn.active {
+    background: var(--primary);
+    border-color: var(--primary-light);
+    box-shadow: 0 0 15px rgba(59, 130, 246, 0.3);
+}
+
 .fire-icon {
     display: inline-flex;
     align-items: center;
