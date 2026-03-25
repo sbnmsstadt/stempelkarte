@@ -12,7 +12,9 @@ async function fetchRewards() {
     try {
         const response = await fetch(`${API_URL}/rewards`);
         if (response.ok) {
-            REWARDS = await response.json();
+            const raw = await response.json();
+            // Filter inactive rewards (true if undefined or true)
+            REWARDS = raw.filter(r => r.active !== false);
             // ensure sorted by threshold
             REWARDS.sort((a,b) => a.threshold - b.threshold);
         }

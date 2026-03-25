@@ -229,7 +229,7 @@ input[type="text"], input[type="number"], input[type="date"] {
 /* Reward Admin Specifics */
 .reward-admin-item {
     background: rgba(255,255,255,0.05);
-    padding: 12px;
+    padding: 10px;
     border-radius: 12px;
     display: flex;
     justify-content: space-between;
@@ -237,12 +237,16 @@ input[type="text"], input[type="number"], input[type="date"] {
     margin-bottom: 8px;
     border: 1px solid transparent;
     transition: all 0.2s;
+    overflow: hidden; /* Prevent spill */
+    gap: 8px;
 }
 
 .reward-admin-item.editing {
     background: rgba(255,255,255,0.08);
     border-color: var(--accent);
     flex-direction: column;
+    align-items: stretch; /* Ensure children take full width */
+    width: 100%;
 }
 
 .reward-info-admin {
@@ -277,8 +281,15 @@ input[type="text"], input[type="number"], input[type="date"] {
 .edit-reward-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 12px;
+    gap: 8px; /* Slightly tighter gap */
     width: 100%;
+    box-sizing: border-box;
+}
+
+/* Stack on small sidebars */
+@media (max-width: 400px) {
+    .edit-reward-grid { grid-template-columns: 1fr; }
+    .edit-reward-grid > div { grid-column: span 1 !important; }
 }
 
 .edit-field {
