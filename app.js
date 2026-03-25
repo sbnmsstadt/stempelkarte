@@ -469,10 +469,16 @@ function openAdminPin() {
     }, "Admin-PIN");
 }
 
-function openStampPin() {
-    // If not supervisor, student must pick activity first
-    if (!isSupervisor && document.getElementById('activity-overlay').classList.contains('active') === false) {
+function openStampPin(skipOverlay = false) {
+    // Always show activity picker first to get the reason
+    if (!skipOverlay && document.getElementById('activity-overlay').classList.contains('active') === false) {
         openActivityOverlay();
+        return;
+    }
+
+    // If already in supervisor mode, we don't need the PIN again
+    if (isSupervisor) {
+        addStamp();
         return;
     }
 
@@ -542,6 +548,10 @@ async function addStamp() {
                 // Reset activity for next time
                 selectedActivity = "Stempel";
                 selectedActivityEmoji = "🌟";
+                
+                // Close any remaining overlays (like activity or pin)
+                closeActivityOverlay();
+                closePinOverlay();
             }
         } catch (err) {
             alert("Fehler beim Speichern.");
@@ -735,13 +745,15 @@ function closeActivityOverlay() {
     document.getElementById('activity-overlay').classList.remove('active');
 }
 
-function selectActivity(reason, emoji) {
+function selectActivity(reason, emoji, event) {
     selectedActivity = reason;
     selectedActivityEmoji = emoji;
     
     // Visual feedback
     document.querySelectorAll('#activity-list .avatar-item').forEach(el => el.style.borderColor = 'transparent');
-    event.currentTarget.style.borderColor = 'var(--primary-light)';
+    if (event && event.currentTarget) {
+        event.currentTarget.style.borderColor = 'var(--primary-light)';
+    }
 }
 
 function confirmActivity() {
@@ -750,6 +762,6 @@ function confirmActivity() {
         selectedActivity = custom;
         selectedActivityEmoji = "🌟";
     }
-    closeActivityOverlay();
-    openStampPin();
+    // Don't close overlay here, let openStampPin with skipOverlay handle the flow
+    openStampPin(true);
 }
