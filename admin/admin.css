@@ -281,9 +281,10 @@ input[type="text"], input[type="number"], input[type="date"] {
 .edit-reward-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 8px; /* Slightly tighter gap */
+    gap: 10px;
     width: 100%;
     box-sizing: border-box;
+    padding: 5px 0;
 }
 
 /* Stack on small sidebars */
@@ -308,6 +309,9 @@ input[type="text"], input[type="number"], input[type="date"] {
 .edit-field input {
     padding: 6px 10px;
     font-size: 0.85rem;
+    width: 100%;
+    box-sizing: border-box;
+    min-width: 0; /* Important for grid flex */
 }
 
 /* Threshold Adjuster */

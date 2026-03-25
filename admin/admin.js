@@ -228,7 +228,7 @@ function renderRewardDashboard() {
                             ${editingReward.active !== false ? 'AN' : 'AUS'}
                         </button>
                     </div>
-                    <div class="edit-field" style="grid-column: span 2">
+                    <div class="edit-field" style="grid-column: span 2;">
                         <label>Beschreibung</label>
                         <input type="text" id="edit-reward-desc" value="${editingReward.desc || ''}">
                     </div>

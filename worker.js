@@ -23,12 +23,13 @@ export default {
 
         try {
             const DEFAULT_REWARDS = [
-                { threshold: 4, icon: "🥨", title: "Snack-Box", desc: "Wähle einen Snack aus." },
-                { threshold: 8, icon: "💍", title: "Armband/Anhänger", desc: "Such dir einen Schmuck aus." },
-                { threshold: 20, icon: "🍿", title: "Level 1: Filmtag", desc: "Popcorn inklusive!" },
-                { threshold: 40, icon: "🎮", title: "Level 2: Extra-Spielzeit", desc: "15 Min an der Konsole/Spiel." },
-                { threshold: 60, icon: "👑", title: "Level 3: VIP Woche", desc: "Entscheide über die Spiele!" }
-            ];
+                    { threshold: 8, title: "Eis essen", icon: "🍦", desc: "Ein Eis deiner Wahl", active: true },
+                    { threshold: 24, title: "Kino Nachmittag", icon: "🎬", desc: "Film schauen mit Popcorn", active: true },
+                    { threshold: 40, title: "Große Überraschung", icon: "🎁", desc: "Etwas ganz Besonderes", active: true },
+                    { threshold: 60, title: "3 Volle Karten Bonus", icon: "🏆", desc: "Spezial-Belohnung für 3 volle Karten!", active: true },
+                    { threshold: 40, icon: "🎮", title: "Level 2: Extra-Spielzeit", desc: "15 Min an der Konsole/Spiel." },
+                    { threshold: 60, icon: "👑", title: "Level 3: VIP Woche", desc: "Entscheide über die Spiele!" }
+                ];
 
             // DEBUG: Test Telegram
             if (path === "/api/debug/test-telegram") {
