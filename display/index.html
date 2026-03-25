@@ -454,7 +454,7 @@
         }
 
         .energy-number {
-            font-size: 4.5rem;
+            font-size: 2.2rem;
             font-weight: 900;
             background: linear-gradient(135deg, #6ee7b7, var(--success));
             -webkit-background-clip: text;
@@ -476,7 +476,7 @@
             display: flex;
             gap: 8px;
             align-items: flex-end;
-            height: 64px;
+            height: 48px;
             width: 100%;
             padding: 0 8px;
         }
@@ -787,23 +787,23 @@
 
             <!-- Klassen-Energie -->
             <div class="card energy-card">
-                <div class="card-header">
-                    <div class="card-icon">🌡️</div>
-                    <div class="card-title">Klassen-Energie</div>
+                <div class="card-header" style="justify-content: space-between;">
+                    <div style="display:flex; align-items:center; gap:12px;">
+                        <div class="card-icon">🌡️</div>
+                        <div class="card-title">Klassen-Energie</div>
+                    </div>
+                    <div style="display:flex; align-items:baseline; gap:8px;">
+                        <div class="energy-number" id="energy-number">0</div>
+                        <div class="energy-label" style="font-size:0.65rem;">Stempel<br>diese Woche</div>
+                    </div>
                 </div>
-                <div class="card-content">
-                    <div class="energy-row">
-                        <div class="energy-top">
-                            <div class="energy-number" id="energy-number">0</div>
-                            <div class="energy-label">Stempel<br>diese Woche</div>
-                        </div>
-                        <div class="energy-bar-row" id="energy-bars">
-                            <!-- 7 day bars filled by JS -->
-                        </div>
-                        <div class="energy-day-label" id="energy-day-labels">
-                            <span>Mo</span><span>Di</span><span>Mi</span>
-                            <span>Do</span><span>Fr</span><span>Sa</span><span>So</span>
-                        </div>
+                <div class="card-content" style="gap:6px;">
+                    <div class="energy-bar-row" id="energy-bars">
+                        <!-- 7 day bars filled by JS -->
+                    </div>
+                    <div class="energy-day-label" id="energy-day-labels">
+                        <span>Mo</span><span>Di</span><span>Mi</span>
+                        <span>Do</span><span>Fr</span><span>Sa</span><span>So</span>
                     </div>
                 </div>
             </div>
