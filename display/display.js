@@ -204,7 +204,7 @@ function renderEnergy() {
     const max = Math.max(...buckets, 1);
     const barsEl = document.getElementById('energy-bars');
     barsEl.innerHTML = buckets.map((v, i) => {
-        const heightPct = Math.max(6, Math.round((v / max) * 90));
+        const heightPct = Math.max(6, Math.round((v / max) * 64));
         const lit = v > 0 ? 'lit' : '';
         return `<div class="energy-bar-seg ${lit}" style="height:${heightPct}px;"></div>`;
     }).join('');
