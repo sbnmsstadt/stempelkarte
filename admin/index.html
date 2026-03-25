@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - Nachmittagsbetreuung</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="admin.css?v=2">
+</head>
+<body>
+    <div id="admin-app">
+        <header>
+            <div class="admin-title-area">
+                <h1>Admin Dashboard</h1>
+                <p class="subtitle">Effiziente Verwaltung der Stempelkarten</p>
+            </div>
+            <button class="back-btn" onclick="window.location.href='../index.html'">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+                Zur Schüler-App
+            </button>
+        </header>
+
+        <!-- Stats Overview -->
+        <div class="stats-row">
+            <div class="stat-card">
+                <span class="stat-label">Schüler Gesamt</span>
+                <span id="stat-total-students" class="stat-value">--</span>
+            </div>
+            <div class="stat-card" style="border-color: var(--accent);">
+                <span class="stat-label">Offene Anfragen</span>
+                <span id="stat-pending-redemptions" class="stat-value">--</span>
+            </div>
+            <div class="stat-card" style="border-color: var(--success);">
+                <span class="stat-label">Stempel vergeben</span>
+                <span id="stat-total-stamps" class="stat-value">--</span>
+            </div>
+            <div class="stat-card">
+                <span class="stat-label">Belohnungen</span>
+                <span id="stat-total-rewards" class="stat-value">--</span>
+            </div>
+        </div>
+
+        <div class="dashboard-grid">
+            <!-- Sidebar: Management Actions -->
+            <aside class="management-sidebar">
+                
+                <!-- Quick Add -->
+                <div class="glass-card">
+                    <h3>➕ Neuer Schüler</h3>
+                    <div style="display:flex; flex-direction:column; gap:12px;">
+                        <input type="text" id="new-student-name" placeholder="Vollständiger Name">
+                        <input type="date" id="new-student-birthday" title="Geburtstag">
+                        <button id="add-btn" class="add-stamp-btn">Hinzufügen</button>
+                    </div>
+                    <p id="status-msg" style="font-size: 0.8rem; margin-top: 10px; display:none;"></p>
+                </div>
+
+                <!-- Redemption Requests -->
+                <div class="glass-card" style="border-color: var(--accent);">
+                    <h3>🎁 Einlösungs-Anfragen</h3>
+                    <div id="redemption-dashboard" class="subtitle">
+                        Lade Anfragen...
+                    </div>
+                </div>
+
+                <!-- Birthdays -->
+                <div class="glass-card" style="border-color: var(--primary-light);">
+                    <h3>🎂 Baldige Geburtstage</h3>
+                    <div id="birthday-dashboard" class="subtitle">
+                        Lade Geburtstage...
+                    </div>
+                </div>
+
+                <!-- Reward Management -->
+                <div class="glass-card" style="border-color: var(--accent);">
+                    <h3>⚙️ Belohnungen</h3>
+                    <div id="admin-reward-list" style="display: flex; flex-direction: column; gap: 8px; margin-bottom: 1.5rem;">
+                        Lade...
+                    </div>
+                    <h4 class="subtitle" style="margin-bottom: 8px;">Neu hinzufügen:</h4>
+                    <div style="display:flex; flex-direction:column; gap:8px;">
+                        <div style="display:flex; gap:8px;">
+                            <input type="number" id="new-reward-threshold" placeholder="Punkte" style="width: 80px;">
+                            <input type="text" id="new-reward-icon" placeholder="Icon" style="width: 60px;">
+                        </div>
+                        <input type="text" id="new-reward-title" placeholder="Titel">
+                        <input type="text" id="new-reward-desc" placeholder="Beschreibung">
+                        <button id="add-reward-btn" class="add-stamp-btn" style="background: var(--accent);">Hinzufügen</button>
+                    </div>
+                    <p id="reward-status-msg" style="font-size: 0.8rem; margin-top: 10px; display:none;"></p>
+                </div>
+
+            </aside>
+
+            <!-- Main Content: Student Grid -->
+            <section class="main-content">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                    <h2 style="font-size: 1.5rem;">Schüler-Übersicht</h2>
+                    <input type="text" id="search-students" placeholder="🔍 Namen suchen..." style="width: 250px; background: rgba(0,0,0,0.2);">
+                </div>
+                <div id="admin-student-list" class="student-grid">
+                    <div class="glass-card" style="text-align:center">Lade Schüler-Daten...</div>
+                </div>
+            </section>
+        </div>
+    </div>
+
+    <script src="admin.js?v=2"></script>
+</body>
+</html>
