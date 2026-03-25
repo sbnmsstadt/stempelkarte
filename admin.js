@@ -429,8 +429,8 @@ function renderAdminList() {
 }
 
 function copyShareLink(id) {
-    const baseUrl = window.location.href.replace('admin.html', 'index.html');
-    const shareLink = `${baseUrl}?id=${id}`;
+    const baseUrl = window.location.href.split('/admin/')[0];
+    const shareLink = `${baseUrl}/?id=${id}`;
     
     navigator.clipboard.writeText(shareLink).then(() => {
         alert("Persönlicher Link für Schüler kopiert:\n" + shareLink);
