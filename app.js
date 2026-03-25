@@ -256,12 +256,23 @@ function renderRewards(student) {
 
     // --- NEW: Group Reward Donation Button (Conditional) ---
     const donateBtn = document.getElementById('group-contribute-btn');
+    const donateStatus = document.getElementById('group-reward-detail-status');
     if (donateBtn) {
         const isGroupActive = SETTINGS.groupReward && SETTINGS.groupReward.active;
         if (!isSupervisor && isGroupActive && freeStamps >= 1) {
             donateBtn.classList.remove('hidden');
         } else {
             donateBtn.classList.add('hidden');
+        }
+        
+        // NEW: Live Status Text
+        if (donateStatus) {
+            if (isGroupActive) {
+                donateStatus.classList.remove('hidden');
+                donateStatus.innerText = `${SETTINGS.groupReward.title || 'Filmtag'} Stand: ${SETTINGS.groupReward.current} / ${SETTINGS.groupReward.target} Stempel`;
+            } else {
+                donateStatus.classList.add('hidden');
+            }
         }
     }
     // ------------------------------------------
