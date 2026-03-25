@@ -25,6 +25,16 @@
                     style="width:100%; font-size:1.5rem; padding:1rem; border-radius:16px; border:1px solid var(--glass-border); background:rgba(255,255,255,0.05); color:white; text-align:center; margin-bottom:1.5rem; text-transform: lowercase;">
                 <button class="add-stamp-btn" onclick="loginWithId()">Challenge starten!</button>
                 
+                <div id="community-goal-container" style="margin-top:2rem; text-align:left;">
+                    <div style="display:flex; justify-content:space-between; font-size:0.8rem; font-weight:700; margin-bottom:8px;">
+                        <span>🍕 Gruppen-Ziel: Pizza-Party!</span>
+                        <span id="community-total-text">0 / 500</span>
+                    </div>
+                    <div class="reward-progress-bg" style="height:12px; border-radius:6px;">
+                        <div id="community-progress-bar" class="reward-progress-bar" style="width: 0%; border-radius:6px; background:linear-gradient(90deg, var(--primary), var(--accent));"></div>
+                    </div>
+                </div>
+                
                 <div style="margin-top:2.5rem; border-top:1px solid var(--glass-border); padding-top:1.5rem;">
                     <button class="icon-btn" onclick="openSupervisorPin()" style="width:100%; display:flex; align-items:center; justify-content:center; gap:10px;">
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
@@ -87,7 +97,7 @@
 
             <div class="glass-card">
                 <div class="student-info">
-                    <div id="detail-avatar" class="avatar">?</div>
+                    <div id="detail-avatar" class="avatar clickable" onclick="openAvatarPicker()">?</div>
                     <div>
                         <h2 id="detail-name" class="student-name">Schüler Name</h2>
                         <p id="detail-stamps-text" class="subtitle">0 von 60 Stempel</p>
@@ -103,6 +113,8 @@
                 <button id="add-stamp-button" class="add-stamp-btn hidden" onclick="openStampPin()">
                     Neuer Stempel
                 </button>
+
+                <div id="badge-container" class="badge-list"></div>
             </div>
 
             <div class="reward-section">
@@ -135,6 +147,17 @@
                     <button class="num-btn" onclick="clearPin()">C</button>
                 </div>
                 <button class="icon-btn" onclick="closePinOverlay()" style="margin-top:20px; width:100%;">Abbrechen</button>
+            </div>
+        </div>
+
+        <!-- Avatar Overlay -->
+        <div id="avatar-overlay" class="overlay">
+            <div class="pin-container">
+                <h3>Wähle deinen Avatar</h3>
+                <div class="avatar-grid" id="avatar-list">
+                    <!-- Emojis will be injected here -->
+                </div>
+                <button class="icon-btn" onclick="closeAvatarOverlay()" style="margin-top:20px; width:100%;">Abbrechen</button>
             </div>
         </div>
     </div>

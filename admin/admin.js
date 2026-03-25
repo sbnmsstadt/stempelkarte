@@ -5,13 +5,14 @@ let lastStudentsSnapshot = "";
 
 document.addEventListener('DOMContentLoaded', async () => {
     await fetchRewards();
+    loadSettings();
     fetchStudents();
     
     // Poll every 5 seconds for new data
     setInterval(fetchStudentsSilent, 5000);
     
-    document.getElementById('add-btn').addEventListener('click', createNewStudent);
-    document.getElementById('add-reward-btn').addEventListener('click', createNewReward);
+    document.getElementById('add-btn')?.addEventListener('click', createNewStudent);
+    document.getElementById('add-reward-btn')?.addEventListener('click', createNewReward);
     
     // Search functionality
     document.getElementById('search-students')?.addEventListener('input', (e) => {
@@ -388,7 +389,7 @@ function renderAdminList(filter = "") {
         item.className = 'glass-card admin-student-item';
         item.innerHTML = `
             <div class="student-info">
-                <div class="avatar">${student.name.charAt(0)}</div>
+                <div class="avatar">${student.avatar || student.name.charAt(0)}</div>
                 <div>
                     <div style="font-weight:700; font-size:1.1rem">${student.name}</div>
                     <div class="subtitle" style="font-size:0.75rem">ID: ${student.id}</div>
@@ -448,3 +449,33 @@ async function updateStamps(id, c) {
 }
 
 function showStatus(m, t) { console.log(m); }
+// System Settings
+async function loadSettings() {
+    try {
+        const response = await fetch(`${API_URL}/settings`);
+        if (response.ok) {
+            const settings = await response.json();
+            document.getElementById('setting-community-target').value = settings.communityTarget || 500;
+        }
+    } catch (err) {}
+}
+
+async function saveSettings() {
+    const target = parseInt(document.getElementById('setting-community-target').value);
+    if (isNaN(target) || target <= 0) {
+        alert("Bitte ein gültiges Ziel eingeben.");
+        return;
+    }
+    try {
+        const response = await fetch(`${API_URL}/settings`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ communityTarget: target })
+        });
+        if (response.ok) {
+            alert("Einstellungen gespeichert!");
+        }
+    } catch (err) {
+        alert("Fehler beim Speichern.");
+    }
+}

@@ -6,6 +6,8 @@ const PIN_SUPERVISOR = "1234";
 const MAX_STAMPS = 60;
 const STAMPS_PER_LEVEL = 20;
 
+const AVATARS = ["🦁", "🐯", "🦊", "🐭", "🐹", "🐰", "🐻", "🐼", "🐨", "🐸", "🐵", "🦄", "🐙", "🦋", "🦖"];
+
 let REWARDS = [];
 
 async function fetchRewards() {
@@ -33,6 +35,7 @@ let syncInterval = null;
 
 document.addEventListener('DOMContentLoaded', async () => {
     await fetchRewards();
+    updateCommunityGoal();
 
     const urlParams = new URLSearchParams(window.location.search);
     const idParam = urlParams.get('id');
@@ -121,6 +124,7 @@ function showHome() {
     stopSync();
     document.querySelectorAll('.view').forEach(v => v.classList.add('hidden'));
     document.getElementById('view-home').classList.remove('hidden');
+    updateCommunityGoal();
 }
 
 function showList() {
@@ -153,7 +157,7 @@ function renderStudentList() {
         card.onclick = () => showDetail(s);
         card.innerHTML = `
             <div class="student-info">
-                <div class="avatar">${s.name.charAt(0)}</div>
+                <div class="avatar">${s.avatar || s.name.charAt(0)}</div>
                 <div class="student-name">${s.name}</div>
             </div>
             <div class="stamp-count">${s.stamps} / ${MAX_STAMPS}</div>
@@ -168,7 +172,12 @@ function showDetail(student) {
     document.getElementById('view-detail').classList.remove('hidden');
     
     document.getElementById('detail-name').innerText = student.name;
-    document.getElementById('detail-avatar').innerText = student.name.charAt(0);
+    const avatar = student.avatar || student.name.charAt(0);
+    const streak = calculateStreak(student.history || []);
+    const streakHTML = streak > 1 ? `<span class="fire-icon">🔥 ${streak} Tage</span>` : '';
+    
+    document.getElementById('detail-name').innerHTML = `${student.name} ${streakHTML}`;
+    document.getElementById('detail-avatar').innerText = avatar;
     
     const addBtn = document.getElementById('add-stamp-button');
     const logoutBtn = document.getElementById('logout-btn');
@@ -188,6 +197,22 @@ function showDetail(student) {
 
     updateStampDisplay(student);
     renderRewards(student);
+    renderBadges(student);
+
+    // Birthday Surprise
+    if (student.birthday) {
+        const today = new Date();
+        const bday = new Date(student.birthday);
+        if (today.getDate() === bday.getDate() && today.getMonth() === bday.getMonth()) {
+            const key = `birthday_confetti_${student.id}_${today.getFullYear()}`;
+            if (!localStorage.getItem(key)) {
+                fireConfetti();
+                localStorage.setItem(key, 'true');
+                // Optional: show a small message
+                setTimeout(() => alert(`🎉 Alles Gute zum Geburtstag, ${student.name}! 🎂`), 500);
+            }
+        }
+    }
 }
 
 function renderRewards(student) {
@@ -314,9 +339,12 @@ function updateStampDisplay(student) {
         const end = l * STAMPS_PER_LEVEL;
         const isUnlocked = student.stamps >= (l - 1) * STAMPS_PER_LEVEL;
 
+        const levelNames = ["Stempel-Lehrling 🌱", "Stempel-Profi ⭐", "Stempel-Legende 👑"];
+        const levelName = levelNames[l - 1] || `Karte ${l}`;
+
         levelContainer.innerHTML = `
             <div class="level-header ${isUnlocked ? 'active' : ''}">
-                <span>Karte ${l}</span>
+                <span>${levelName}</span>
                 <span class="level-range">${start}-${end}</span>
             </div>
             <div class="stamp-grid-20"></div>
@@ -501,4 +529,146 @@ async function addStamp() {
             alert("Fehler beim Speichern.");
         }
     }
+}
+// Community Goal
+async function updateCommunityGoal() {
+    try {
+        // First load settings to get current target
+        let target = 500;
+        const setRes = await fetch(`${API_URL}/settings`);
+        if (setRes.ok) {
+            const settings = await setRes.json();
+            target = settings.communityTarget || 500;
+        }
+
+        const response = await fetch(`${API_URL}/students`);
+        if (response.ok) {
+            const allStudents = await response.json();
+            const total = allStudents.reduce((sum, s) => sum + (s.stamps || 0), 0);
+            const progress = Math.min(100, (total / target) * 100);
+            
+            const bar = document.getElementById('community-progress-bar');
+            const text = document.getElementById('community-total-text');
+            if (bar && text) {
+                bar.style.width = `${progress}%`;
+                text.innerText = `${total} / ${target}`;
+            }
+        }
+    } catch (err) {
+        console.error("Fehler beim Community-Goal Update", err);
+    }
+}
+
+// Streak Calculation
+function calculateStreak(history) {
+    if (!history || history.length === 0) return 0;
+    
+    // Sort and unique dates
+    const dates = [...new Set(history)].sort();
+    const todayStr = new Date().toISOString().split('T')[0];
+    
+    // Helper to get date object from string (local time)
+    const parse = (s) => new Date(s);
+    
+    let current = todayStr;
+    let streak = 0;
+    
+    // Check if last stamp was today or yesterday
+    const lastDate = dates[dates.length - 1];
+    const diffToToday = (parse(todayStr) - parse(lastDate)) / (1000 * 60 * 60 * 24);
+    
+    if (diffToToday > 1) return 0; // Streak broken
+
+    // Count backwards
+    let checkDate = parse(lastDate);
+    for (let i = dates.length - 1; i >= 0; i--) {
+        const d = parse(dates[i]);
+        const diff = (checkDate - d) / (1000 * 60 * 60 * 24);
+        
+        if (diff === 0) {
+            streak++;
+        } else if (diff === 1) {
+            streak++;
+            checkDate = d;
+        } else {
+            break;
+        }
+    }
+    return streak;
+}
+
+// Avatar Picker
+function openAvatarPicker() {
+    if (isSupervisor) return; // Normally students pick their own
+    const overlay = document.getElementById('avatar-overlay');
+    const list = document.getElementById('avatar-list');
+    list.innerHTML = '';
+    
+    AVATARS.forEach(emoji => {
+        const btn = document.createElement('div');
+        btn.className = 'avatar-item';
+        btn.innerText = emoji;
+        btn.onclick = () => selectAvatar(emoji);
+        list.appendChild(btn);
+    });
+    
+    overlay.classList.add('active');
+}
+
+function closeAvatarOverlay() {
+    document.getElementById('avatar-overlay').classList.remove('active');
+}
+
+async function selectAvatar(emoji) {
+    if (!currentStudent) return;
+    
+    // Optimistic UI update
+    currentStudent.avatar = emoji;
+    document.getElementById('detail-avatar').innerText = emoji;
+    closeAvatarOverlay();
+
+    // Persist to server (Will work fully after Phase 2, but PATCH now for stamps)
+    try {
+        const response = await fetch(`${API_URL}/students/${currentStudent.id}`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ avatar: emoji })
+        });
+        if (response.ok) {
+            console.log("Avatar saved.");
+        }
+    } catch (err) {
+        console.error("Fehler beim Speichern des Avatars.");
+    }
+}
+
+function renderBadges(student) {
+    const container = document.getElementById('badge-container');
+    if (!container) return;
+    container.innerHTML = '';
+    
+    // Auto-calculate badges based on current state
+    const badges = [];
+    if (student.stamps > 0) badges.push("Erster Stempel! ✨");
+    if (student.stamps >= 10) badges.push("Stempel-Held ⭐");
+    if (student.stamps >= 20) badges.push("Profi-Karte 🔓");
+    if (student.stamps >= 40) badges.push("Legenden-Status 👑");
+    
+    const streak = calculateStreak(student.history || []);
+    if (streak >= 3) badges.push("Streak-Meister 🔥");
+    if (streak >= 5) badges.push("Nicht zu stoppen! ⚡");
+
+    // Add manual badges from student data if any
+    if (student.badges && Array.isArray(student.badges)) {
+        student.badges.forEach(b => {
+            if (!badges.includes(b)) badges.push(b);
+        });
+    }
+
+    badges.forEach(b => {
+        const span = document.createElement('span');
+        span.className = 'badge-tag';
+        span.innerText = b;
+        container.appendChild(span);
+    });
 }
