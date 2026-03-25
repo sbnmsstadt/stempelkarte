@@ -338,7 +338,7 @@ function openSupervisorPin() {
 function openAdminPin() {
     openPinOverlay((pin) => {
         if (pin === PIN_ADMIN) {
-            window.location.href = 'admin.html';
+            window.location.href = 'admin/index.html';
             return true;
         }
         return false;
