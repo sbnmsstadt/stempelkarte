@@ -61,10 +61,21 @@ function renderAll() {
     renderTicker();
 }
 
-// ── KIDS: RANDOM FLOAT ─────────────────────────
-function renderKids() {
+// ── KIDS: BOUNCING PHYSICS ─────────────────────
+let kidPhysics = [];
+let physicsRunning = false;
+let physicsRAF = null;
+
+function initKidPhysics() {
     const zone = document.getElementById('bubble-zone');
     if (!zone || students.length === 0) return;
+
+    zone.innerHTML = '';
+    // Measure zone
+    const W = zone.clientWidth;
+    const H = zone.clientHeight;
+    const ITEM_W = 76; // approximate rendered width of each kid widget
+    const ITEM_H = 96;
 
     const today = new Date();
     today.setHours(0,0,0,0);
@@ -75,78 +86,87 @@ function renderKids() {
     sunday.setDate(monday.getDate() + 6);
     sunday.setHours(23,59,59,999);
 
-    // Layout params
-    const W = zone.clientWidth  || 360;
-    const H = zone.clientHeight || 420;
-    const ITEM_W = 62;
-    const ITEM_H = 86;
-
-    // Sort: today first, then this-week, then by upcoming birthday
-    const sorted = [...students].sort((a, b) => {
-        const score = (s) => {
-            if (!s.birthday) return 3;
-            const [,m,d] = s.birthday.split('-').map(Number);
-            const bday = new Date(today.getFullYear(), m-1, d);
-            if (bday.toDateString() === today.toDateString()) return 0;
-            if (bday >= monday && bday <= sunday) return 1;
-            if (bday < today) return 2.5;
-            return 2;
-        };
-        const sa = score(a), sb = score(b);
-        if (sa !== sb) return sa - sb;
-        // Secondary: next birthday date
-        const nextBday = (s) => {
-            if (!s.birthday) return Infinity;
-            const [,m,d] = s.birthday.split('-').map(Number);
-            let bday = new Date(today.getFullYear(), m-1, d);
-            if (bday < today) bday = new Date(today.getFullYear()+1, m-1, d);
-            return bday.getTime();
-        };
-        return nextBday(a) - nextBday(b);
-    });
-
-    // Place them randomly, no overlaps (simple grid with jitter)
-    const cols = Math.max(3, Math.floor(W / (ITEM_W + 8)));
-    const rows = Math.ceil(sorted.length / cols);
-    const cellW = W / cols;
-    const cellH = Math.min(H / Math.max(rows, 1), ITEM_H + 12);
-
-    const html = sorted.map((s, idx) => {
+    kidPhysics = students.map((s, idx) => {
         let isToday = false, isThisWeek = false, dateStr = '';
         if (s.birthday) {
             const [,m,d] = s.birthday.split('-').map(Number);
             const bday = new Date(today.getFullYear(), m-1, d);
-            isToday   = bday.toDateString() === today.toDateString();
+            isToday    = bday.toDateString() === today.toDateString();
             isThisWeek = bday >= monday && bday <= sunday;
-            dateStr   = `${String(d).padStart(2,'0')}.${String(m).padStart(2,'0')}.`;
+            dateStr    = `${String(d).padStart(2,'0')}.${String(m).padStart(2,'0')}.`;
         }
 
-        // Semi-random position within cell
-        const col = idx % cols;
-        const row = Math.floor(idx / cols);
-        const jitterX = (Math.sin(idx * 2.4) * 0.4 + 0.5) * (cellW - ITEM_W);
-        const jitterY = (Math.cos(idx * 1.7) * 0.4 + 0.5) * (cellH - ITEM_H);
-        const x = Math.round(col * cellW + jitterX);
-        const y = Math.round(row * cellH + jitterY);
-
-        const speed  = (3.2 + (idx % 7) * 0.55).toFixed(1);
-        const delay  = ((idx * 0.37) % 5).toFixed(2);
+        // Create DOM element
+        const el = document.createElement('div');
+        el.className = 'float-kid';
+        el.style.position = 'absolute';
+        el.style.animation = 'none'; // disable CSS drift; we control position
 
         const avatarClass = isToday ? 'today' : isThisWeek ? 'upcoming' : '';
         const nameClass   = isToday ? 'today' : '';
         const bdayClass   = isToday ? 'today' : isThisWeek ? 'upcoming' : '';
         const todayTag    = isToday ? `<div class="today-tag">🎂 HEUTE!</div>` : '';
 
-        return `
-            <div class="float-kid" style="left:${x}px; top:${y}px; animation-duration:${speed}s; animation-delay:-${delay}s;">
-                <div class="float-avatar ${avatarClass}">${s.avatar || s.name.charAt(0)}</div>
-                ${todayTag}
-                <div class="float-name ${nameClass}">${s.name.split(' ')[0]}</div>
-                ${dateStr ? `<div class="float-bday ${bdayClass}">${dateStr}</div>` : ''}
-            </div>`;
-    }).join('');
+        el.innerHTML = `
+            <div class="float-avatar ${avatarClass}">${s.avatar || s.name.charAt(0)}</div>
+            ${todayTag}
+            <div class="float-name ${nameClass}">${s.name.split(' ')[0]}</div>
+            ${dateStr ? `<div class="float-bday ${bdayClass}">${dateStr}</div>` : ''}`;
 
-    zone.innerHTML = html;
+        zone.appendChild(el);
+
+        // Random start position spread across screen
+        const x = Math.random() * Math.max(1, W - ITEM_W);
+        const y = Math.random() * Math.max(1, H - ITEM_H);
+
+        // Speed — slight variation per kid, slow & gentle
+        const baseSpeed = 0.4 + Math.random() * 0.5;
+        const angle = Math.random() * Math.PI * 2;
+        const vx = Math.cos(angle) * baseSpeed;
+        const vy = Math.sin(angle) * baseSpeed;
+
+        return { el, x, y, vx, vy, w: ITEM_W, h: ITEM_H };
+    });
+
+    // Start physics loop if not already running
+    if (!physicsRunning) {
+        physicsRunning = true;
+        physicsLoop();
+    }
+}
+
+function physicsLoop() {
+    const zone = document.getElementById('bubble-zone');
+    if (!zone) { physicsRunning = false; return; }
+
+    const W = zone.clientWidth;
+    const H = zone.clientHeight;
+
+    for (const k of kidPhysics) {
+        k.x += k.vx;
+        k.y += k.vy;
+
+        // Bounce X
+        if (k.x <= 0) { k.x = 0; k.vx = Math.abs(k.vx); }
+        if (k.x + k.w >= W) { k.x = W - k.w; k.vx = -Math.abs(k.vx); }
+
+        // Bounce Y
+        if (k.y <= 0) { k.y = 0; k.vy = Math.abs(k.vy); }
+        if (k.y + k.h >= H) { k.y = H - k.h; k.vy = -Math.abs(k.vy); }
+
+        k.el.style.left = `${k.x}px`;
+        k.el.style.top  = `${k.y}px`;
+    }
+
+    physicsRAF = requestAnimationFrame(physicsLoop);
+}
+
+function renderKids() {
+    // Cancel old loop and rebuild
+    if (physicsRAF) cancelAnimationFrame(physicsRAF);
+    physicsRunning = false;
+    kidPhysics = [];
+    initKidPhysics();
 }
 
 // ── COUNTDOWN ──────────────────────────────────
