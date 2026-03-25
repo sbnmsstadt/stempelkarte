@@ -279,9 +279,13 @@ function updateStampDisplay(student) {
     }
 
     // Create 3 levels
+    const dotsContainer = document.getElementById('carousel-dots');
+    dotsContainer.innerHTML = '';
+
     for (let l = 1; l <= 3; l++) {
         const levelContainer = document.createElement('div');
         levelContainer.className = 'level-group';
+        levelContainer.dataset.level = l;
         
         const start = (l - 1) * STAMPS_PER_LEVEL + 1;
         const end = l * STAMPS_PER_LEVEL;
@@ -289,7 +293,7 @@ function updateStampDisplay(student) {
 
         levelContainer.innerHTML = `
             <div class="level-header ${isUnlocked ? 'active' : ''}">
-                <span>Level ${l}</span>
+                <span>Karte ${l}</span>
                 <span class="level-range">${start}-${end}</span>
             </div>
             <div class="stamp-grid-20"></div>
@@ -312,7 +316,36 @@ function updateStampDisplay(student) {
             grid.appendChild(slot);
         }
         mainGrid.appendChild(levelContainer);
+
+        // Add Dot
+        const dot = document.createElement('div');
+        dot.className = 'dot';
+        dot.dataset.target = l;
+        dotsContainer.appendChild(dot);
     }
+
+    // Scroll listener for dots
+    mainGrid.onscroll = () => {
+        const scrollPos = mainGrid.scrollLeft;
+        const width = mainGrid.offsetWidth;
+        const activeIdx = Math.round(scrollPos / width);
+        document.querySelectorAll('.dot').forEach((d, i) => {
+            d.classList.toggle('active', i === activeIdx);
+        });
+    };
+
+    // Auto-scroll to current level
+    const currentLevel = Math.min(3, Math.floor(student.stamps / STAMPS_PER_LEVEL) + 1);
+    setTimeout(() => {
+        const target = mainGrid.querySelector(`.level-group[data-level="${currentLevel}"]`);
+        if (target) {
+            target.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+            // Initial dot update
+            document.querySelectorAll('.dot').forEach((d, i) => {
+                d.classList.toggle('active', i === (currentLevel - 1));
+            });
+        }
+    }, 100);
 }
 
 // PIN Overlay

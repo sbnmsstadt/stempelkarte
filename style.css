@@ -62,11 +62,26 @@ h1 {
 
 /* Level Structure */
 .level-group {
-    margin-bottom: 2rem;
-    border-radius: 16px;
-    padding: 1rem;
-    background: rgba(255,255,255,0.02);
+    flex: 0 0 100%;
+    scroll-snap-align: center;
+    border-radius: 20px;
+    padding: 1.25rem;
+    background: rgba(255,255,255,0.03);
     border: 1px solid var(--glass-border);
+    transition: transform 0.3s;
+}
+
+#stamp-grid {
+    display: flex;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    gap: 1rem;
+    padding-bottom: 1rem;
+    scrollbar-width: none; /* Hide scrollbar Firefox */
+}
+
+#stamp-grid::-webkit-scrollbar {
+    display: none; /* Hide scrollbar Chrome/Safari */
 }
 
 .level-header {
@@ -339,6 +354,28 @@ input[type="number"] {
 }
 
 .hidden { display: none !important; }
+
+.carousel-dots {
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+    margin-bottom: 1.5rem;
+}
+
+.dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.2);
+    transition: all 0.3s;
+}
+
+.dot.active {
+    background: var(--primary-light);
+    transform: scale(1.3);
+    box-shadow: 0 0 10px var(--primary-light);
+}
+
 
 @keyframes popIn {
     0% { transform: scale(0); }
