@@ -1,18 +1,40 @@
 const API_URL = "https://stempelkarte.sb-nmsstadt.workers.dev/api";
 let students = [];
+let REWARDS = [];
+let lastStudentsSnapshot = "";
 
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
+    await fetchRewards();
     fetchStudents();
     
+    // Poll every 5 seconds for new redemptions/stamps
+    setInterval(fetchStudentsSilent, 5000);
+    
     document.getElementById('add-btn').addEventListener('click', createNewStudent);
+    document.getElementById('add-reward-btn').addEventListener('click', createNewReward);
 });
+
+async function fetchRewards() {
+    try {
+        const response = await fetch(`${API_URL}/rewards`);
+        if (response.ok) {
+            REWARDS = await response.json();
+            REWARDS.sort((a,b) => a.threshold - b.threshold);
+            renderRewardDashboard();
+        }
+    } catch (err) {
+        console.error("Fehler beim Laden der Belohnungen", err);
+    }
+}
 
 async function fetchStudents() {
     const container = document.getElementById('admin-student-list');
     try {
         const response = await fetch(`${API_URL}/students`);
         if (response.ok) {
-            students = await response.json();
+            const raw = await response.text();
+            lastStudentsSnapshot = raw;
+            students = JSON.parse(raw);
             renderAdminList();
             renderBirthdayDashboard();
             renderRedemptionDashboard();
@@ -21,6 +43,27 @@ async function fetchStudents() {
         }
     } catch (err) {
         showStatus("Verbindung zum Server fehlgeschlagen.", "error");
+    }
+}
+
+async function fetchStudentsSilent() {
+    // Only fetch if tab is visible to save requests
+    if (document.hidden) return;
+    
+    try {
+        const response = await fetch(`${API_URL}/students`);
+        if (response.ok) {
+            const raw = await response.text();
+            if (raw !== lastStudentsSnapshot) {
+                lastStudentsSnapshot = raw;
+                students = JSON.parse(raw);
+                renderAdminList();
+                renderBirthdayDashboard();
+                renderRedemptionDashboard();
+            }
+        }
+    } catch (err) {
+        // silent fail
     }
 }
 
@@ -71,14 +114,8 @@ function renderRedemptionDashboard() {
 }
 
 function getRewardNameByThreshold(threshold) {
-    const map = {
-        4: "Snack-Box",
-        8: "Armband/Anhänger",
-        20: "Level 1: Filmtag",
-        40: "Level 2: Extra-Spielzeit",
-        60: "Level 3: VIP Woche"
-    };
-    return map[threshold] || `Level ${threshold} Belohnung`;
+    const r = REWARDS.find(x => x.threshold === parseInt(threshold));
+    return r ? r.title : `Level ${threshold} Belohnung`;
 }
 
 async function confirmRedemption(studentId, threshold) {
@@ -163,6 +200,107 @@ function renderBirthdayDashboard() {
         el.innerHTML = `<span style="color:white; font-weight:600;">${u.name}</span> wird ${u.age} (${u.originalDateStr}) - <span style="color:var(--primary-light);">${relativeDay}</span>`;
         db.appendChild(el);
     });
+}
+
+function renderRewardDashboard() {
+    const list = document.getElementById('admin-reward-list');
+    if (!list) return;
+    list.innerHTML = '';
+
+    if (REWARDS.length === 0) {
+        list.innerHTML = '<i>Keine Belohnungen vorhanden.</i>';
+        return;
+    }
+
+    REWARDS.forEach(reward => {
+        const item = document.createElement('div');
+        item.style.display = 'flex';
+        item.style.justifyContent = 'space-between';
+        item.style.alignItems = 'center';
+        item.style.background = 'rgba(255,255,255,0.05)';
+        item.style.padding = '10px';
+        item.style.borderRadius = '8px';
+        item.innerHTML = `
+            <div style="flex:1">
+                <strong>${reward.threshold} Stempel:</strong> ${reward.icon} ${reward.title}
+                <div style="font-size:0.8rem; color:var(--text-muted);">${reward.desc}</div>
+            </div>
+            <button class="icon-btn-small" onclick="deleteReward(${reward.threshold})" title="Löschen" style="background: hsla(0, 80%, 60%, 0.2); border: 1px solid hsla(0, 80%, 60%, 0.5); color: #ff6b6b; margin-left:10px;">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+            </button>
+        `;
+        list.appendChild(item);
+    });
+}
+
+async function saveRewardsAPI(newRewardsArray) {
+    try {
+        const response = await fetch(`${API_URL}/rewards`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(newRewardsArray)
+        });
+        if (response.ok) {
+            REWARDS = await response.json();
+            renderRewardDashboard();
+            return true;
+        }
+    } catch (err) {
+        console.error(err);
+    }
+    return false;
+}
+
+async function createNewReward() {
+    const thresholdInput = document.getElementById('new-reward-threshold');
+    const iconInput = document.getElementById('new-reward-icon');
+    const titleInput = document.getElementById('new-reward-title');
+    const descInput = document.getElementById('new-reward-desc');
+    const btn = document.getElementById('add-reward-btn');
+
+    const threshold = parseInt(thresholdInput.value);
+    const icon = iconInput.value.trim() || "🎁";
+    const title = titleInput.value.trim();
+    const desc = descInput.value.trim();
+
+    if (isNaN(threshold) || threshold <= 0 || !title) {
+        alert("Bitte eine gültige Stempelanzahl und einen Titel eingeben.");
+        return;
+    }
+
+    // Check if threshold already exists
+    if (REWARDS.find(r => r.threshold === threshold)) {
+        alert(`Es gibt bereits eine Belohnung für ${threshold} Stempel! Bitte lösche diese zuerst.`);
+        return;
+    }
+
+    btn.disabled = true;
+    
+    const newDoc = { threshold, icon, title, desc };
+    const updatedArray = [...REWARDS, newDoc];
+    
+    const success = await saveRewardsAPI(updatedArray);
+    
+    if (success) {
+        thresholdInput.value = '';
+        iconInput.value = '';
+        titleInput.value = '';
+        descInput.value = '';
+        document.getElementById('reward-status-msg').innerText = "Belohnung gespeichert!";
+        document.getElementById('reward-status-msg').style.display = "block";
+        document.getElementById('reward-status-msg').style.color = "var(--success)";
+        setTimeout(() => document.getElementById('reward-status-msg').style.display = "none", 3000);
+    } else {
+        alert("Fehler beim Speichern der Belohnung.");
+    }
+    btn.disabled = false;
+}
+
+async function deleteReward(threshold) {
+    if (!confirm(`Belohnung für ${threshold} Stempel wirklich löschen?`)) return;
+    const updatedArray = REWARDS.filter(r => r.threshold !== threshold);
+    const success = await saveRewardsAPI(updatedArray);
+    if (!success) alert("Fehler beim Löschen.");
 }
 
 function renderAdminList() {

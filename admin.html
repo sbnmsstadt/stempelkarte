@@ -58,6 +58,27 @@
             <div id="admin-student-list" class="student-list">
                 <div class="glass-card" style="text-align:center">Lade Schüler...</div>
             </div>
+
+            <div class="glass-card" style="margin-top: 1.5rem; border-color: var(--accent);">
+                <h3>🎁 Belohnungen verwalten</h3>
+                <div id="admin-reward-list" style="margin-top: 1rem; display: flex; flex-direction: column; gap: 10px;">
+                    Lade Belohnungen...
+                </div>
+                
+                <h4 style="margin-top: 1.5rem; margin-bottom: 0.5rem; color: var(--text-muted);">Neue Belohnung hinzufügen</h4>
+                <div style="display:flex; gap:10px; flex-wrap: wrap;">
+                    <input type="number" id="new-reward-threshold" placeholder="Stempel (z.B. 20)" style="flex:1; min-width:80px; padding: 10px; border-radius: 8px; border: 1px solid var(--glass-border); background: rgba(255,255,255,0.05); color: white;">
+                    <input type="text" id="new-reward-icon" placeholder="Emoji (z.B. 🍿)" style="flex:1; min-width:80px; padding: 10px; border-radius: 8px; border: 1px solid var(--glass-border); background: rgba(255,255,255,0.05); color: white;">
+                    <input type="text" id="new-reward-title" placeholder="Titel (z.B. Filmtag)" style="flex:2; min-width:120px; padding: 10px; border-radius: 8px; border: 1px solid var(--glass-border); background: rgba(255,255,255,0.05); color: white;">
+                    <input type="text" id="new-reward-desc" placeholder="Beschreibung" style="flex:3; min-width:140px; padding: 10px; border-radius: 8px; border: 1px solid var(--glass-border); background: rgba(255,255,255,0.05); color: white;">
+                    <button id="add-reward-btn" class="add-stamp-btn" style="width:auto; padding: 10px 20px;">Hinzufügen</button>
+                </div>
+                <p id="reward-status-msg" style="font-size: 0.8rem; margin-top: 10px; display:none;"></p>
+            </div>
+
+            <div style="margin-top: 2rem;">
+                <h2 style="font-size: 1.5rem; margin-bottom: 1rem;">Alle Schüler</h2>
+            </div>
         </main>
     </div>
 

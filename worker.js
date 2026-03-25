@@ -22,6 +22,32 @@ export default {
     }
 
     try {
+      const DEFAULT_REWARDS = [
+          { threshold: 4, icon: "🥨", title: "Snack-Box", desc: "Wähle einen Snack aus." },
+          { threshold: 8, icon: "💍", title: "Armband/Anhänger", desc: "Such dir einen Schmuck aus." },
+          { threshold: 20, icon: "🍿", title: "Level 1: Filmtag", desc: "Popcorn inklusive!" },
+          { threshold: 40, icon: "🎮", title: "Level 2: Extra-Spielzeit", desc: "15 Min an der Konsole/Spiel." },
+          { threshold: 60, icon: "👑", title: "Level 3: VIP Woche", desc: "Entscheide über die Spiele!" }
+      ];
+
+      if (path === "/api/rewards" && method === "GET") {
+        const rewardsRaw = await env.DATABASE.get("rewards");
+        const rewards = rewardsRaw ? JSON.parse(rewardsRaw) : DEFAULT_REWARDS;
+        return new Response(JSON.stringify(rewards), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" }
+        });
+      }
+
+      if (path === "/api/rewards" && method === "PUT") {
+        const rewards = await request.json();
+        // Sort by threshold automatically
+        rewards.sort((a,b) => a.threshold - b.threshold);
+        await env.DATABASE.put("rewards", JSON.stringify(rewards));
+        return new Response(JSON.stringify(rewards), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" }
+        });
+      }
+
       if (path === "/api/students" && method === "GET") {
         const studentsRaw = await env.DATABASE.get("students");
         const students = studentsRaw ? JSON.parse(studentsRaw) : [];

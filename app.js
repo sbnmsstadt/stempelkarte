@@ -6,13 +6,20 @@ const PIN_SUPERVISOR = "1234";
 const MAX_STAMPS = 60;
 const STAMPS_PER_LEVEL = 20;
 
-const REWARDS = [
-    { threshold: 4, icon: "🥨", title: "Snack-Box", desc: "Wähle einen Snack aus." },
-    { threshold: 8, icon: "💍", title: "Armband/Anhänger", desc: "Such dir einen Schmuck aus." },
-    { threshold: 20, icon: "🍿", title: "Level 1: Filmtag", desc: "Popcorn inklusive!" },
-    { threshold: 40, icon: "🎮", title: "Level 2: Extra-Spielzeit", desc: "15 Min an der Konsole/Spiel." },
-    { threshold: 60, icon: "👑", title: "Level 3: VIP Woche", desc: "Entscheide über die Spiele!" }
-];
+let REWARDS = [];
+
+async function fetchRewards() {
+    try {
+        const response = await fetch(`${API_URL}/rewards`);
+        if (response.ok) {
+            REWARDS = await response.json();
+            // ensure sorted by threshold
+            REWARDS.sort((a,b) => a.threshold - b.threshold);
+        }
+    } catch (err) {
+        console.error("Fehler beim Laden der Belohnungen", err);
+    }
+}
 
 let students = [];
 let currentStudent = null;
@@ -22,8 +29,9 @@ let isSupervisor = false;
 let isDirectLink = false;
 let syncInterval = null;
 
-// Initialize
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
+    await fetchRewards();
+
     const urlParams = new URLSearchParams(window.location.search);
     const idParam = urlParams.get('id');
     
