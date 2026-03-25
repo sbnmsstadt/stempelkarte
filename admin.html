@@ -23,9 +23,10 @@
             </header>
 
             <!-- Dashboards Area -->
-            <div style="display: grid; grid-template-columns: 1fr; gap: 1rem; margin-bottom: 1.5rem;">
-                <!-- Redemption Requests -->
-                <div class="glass-card" style="margin-bottom: 0; border-color: var(--accent);">
+            <div class="admin-dashboard-grid">
+                
+                <!-- Erste Spalte / Box: Einlösungs-Anfragen -->
+                <div class="glass-card" style="margin-bottom: 0; border-color: var(--accent); height: 100%;">
                     <h3 style="display:flex; align-items:center; gap:8px;">
                         🎁 Einlösungs-Anfragen
                     </h3>
@@ -34,8 +35,8 @@
                     </div>
                 </div>
 
-                <!-- Birthday Dashboard -->
-                <div class="glass-card" style="margin-bottom: 0; border-color: var(--primary-light);">
+                <!-- Zweite Spalte / Box: Baldige Geburtstage -->
+                <div class="glass-card" style="margin-bottom: 0; border-color: var(--primary-light); height: 100%;">
                     <h3 style="display:flex; align-items:center; gap:8px;">
                         🎂 Baldige Geburtstage
                     </h3>
@@ -43,20 +44,25 @@
                         Lade Geburtstage...
                     </div>
                 </div>
-            </div>
 
-            <div class="glass-card">
-                <h3>Neuen Schüler anlegen</h3>
-                <div style="display:flex; gap:10px; margin-top:1rem; flex-wrap: wrap;">
-                    <input type="text" id="new-student-name" placeholder="Name" style="flex:1; min-width:120px; padding: 10px; border-radius: 8px; border: 1px solid var(--glass-border); background: rgba(255,255,255,0.05); color: white;">
-                    <input type="date" id="new-student-birthday" title="Geburtsdatum (optional)" style="flex:1; min-width:140px; padding: 10px; border-radius: 8px; border: 1px solid var(--glass-border); background: rgba(255,255,255,0.05); color: white; color-scheme: dark;">
-                    <button id="add-btn" class="add-stamp-btn" style="width:auto; padding: 10px 20px;">Hinzufügen</button>
+                <!-- Dritte Spalte / Box: Neuen Schüler anlegen -->
+                <div class="glass-card" style="margin-bottom: 0; height: 100%;">
+                    <h3>Neuen Schüler anlegen</h3>
+                    <div style="display:flex; gap:10px; margin-top:1rem; flex-wrap: wrap;">
+                        <input type="text" id="new-student-name" placeholder="Name" style="flex:1; min-width:120px; padding: 10px; border-radius: 8px; border: 1px solid var(--glass-border); background: rgba(255,255,255,0.05); color: white;">
+                        <input type="date" id="new-student-birthday" title="Geburtsdatum (optional)" style="flex:1; min-width:140px; padding: 10px; border-radius: 8px; border: 1px solid var(--glass-border); background: rgba(255,255,255,0.05); color: white; color-scheme: dark;">
+                        <button id="add-btn" class="add-stamp-btn" style="width:auto; padding: 10px 20px;">Hinzufügen</button>
+                    </div>
+                    <p id="status-msg" style="font-size: 0.8rem; margin-top: 10px; display:none;"></p>
                 </div>
-                <p id="status-msg" style="font-size: 0.8rem; margin-top: 10px; display:none;"></p>
+
             </div>
 
-            <div id="admin-student-list" class="student-list">
-                <div class="glass-card" style="text-align:center">Lade Schüler...</div>
+            <div style="margin-bottom: 2rem;">
+                <h2 style="font-size: 1.5rem; margin-bottom: 1rem;">Alle Schüler</h2>
+                <div id="admin-student-list" class="admin-student-grid">
+                    <div class="glass-card" style="text-align:center">Lade Schüler...</div>
+                </div>
             </div>
 
             <div class="glass-card" style="margin-top: 1.5rem; border-color: var(--accent);">

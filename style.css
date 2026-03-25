@@ -135,6 +135,28 @@ h1 {
     margin-bottom: 1rem;
 }
 
+.admin-dashboard-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.admin-student-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+}
+
+@media (min-width: 768px) {
+    .admin-dashboard-grid {
+        grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+    }
+    .admin-student-grid {
+        grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+    }
+}
+
 .home-card {
     padding: 3rem 1.5rem;
     text-align: center;
