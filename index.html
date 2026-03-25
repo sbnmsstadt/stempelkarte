@@ -145,8 +145,14 @@
                     style="margin-top:10px; background:linear-gradient(135deg, var(--accent), #f59e0b); font-size:0.9rem; padding:0.8rem;">
                     🎬 1 Stempel spenden
                 </button>
-                <div id="group-reward-detail-status" class="hidden" style="font-size:0.75rem; color:var(--text-muted); margin-top:8px; font-weight:700;">
-                    Filmtag Stand: 0 / 8 Stempel
+                <div id="group-reward-detail-container" class="hidden" style="margin-top:15px;">
+                    <div style="display:flex; justify-content:space-between; font-size:0.75rem; font-weight:700; margin-bottom:5px;">
+                        <span id="group-reward-detail-label">🎬 Filmtag Stand</span>
+                        <span id="group-reward-detail-numbers">0 / 8</span>
+                    </div>
+                    <div class="reward-progress-bg" style="height:12px; border-radius:6px; background: rgba(255,255,255,0.15); border: 1px solid var(--glass-border);">
+                        <div id="group-reward-detail-bar" class="reward-progress-bar" style="width: 0%; border-radius:6px; background: linear-gradient(90deg, var(--accent), #f59e0b);"></div>
+                    </div>
                 </div>
 
             <div class="reward-section">
@@ -221,7 +227,7 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
-    <script src="app.js?v=2"></script>
+    <script src="app.js?v=3"></script>
 
 </body>
 </html>

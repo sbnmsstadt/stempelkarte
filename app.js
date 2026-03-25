@@ -264,7 +264,6 @@ function renderRewards(student) {
 
     // --- NEW: Group Reward Donation Button (Conditional) ---
     const donateBtn = document.getElementById('group-contribute-btn');
-    const donateStatus = document.getElementById('group-reward-detail-status');
     if (donateBtn) {
         const isGroupActive = SETTINGS.groupReward && SETTINGS.groupReward.active;
         const isFull = isGroupActive && SETTINGS.groupReward.current >= SETTINGS.groupReward.target;
@@ -275,13 +274,22 @@ function renderRewards(student) {
             donateBtn.classList.add('hidden');
         }
         
-        // NEW: Live Status Text
-        if (donateStatus) {
+        // NEW: Live Status Bar in Detail View
+        const donateContainer = document.getElementById('group-reward-detail-container');
+        if (donateContainer) {
             if (isGroupActive) {
-                donateStatus.classList.remove('hidden');
-                donateStatus.innerText = `${SETTINGS.groupReward.title || 'Filmtag'} Stand: ${SETTINGS.groupReward.current} / ${SETTINGS.groupReward.target} Stempel`;
+                donateContainer.classList.remove('hidden');
+                
+                const gTitle = SETTINGS.groupReward.title || 'Filmtag';
+                const gCurrent = SETTINGS.groupReward.current || 0;
+                const gTarget = SETTINGS.groupReward.target || 8;
+                const gPercent = Math.min(100, (gCurrent / gTarget) * 100);
+
+                document.getElementById('group-reward-detail-label').innerText = `🎬 ${gTitle} Stand`;
+                document.getElementById('group-reward-detail-numbers').innerText = `${gCurrent} / ${gTarget}`;
+                document.getElementById('group-reward-detail-bar').style.width = `${gPercent}%`;
             } else {
-                donateStatus.classList.add('hidden');
+                donateContainer.classList.add('hidden');
             }
         }
     }
