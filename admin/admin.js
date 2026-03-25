@@ -228,10 +228,6 @@ function renderRewardDashboard() {
                             ${editingReward.active !== false ? 'AN' : 'AUS'}
                         </button>
                     </div>
-                    <div class="edit-field" style="grid-column: span 2">
-                        <label>Einheit (z.B. volle Karten)</label>
-                        <input type="text" id="edit-reward-unit" value="${editingReward.unit || ''}" placeholder="STEMPEL">
-                    </div>
                     <div class="edit-field" style="grid-column: span 2;">
                         <label>Beschreibung</label>
                         <input type="text" id="edit-reward-desc" value="${editingReward.desc || ''}">
@@ -247,7 +243,7 @@ function renderRewardDashboard() {
             item.classList.toggle('inactive', !isActive);
             item.innerHTML = `
                 <div class="reward-info-admin">
-                    <span class="reward-threshold-badge">${reward.threshold} ${reward.unit || 'STEMPEL'}</span>
+                    <span class="reward-threshold-badge">${reward.threshold}</span>
                     <span class="reward-icon-small" style="${!isActive ? 'opacity:0.3' : ''}">${reward.icon}</span>
                     <div class="reward-text-admin" style="${!isActive ? 'opacity:0.5' : ''}">
                         <div class="reward-title-admin">${reward.title} ${!isActive ? '(Deaktiviert)' : ''}</div>
@@ -327,8 +323,7 @@ async function saveEditReward() {
     const updated = REWARDS.map(r => {
         if (!replaced && r.threshold === editingReward.oldThreshold) {
             replaced = true;
-            const newUnit = document.getElementById('edit-reward-unit').value || "";
-            return { threshold: newT, icon: newIcon, title: newTitle, desc: newDesc, unit: newUnit, active: editingReward.active !== false };
+            return { threshold: newT, icon: newIcon, title: newTitle, desc: newDesc, active: editingReward.active !== false };
         }
         return r;
     });
@@ -358,8 +353,6 @@ async function createNewReward() {
     const title = document.getElementById('new-reward-title').value;
     const desc = document.getElementById('new-reward-desc').value;
     
-    const unit = document.getElementById('new-reward-unit').value || "";
-    
     if (!t || !title) {
         alert("Bitte Stempelanzahl und Titel eingeben.");
         return;
@@ -370,12 +363,11 @@ async function createNewReward() {
         return;
     }
 
-    const updated = [...REWARDS, {threshold:t, icon:i, title, desc, unit, active: true}];
+    const updated = [...REWARDS, {threshold:t, icon:i, title, desc, active: true}];
     await saveRewardsAPI(updated);
     
     // Clear inputs
     document.getElementById('new-reward-threshold').value = '';
-    document.getElementById('new-reward-unit').value = '';
     document.getElementById('new-reward-title').value = '';
     document.getElementById('new-reward-desc').value = '';
 }
