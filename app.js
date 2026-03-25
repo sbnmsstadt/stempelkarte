@@ -272,7 +272,8 @@ function updateStampDisplay(student) {
     mainGrid.innerHTML = '';
     text.innerText = `${student.stamps} von ${MAX_STAMPS} Stempel gesammelt`;
 
-    let maxCompletedRedemption = 0;
+    let maxCompletedRedemption = student.maxConfirmedThreshold || 0;
+    // Also check legacy 'completed' entries in old redemption data
     if (student.redemptions) {
         for (const [threshold, status] of Object.entries(student.redemptions)) {
             if (status === 'completed') {

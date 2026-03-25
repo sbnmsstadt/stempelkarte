@@ -153,6 +153,11 @@ export default {
         } else if (method === "PATCH") {
           // Confirm a redemption (admin) — delete the key so the reward can be redeemed again
           delete students[index].redemptions[threshold];
+          // But keep track of the highest confirmed threshold so the stamp card stays checked
+          students[index].maxConfirmedThreshold = Math.max(
+            students[index].maxConfirmedThreshold || 0,
+            parseInt(threshold)
+          );
         }
         
         await env.DATABASE.put("students", JSON.stringify(students));
