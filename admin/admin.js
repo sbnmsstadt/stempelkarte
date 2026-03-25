@@ -189,6 +189,8 @@ function renderBirthdayDashboard() {
     });
 }
 
+let editingReward = null; 
+
 function renderRewardDashboard() {
     const list = document.getElementById('admin-reward-list');
     if (!list) return;
@@ -196,18 +198,48 @@ function renderRewardDashboard() {
 
     REWARDS.forEach(reward => {
         const item = document.createElement('div');
-        item.style.background = 'rgba(255,255,255,0.05)';
-        item.style.padding = '8px';
-        item.style.borderRadius = '8px';
-        item.style.display = 'flex';
-        item.style.justifyContent = 'space-between';
-        item.style.alignItems = 'center';
+        item.className = 'reward-admin-item';
         
-        if (editingRewardThreshold === reward.threshold) {
-            item.innerHTML = `<input type="text" id="edit-reward-title" value="${reward.title}" style="width:100px; padding:2px"> <button onclick="saveEditReward(${reward.threshold})">V</button>`;
+        if (editingReward && editingReward.oldThreshold === reward.threshold) {
+            item.classList.add('editing');
+            item.innerHTML = `
+                <div class="edit-reward-grid">
+                    <div class="edit-field">
+                        <label>Icon</label>
+                        <input type="text" id="edit-reward-icon" value="${editingReward.icon}" style="width:40px">
+                    </div>
+                    <div class="edit-field">
+                        <label>Stempel</label>
+                        <div class="threshold-adjuster">
+                            <button onclick="adjustEditThreshold(-1)">-</button>
+                            <input type="number" id="edit-reward-threshold" value="${editingReward.threshold}" readonly>
+                            <button onclick="adjustEditThreshold(1)">+</button>
+                        </div>
+                    </div>
+                    <div class="edit-field" style="grid-column: span 2">
+                        <label>Titel</label>
+                        <input type="text" id="edit-reward-title" value="${editingReward.title}">
+                    </div>
+                    <div class="edit-field" style="grid-column: span 2">
+                        <label>Beschreibung</label>
+                        <input type="text" id="edit-reward-desc" value="${editingReward.desc || ''}">
+                    </div>
+                    <div style="grid-column: span 2; display:flex; gap:8px; margin-top:8px;">
+                        <button onclick="saveEditReward()" class="add-stamp-btn" style="flex:1; padding:8px; background:var(--success)">Speichern</button>
+                        <button onclick="cancelEditReward()" class="add-stamp-btn" style="flex:1; padding:8px; background:rgba(255,255,255,0.1)">Abbrechen</button>
+                    </div>
+                </div>
+            `;
         } else {
             item.innerHTML = `
-                <div style="font-size:0.8rem"><strong>${reward.threshold}</strong>: ${reward.icon} ${reward.title}</div>
+                <div class="reward-info-admin">
+                    <span class="reward-threshold-badge">${reward.threshold}</span>
+                    <span class="reward-icon-small">${reward.icon}</span>
+                    <div class="reward-text-admin">
+                        <div class="reward-title-admin">${reward.title}</div>
+                        <div class="subtitle" style="font-size:0.7rem">${reward.desc || ''}</div>
+                    </div>
+                </div>
                 <div style="display:flex; gap:4px;">
                     <button onclick="startEditReward(${reward.threshold})" class="icon-btn-small" style="padding:4px"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg></button>
                     <button onclick="deleteReward(${reward.threshold})" class="icon-btn-small" style="padding:4px; color:#ff6b6b;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg></button>
@@ -218,16 +250,47 @@ function renderRewardDashboard() {
     });
 }
 
-let editingRewardThreshold = null;
-function startEditReward(t) { editingRewardThreshold = t; renderRewardDashboard(); }
-function cancelEditReward() { editingRewardThreshold = null; renderRewardDashboard(); }
+function startEditReward(t) {
+    const r = REWARDS.find(x => x.threshold === t);
+    if (r) {
+        editingReward = { ...r, oldThreshold: t };
+        renderRewardDashboard();
+    }
+}
 
-async function saveEditReward(oldT) {
-    const title = prompt("Neuer Titel:", REWARDS.find(r=>r.threshold===oldT).title);
-    if (!title) return;
-    const updated = REWARDS.map(r => r.threshold === oldT ? {...r, title} : r);
+function cancelEditReward() {
+    editingReward = null;
+    renderRewardDashboard();
+}
+
+function adjustEditThreshold(delta) {
+    if (!editingReward) return;
+    editingReward.threshold = Math.max(1, (editingReward.threshold || 0) + delta);
+    renderRewardDashboard();
+}
+
+async function saveEditReward() {
+    if (!editingReward) return;
+    
+    const newIcon = document.getElementById('edit-reward-icon').value;
+    const newTitle = document.getElementById('edit-reward-title').value;
+    const newDesc = document.getElementById('edit-reward-desc').value;
+    const newT = editingReward.threshold;
+
+    if (!newTitle) {
+        alert("Bitte einen Titel eingeben.");
+        return;
+    }
+
+    const updated = REWARDS.map(r => {
+        if (r.threshold === editingReward.oldThreshold) {
+            return { threshold: newT, icon: newIcon, title: newTitle, desc: newDesc };
+        }
+        return r;
+    });
+
     await saveRewardsAPI(updated);
-    editingRewardThreshold = null;
+    editingReward = null;
 }
 
 async function saveRewardsAPI(arr) {

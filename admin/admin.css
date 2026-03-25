@@ -225,3 +225,100 @@ input[type="text"], input[type="number"], input[type="date"] {
 }
 
 .hidden { display: none !important; }
+
+/* Reward Admin Specifics */
+.reward-admin-item {
+    background: rgba(255,255,255,0.05);
+    padding: 12px;
+    border-radius: 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+    border: 1px solid transparent;
+    transition: all 0.2s;
+}
+
+.reward-admin-item.editing {
+    background: rgba(255,255,255,0.08);
+    border-color: var(--accent);
+    flex-direction: column;
+}
+
+.reward-info-admin {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex: 1;
+}
+
+.reward-threshold-badge {
+    background: var(--primary);
+    color: white;
+    padding: 2px 8px;
+    border-radius: 6px;
+    font-size: 0.75rem;
+    font-weight: 800;
+}
+
+.reward-icon-small { font-size: 1.25rem; }
+
+.reward-text-admin {
+    display: flex;
+    flex-direction: column;
+}
+
+.reward-title-admin {
+    font-weight: 700;
+    font-size: 0.9rem;
+}
+
+/* Edit Form */
+.edit-reward-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    width: 100%;
+}
+
+.edit-field {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.edit-field label {
+    font-size: 0.65rem;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    font-weight: 700;
+}
+
+.edit-field input {
+    padding: 6px 10px;
+    font-size: 0.85rem;
+}
+
+/* Threshold Adjuster */
+.threshold-adjuster {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.threshold-adjuster button {
+    background: var(--primary);
+    border: none;
+    color: white;
+    width: 28px;
+    height: 28px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 800;
+}
+
+.threshold-adjuster input {
+    width: 45px;
+    text-align: center;
+    padding: 4px !important;
+}
