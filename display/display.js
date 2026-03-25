@@ -63,6 +63,11 @@ function renderAll() {
 // --- Birthdays ---
 function renderBirthdays() {
     const container = document.getElementById('birthday-list');
+    if (students.length === 0) {
+        container.innerHTML = `<div class="empty-state"><div class="empty-icon">🎂</div><span>Keine Schüler eingetragen</span></div>`;
+        return;
+    }
+
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     const day = today.getDay() || 7;
@@ -70,52 +75,35 @@ function renderBirthdays() {
     monday.setDate(today.getDate() - day + 1);
     const sunday = new Date(monday);
     sunday.setDate(monday.getDate() + 6);
-    sunday.setHours(23,59,59,999);
+    sunday.setHours(23, 59, 59, 999);
 
-    const birthdays = [];
-    for (const s of students) {
-        if (!s.birthday) continue;
-        const [y, m, d] = s.birthday.split('-').map(Number);
-        const bday = new Date(today.getFullYear(), m - 1, d);
-        if (bday >= monday && bday <= sunday) {
-            const isToday = bday.toDateString() === today.toDateString();
-            const isTomorrow = bday > today && bday <= new Date(today.getTime() + 86400000);
-            birthdays.push({ student: s, date: bday, isToday, isTomorrow });
+    const items = students.map((s, idx) => {
+        let isToday = false;
+        let isThisWeek = false;
+
+        if (s.birthday) {
+            const [, m, d] = s.birthday.split('-').map(Number);
+            const bday = new Date(today.getFullYear(), m - 1, d);
+            isToday = bday.toDateString() === today.toDateString();
+            isThisWeek = bday >= monday && bday <= sunday;
         }
-    }
 
-    // Also add ALL students birthdays sorted by next occurrence for a full list
-    const allBirthdays = students
-        .filter(s => s.birthday)
-        .map(s => {
-            const [y, m, d] = s.birthday.split('-').map(Number);
-            let bday = new Date(today.getFullYear(), m - 1, d);
-            if (bday < today) bday = new Date(today.getFullYear() + 1, m - 1, d);
-            return { student: s, date: bday };
-        })
-        .sort((a, b) => a.date - b.date);
+        // Each kid floats at a slightly different speed & delay for organic feel
+        const speed = (3.5 + (idx % 5) * 0.7).toFixed(1);
+        const delay = ((idx * 0.4) % 4).toFixed(1);
+        const avatarClass = isToday ? 'today' : isThisWeek ? 'upcoming' : '';
+        const nameClass = isToday ? 'today' : '';
+        const todayTag = isToday ? '<div style="font-size:0.5rem; color:#f472b6; font-weight:900; letter-spacing:0.05em;">🎂 HEUTE</div>' : '';
 
-    if (allBirthdays.length === 0) {
-        container.innerHTML = `<div class="empty-state"><div class="empty-icon">🎂</div><span>Keine Geburtstage eingetragen</span></div>`;
-        return;
-    }
-
-    const thisWeek = allBirthdays.filter(b => b.date >= monday && b.date <= sunday);
-    const upcoming = allBirthdays.slice(0, 5);
-
-    const items = (thisWeek.length > 0 ? thisWeek : upcoming).map((b, i) => {
-        const d = b.date;
-        const dateStr = `${String(d.getDate()).padStart(2,'0')}.${String(d.getMonth()+1).padStart(2,'0')}.`;
-        const isToday = d.toDateString() === today.toDateString();
         return `
-            <div class="birthday-item ${isToday ? 'birthday-today' : ''} fade-item" style="animation-delay:${i * 0.08}s">
-                <div class="birthday-avatar">${b.student.avatar || b.student.name.charAt(0)}</div>
-                <div class="birthday-name">${b.student.name}</div>
-                <div class="birthday-date">${isToday ? '🎉 HEUTE!' : dateStr}</div>
+            <div class="float-kid" style="animation-duration:${speed}s; animation-delay:-${delay}s;">
+                <div class="float-avatar ${avatarClass}">${s.avatar || s.name.charAt(0)}</div>
+                ${todayTag}
+                <div class="float-name ${nameClass}">${s.name.split(' ')[0]}</div>
             </div>`;
     }).join('');
 
-    container.innerHTML = `<div class="scroll-list-inner">${items}</div>`;
+    container.innerHTML = `<div class="float-grid">${items}</div>`;
 }
 
 // --- VIPs ---
