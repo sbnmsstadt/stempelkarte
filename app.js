@@ -207,10 +207,11 @@ function renderRewards(student) {
         
         let actionHTML = '';
         if (isReached) {
-            if (status === 'completed') {
-                actionHTML = '<span class="reward-status success">Eingelöst ✅</span>';
-            } else if (status === 'pending') {
+            if (status === 'pending') {
                 actionHTML = '<span class="reward-status warning">Angefragt ⏳</span>';
+            } else if (status === 'completed') {
+                // Legacy: old data — show button to redeem again
+                actionHTML = `<button class="redeem-btn" onclick="requestRedemption(${reward.threshold})">Nochmal einlösen</button>`;
             } else {
                 actionHTML = `<button class="redeem-btn" onclick="requestRedemption(${reward.threshold})">Einlösen</button>`;
             }

@@ -151,8 +151,8 @@ export default {
           await sendTelegramMessage(env, `🎁 NEUE ANFRAGE!\n\nSchüler: ${students[index].name}\nBelohnung: ${rewardName}\n\nBitte im Admin-Dashboard bestätigen.`);
           
         } else if (method === "PATCH") {
-          // Confirm a redemption (admin)
-          students[index].redemptions[threshold] = status || "completed";
+          // Confirm a redemption (admin) — delete the key so the reward can be redeemed again
+          delete students[index].redemptions[threshold];
         }
         
         await env.DATABASE.put("students", JSON.stringify(students));
