@@ -272,6 +272,8 @@ function adjustEditThreshold(delta) {
 async function saveEditReward() {
     if (!editingReward) return;
     
+    // Use the values from our local editingReward state which is kept in sync by adjustEditThreshold
+    // but icon/title/desc need to be grabbed from DOM
     const newIcon = document.getElementById('edit-reward-icon').value;
     const newTitle = document.getElementById('edit-reward-title').value;
     const newDesc = document.getElementById('edit-reward-desc').value;
@@ -282,8 +284,19 @@ async function saveEditReward() {
         return;
     }
 
+    // Check if new threshold already exists elsewhere
+    if (newT !== editingReward.oldThreshold) {
+        if (REWARDS.some(r => r.threshold === newT)) {
+            alert(`Es gibt bereits eine Belohnung für ${newT} Stempel. Bitte wähle eine andere Anzahl.`);
+            return;
+        }
+    }
+
+    // We only want to replace the ONE reward we started editing
+    let replaced = false;
     const updated = REWARDS.map(r => {
-        if (r.threshold === editingReward.oldThreshold) {
+        if (!replaced && r.threshold === editingReward.oldThreshold) {
+            replaced = true;
             return { threshold: newT, icon: newIcon, title: newTitle, desc: newDesc };
         }
         return r;
@@ -313,9 +326,24 @@ async function createNewReward() {
     const i = document.getElementById('new-reward-icon').value || "🎁";
     const title = document.getElementById('new-reward-title').value;
     const desc = document.getElementById('new-reward-desc').value;
-    if (!t || !title) return;
+    
+    if (!t || !title) {
+        alert("Bitte Stempelanzahl und Titel eingeben.");
+        return;
+    }
+
+    if (REWARDS.some(r => r.threshold === t)) {
+        alert(`Es gibt bereits eine Belohnung für ${t} Stempel.`);
+        return;
+    }
+
     const updated = [...REWARDS, {threshold:t, icon:i, title, desc}];
     await saveRewardsAPI(updated);
+    
+    // Clear inputs
+    document.getElementById('new-reward-threshold').value = '';
+    document.getElementById('new-reward-title').value = '';
+    document.getElementById('new-reward-desc').value = '';
 }
 
 async function deleteReward(t) {
