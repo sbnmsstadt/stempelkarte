@@ -237,9 +237,11 @@ async function requestRedemption(threshold) {
             currentStudent = await response.json();
             renderRewards(currentStudent);
             alert("Einlösung angefragt! Der Admin wird es bald bestätigen.");
+        } else {
+            alert("Fehler: Server hat den Befehl nicht erkannt. Hast du die neue worker.js schon auf Cloudflare hochgeladen?");
         }
     } catch (err) {
-        alert("Fehler bei der Anfrage.");
+        alert("Fehler bei der Anfrage. Keine Verbindung zum Server.");
     }
 }
 
