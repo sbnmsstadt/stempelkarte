@@ -196,12 +196,12 @@ function renderRewards(student) {
     const stamps = student.stamps;
     const redemptions = student.redemptions || {};
     
-    // Compute highest confirmed threshold to figure out "free" (non-checked) stamps
-    let maxCompletedThreshold = 0;
+    // Compute total "used" stamps (sum of all confirmed redemption thresholds)
+    let usedStamps = 0;
     Object.entries(redemptions).forEach(([t, s]) => {
-        if (s === 'completed') maxCompletedThreshold = Math.max(maxCompletedThreshold, parseInt(t));
+        if (s === 'completed') usedStamps += parseInt(t);
     });
-    const freeStamps = stamps - maxCompletedThreshold;
+    const freeStamps = stamps - usedStamps;
 
     REWARDS.forEach(reward => {
         const item = document.createElement('div');
