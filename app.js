@@ -62,10 +62,10 @@ async function silentSync() {
         const response = await fetch(`${API_URL}/students/${currentStudent.id}`);
         if (response.ok) {
             const freshData = await response.json();
-            if (freshData.stamps !== currentStudent.stamps) {
+            if (freshData.stamps !== currentStudent.stamps || JSON.stringify(freshData.redemptions) !== JSON.stringify(currentStudent.redemptions)) {
                 currentStudent = freshData;
                 updateStampDisplay(currentStudent);
-                renderRewards(currentStudent.stamps);
+                renderRewards(currentStudent);
             }
         }
     } catch (err) {
@@ -175,20 +175,39 @@ function showDetail(student) {
     }
 
     updateStampDisplay(student);
-    renderRewards(student.stamps);
+    renderRewards(student);
 }
 
-function renderRewards(stamps) {
+function renderRewards(student) {
     const list = document.getElementById('reward-list');
     if (!list) return;
     list.innerHTML = '';
     
+    const stamps = student.stamps;
+    const redemptions = student.redemptions || {};
+    
     REWARDS.forEach(reward => {
         const item = document.createElement('div');
-        const isUnlocked = stamps >= reward.threshold;
+        const isReached = stamps >= reward.threshold;
         const progress = Math.min(100, (stamps / reward.threshold) * 100);
         
-        item.className = `glass-card reward-item ${isUnlocked ? 'unlocked' : ''}`;
+        const status = redemptions[reward.threshold]; // undefined, 'pending', 'completed'
+        
+        item.className = `glass-card reward-item ${isReached ? 'unlocked' : ''} ${status === 'completed' ? 'redeemed' : ''}`;
+        
+        let actionHTML = '';
+        if (isReached) {
+            if (status === 'completed') {
+                actionHTML = '<span class="reward-status success">Eingelöst ✅</span>';
+            } else if (status === 'pending') {
+                actionHTML = '<span class="reward-status warning">Angefragt ⏳</span>';
+            } else {
+                actionHTML = `<button class="redeem-btn" onclick="requestRedemption(${reward.threshold})">Einlösen</button>`;
+            }
+        } else {
+            actionHTML = `<span class="reward-status">${reward.threshold} Stempel</span>`;
+        }
+
         item.innerHTML = `
             <div class="reward-icon">${reward.icon}</div>
             <div style="flex:1">
@@ -198,12 +217,30 @@ function renderRewards(stamps) {
                     <div class="reward-progress-bar" style="width: ${progress}%"></div>
                 </div>
             </div>
-            <div class="reward-status">
-                ${isUnlocked ? '✅' : `${reward.threshold}`}
+            <div style="text-align:right;">
+                ${actionHTML}
             </div>
         `;
         list.appendChild(item);
     });
+}
+
+async function requestRedemption(threshold) {
+    if (!currentStudent) return;
+    try {
+        const response = await fetch(`${API_URL}/students/${currentStudent.id}/redeem`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ threshold: threshold })
+        });
+        if (response.ok) {
+            currentStudent = await response.json();
+            renderRewards(currentStudent);
+            alert("Einlösung angefragt! Der Admin wird es bald bestätigen.");
+        }
+    } catch (err) {
+        alert("Fehler bei der Anfrage.");
+    }
 }
 
 function goBack() {
@@ -222,6 +259,15 @@ function updateStampDisplay(student) {
     mainGrid.innerHTML = '';
     text.innerText = `${student.stamps} von ${MAX_STAMPS} Stempel gesammelt`;
 
+    let maxCompletedRedemption = 0;
+    if (student.redemptions) {
+        for (const [threshold, status] of Object.entries(student.redemptions)) {
+            if (status === 'completed') {
+                maxCompletedRedemption = Math.max(maxCompletedRedemption, parseInt(threshold));
+            }
+        }
+    }
+
     // Create 3 levels
     for (let l = 1; l <= 3; l++) {
         const levelContainer = document.createElement('div');
@@ -230,7 +276,6 @@ function updateStampDisplay(student) {
         const start = (l - 1) * STAMPS_PER_LEVEL + 1;
         const end = l * STAMPS_PER_LEVEL;
         const isUnlocked = student.stamps >= (l - 1) * STAMPS_PER_LEVEL;
-        const isCompleted = student.stamps >= end;
 
         levelContainer.innerHTML = `
             <div class="level-header ${isUnlocked ? 'active' : ''}">
@@ -243,8 +288,17 @@ function updateStampDisplay(student) {
         const grid = levelContainer.querySelector('.stamp-grid-20');
         for (let i = start; i <= end; i++) {
             const slot = document.createElement('div');
-            slot.className = `stamp-slot ${i <= student.stamps ? 'filled' : ''}`;
-            slot.innerText = i <= student.stamps ? '★' : '';
+            let isFilled = i <= student.stamps;
+            let isChecked = i <= maxCompletedRedemption;
+            
+            slot.className = `stamp-slot ${isFilled ? 'filled' : ''} ${isChecked ? 'checked' : ''}`;
+            if (isChecked) {
+                slot.innerText = '✔';
+            } else if (isFilled) {
+                slot.innerText = '★';
+            } else {
+                slot.innerText = '';
+            }
             grid.appendChild(slot);
         }
         mainGrid.appendChild(levelContainer);
@@ -337,9 +391,9 @@ async function addStamp() {
                 body: JSON.stringify({ stamps: newCount })
             });
             if (response.ok) {
-                currentStudent.stamps = newCount;
+                currentStudent = await response.json();
                 updateStampDisplay(currentStudent);
-                renderRewards(currentStudent.stamps);
+                renderRewards(currentStudent);
             }
         } catch (err) {
             alert("Fehler beim Speichern.");

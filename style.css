@@ -117,6 +117,13 @@ h1 {
     animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
+.stamp-slot.checked {
+    background: var(--success);
+    color: white;
+    box-shadow: 0 0 10px hsla(142, 70%, 45%, 0.5);
+}
+
+
 /* General Layouts */
 .glass-card {
     background: var(--bg-card);
@@ -170,12 +177,44 @@ h1 {
     padding: 1rem;
     margin-bottom: 0.5rem;
     opacity: 0.5;
+    transition: all 0.3s;
 }
 
 .reward-item.unlocked {
     opacity: 1;
+    border-color: var(--primary-light);
+}
+
+.reward-item.redeemed {
     border-color: var(--success);
     background: hsla(142, 70%, 45%, 0.1);
+}
+
+.reward-status {
+    font-weight: 700;
+    font-size: 0.8rem;
+    color: var(--text-muted);
+}
+
+.reward-status.success { color: var(--success); }
+.reward-status.warning { color: #f59e0b; }
+
+.redeem-btn {
+    background: var(--primary);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    padding: 6px 12px;
+    font-weight: 700;
+    font-size: 0.8rem;
+    cursor: pointer;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+    transition: all 0.2s;
+}
+
+.redeem-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 15px rgba(0,0,0,0.3);
 }
 
 .reward-progress-bg {
