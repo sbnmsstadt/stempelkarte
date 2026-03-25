@@ -69,6 +69,7 @@ async function fetchStudentsSilent() {
             }
         }
     } catch (err) { }
+    loadSettings();
 }
 
 function updateStats() {

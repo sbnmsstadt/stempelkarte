@@ -220,6 +220,16 @@ export default {
 
                     await sendTelegramMessage(env, `🎁 NEUE ANFRAGE!\n\nSchüler: ${students[index].name}\nBelohnung: ${rewardName}\n\nBitte im Admin-Dashboard bestätigen.`);
 
+                    // --- NEW: If reward title is "Filmtag", increment group progress automatically ---
+                    if (rewardName.toLowerCase().includes("filmtag")) {
+                        const settingsRaw = await env.DATABASE.get("settings");
+                        let settings = JSON.parse(settingsRaw || "{}");
+                        if (settings.groupReward) {
+                            settings.groupReward.current = (settings.groupReward.current || 0) + parseInt(threshold);
+                            await env.DATABASE.put("settings", JSON.stringify(settings));
+                        }
+                    }
+
                 } else if (method === "PATCH") {
                     // Confirm a redemption (admin) — mark as completed so stamp card stays checked
                     students[index].redemptions[threshold] = "completed";
