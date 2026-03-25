@@ -214,7 +214,8 @@ function renderRewardDashboard() {
                         <label>Stempel</label>
                         <div class="threshold-adjuster">
                             <button onclick="adjustEditThreshold(-1)">-</button>
-                            <input type="number" id="edit-reward-threshold" value="${editingReward.threshold}" readonly>
+                            <input type="number" id="edit-reward-threshold" value="${editingReward.threshold}" 
+                                oninput="editingReward.threshold = parseInt(this.value) || 0">
                             <button onclick="adjustEditThreshold(1)">+</button>
                         </div>
                     </div>
@@ -328,8 +329,9 @@ async function saveEditReward() {
         return r;
     });
 
-    await saveRewardsAPI(updated);
+    // Reset editing state BEFORE re-rendering
     editingReward = null;
+    await saveRewardsAPI(updated);
 }
 
 async function saveRewardsAPI(arr) {
