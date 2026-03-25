@@ -72,7 +72,9 @@ async function silentSync() {
         const response = await fetch(`${API_URL}/students/${currentStudent.id}`);
         if (response.ok) {
             const freshData = await response.json();
-            if (freshData.stamps !== currentStudent.stamps || JSON.stringify(freshData.redemptions) !== JSON.stringify(currentStudent.redemptions)) {
+            if (freshData.stamps !== currentStudent.stamps || 
+                freshData.usedStamps !== currentStudent.usedStamps ||
+                JSON.stringify(freshData.redemptions) !== JSON.stringify(currentStudent.redemptions)) {
                 currentStudent = freshData;
                 updateStampDisplay(currentStudent);
                 renderRewards(currentStudent);
@@ -196,17 +198,20 @@ function renderRewards(student) {
     const stamps = student.stamps;
     const redemptions = student.redemptions || {};
     
-    // Compute total "used" stamps (sum of all confirmed redemption thresholds)
-    let usedStamps = 0;
-    Object.entries(redemptions).forEach(([t, s]) => {
-        if (s === 'completed') usedStamps += parseInt(t);
-    });
+    // Compute total "used" stamps (how many were spent)
+    // Preference: student.usedStamps from server, Fallback: sum of all confirmed thresholds
+    let usedStamps = student.usedStamps || 0;
+    if (usedStamps === 0 && student.redemptions) {
+        Object.entries(redemptions).forEach(([t, s]) => {
+            if (s === 'completed') usedStamps += parseInt(t);
+        });
+    }
     const freeStamps = stamps - usedStamps;
 
     REWARDS.forEach(reward => {
         const item = document.createElement('div');
-        const isReached = stamps >= reward.threshold;
-        const progress = Math.min(100, (stamps / reward.threshold) * 100);
+        const isReached = freeStamps >= reward.threshold;
+        const progress = Math.min(100, (freeStamps / reward.threshold) * 100);
         
         const status = redemptions[reward.threshold]; // undefined, 'pending', 'completed'
         
@@ -283,14 +288,18 @@ function updateStampDisplay(student) {
     mainGrid.innerHTML = '';
     text.innerText = `${student.stamps} von ${MAX_STAMPS} Stempel gesammelt`;
 
-    let maxCompletedRedemption = 0;
-    if (student.redemptions) {
-        for (const [threshold, status] of Object.entries(student.redemptions)) {
-            if (status === 'completed') {
-                maxCompletedRedemption = Math.max(maxCompletedRedemption, parseInt(threshold));
-            }
-        }
+    // Checkmarks: based on TOTAL stamps ever spent (used)
+    let usedStamps = student.usedStamps || 0;
+    
+    // If usedStamps is 0 (old data or start), try to reconstruct it from redemptions
+    if (usedStamps === 0 && student.redemptions) {
+        let sum = 0;
+        Object.entries(student.redemptions).forEach(([t, s]) => {
+            if (s === 'completed') sum += parseInt(t);
+        });
+        usedStamps = sum;
     }
+    const maxCompletedRedemption = usedStamps;
 
     // Create 3 levels
     const dotsContainer = document.getElementById('carousel-dots');
