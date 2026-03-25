@@ -406,11 +406,25 @@ function renderAdminList(filter = "") {
         const fullCards = Math.floor(student.stamps / 20);
         const vipEligible = fullCards >= 1;
 
+        // Calculate VIP days
+        let vipDayText = '';
+        if (isVip && student.vip.grantedAt) {
+            const grantedDate = new Date(student.vip.grantedAt);
+            const today = new Date();
+            today.setHours(0,0,0,0);
+            const daysDiff = Math.floor((today - grantedDate) / (1000 * 60 * 60 * 24)) + 1;
+            const vipDuration = window._vipDuration || 3;
+            const daysLeft = vipDuration - daysDiff + 1;
+            vipDayText = daysLeft <= 1 
+                ? `⭐ VIP — <span style="color:#ff6b6b">Letzter Tag!</span>` 
+                : `⭐ VIP — <span style="color:gold">Tag ${daysDiff}/${vipDuration}</span>`;
+        }
+
         item.innerHTML = `
             <div class="student-info">
                 <div class="avatar" style="${isVip ? 'box-shadow: 0 0 12px gold; border: 2px solid gold;' : ''}">${student.avatar || student.name.charAt(0)}</div>
                 <div>
-                    <div style="font-weight:700; font-size:1.1rem">${student.name} ${isVip ? '<span style="color:gold; font-size:0.7rem; font-weight:900; letter-spacing:0.1em; background:rgba(255,215,0,0.15); border:1px solid gold; border-radius:6px; padding:2px 6px;">⭐ VIP</span>' : ''}</div>
+                    <div style="font-weight:700; font-size:1.1rem">${student.name} ${isVip ? `<span style="font-size:0.7rem; font-weight:900; letter-spacing:0.05em;">${vipDayText}</span>` : ''}</div>
                     <div class="subtitle" style="font-size:0.75rem">ID: ${student.id} · ${fullCards} volle Karte(n)</div>
                     ${student.birthday ? `<div style="font-size:0.75rem">🎂 ${formatDate(student.birthday)}</div>` : ''}
                 </div>
@@ -528,6 +542,11 @@ async function loadSettings() {
                     document.getElementById('group-reward-approve-btn').classList.add('hidden');
                 }
             }
+
+            // Load VIP duration
+            const vipInput = document.getElementById('setting-vip-duration');
+            if (vipInput) vipInput.value = settings.vipDurationDays || 3;
+            window._vipDuration = settings.vipDurationDays || 3;
         }
     } catch (err) {}
 }
@@ -573,6 +592,7 @@ async function saveSettings() {
                 communityTitle: communityTitle,
                 communityGoalVisible: communityVisible,
                 activities: activities,
+                vipDurationDays: parseInt(document.getElementById('setting-vip-duration')?.value) || 3,
                 groupReward: {
                     title: groupTitle,
                     target: groupTarget,

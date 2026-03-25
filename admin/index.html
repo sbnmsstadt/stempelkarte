@@ -122,6 +122,14 @@
                                 <input type="number" id="setting-group-target" placeholder="8" style="width:100%; text-align:center;">
                             </div>
                         </div>
+                        <div style="display:flex; gap:10px; align-items:center; background:rgba(255,215,0,0.05); border:1px solid rgba(255,215,0,0.2); border-radius:12px; padding:12px;">
+                            <div style="font-size:1.5rem;">⭐</div>
+                            <div style="flex:1">
+                                <label style="font-size:0.75rem; color:gold; font-weight:700; display:block; margin-bottom:6px;">VIP-DAUER (TAGE)</label>
+                                <input type="number" id="setting-vip-duration" placeholder="3" min="1" max="30" style="width:80px; text-align:center;">
+                                <span style="font-size:0.75rem; color:var(--text-muted); margin-left:8px;">Tage bis VIP automatisch abläuft</span>
+                            </div>
+                        </div>
                         <button onclick="saveSettings()" class="add-stamp-btn" style="padding:10px; font-size:0.9rem;">Einstellungen speichern</button>
                     </div>
                 </div>

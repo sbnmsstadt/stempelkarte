@@ -425,46 +425,148 @@ export default {
         try {
             const studentsRaw = await env.DATABASE.get("students");
             if (!studentsRaw) return;
-            const students = JSON.parse(studentsRaw);
+            let students = JSON.parse(studentsRaw);
+
+            const settingsRaw = await env.DATABASE.get("settings");
+            const settings = settingsRaw ? JSON.parse(settingsRaw) : {};
+            const vipDuration = settings.vipDurationDays || 3;
 
             const today = new Date();
-            // Calculate start and end of the current week (Monday to Sunday)
+            today.setHours(0, 0, 0, 0);
+            const todayStr = today.toISOString().split('T')[0];
+
+            let events = [];
+            let studentsChanged = false;
+
+            // --- 1. Check VIP expiry ---
+            for (let i = 0; i < students.length; i++) {
+                const s = students[i];
+                if (s.vip && s.vip.active && s.vip.grantedAt) {
+                    const grantedDate = new Date(s.vip.grantedAt);
+                    grantedDate.setHours(0,0,0,0);
+                    const daysDiff = Math.floor((today - grantedDate) / (1000 * 60 * 60 * 24)) + 1;
+                    const daysLeft = vipDuration - daysDiff + 1;
+
+                    if (daysLeft <= 0) {
+                        // VIP expired → auto-deactivate
+                        students[i].vip.active = false;
+                        if (!students[i].history) students[i].history = [];
+                        students[i].history.push({ date: todayStr, reason: "VIP-Status abgelaufen ⏰" });
+                        events.push({ type: 'vip_expired', name: s.name });
+                        studentsChanged = true;
+                    } else if (daysLeft === 1) {
+                        // Last VIP day warning
+                        events.push({ type: 'vip_last_day', name: s.name, day: daysDiff, total: vipDuration });
+                    } else {
+                        events.push({ type: 'vip_active', name: s.name, day: daysDiff, total: vipDuration });
+                    }
+                }
+            }
+
+            if (studentsChanged) {
+                await env.DATABASE.put("students", JSON.stringify(students));
+            }
+
+            // --- 2. Check Birthdays (this week) ---
             const day = today.getDay() || 7;
             const monday = new Date(today);
             monday.setDate(today.getDate() - day + 1);
             monday.setHours(0, 0, 0, 0);
-
             const sunday = new Date(monday);
             sunday.setDate(monday.getDate() + 6);
             sunday.setHours(23, 59, 59, 999);
 
-            let birthdayKids = [];
-
             for (const s of students) {
                 if (!s.birthday) continue;
-
                 const parts = s.birthday.split('-');
                 if (parts.length === 3) {
                     const bMonth = parseInt(parts[1], 10) - 1;
                     const bDay = parseInt(parts[2], 10);
                     const thisYearBday = new Date(today.getFullYear(), bMonth, bDay);
-
                     if (thisYearBday >= monday && thisYearBday <= sunday) {
-                        birthdayKids.push(s.name);
+                        const isToday = thisYearBday.toISOString().split('T')[0] === todayStr;
+                        events.push({ type: 'birthday', name: s.name, isToday });
                     }
                 }
             }
 
-            if (birthdayKids.length > 0) {
-                const names = birthdayKids.join(", ");
-                const message = `🎂 ACHTUNG! Diese Woche haben folgende Schüler Geburtstag:\n\n🎉 ${names}\n\nBitte nicht vergessen zu gratulieren!`;
-                await sendTelegramMessage(env, message);
+            // --- 3. Check pending redemptions ---
+            let pendingCount = 0;
+            students.forEach(s => {
+                if (s.redemptions) {
+                    Object.values(s.redemptions).forEach(v => {
+                        if (v === 'pending') pendingCount++;
+                    });
+                }
+            });
+            if (pendingCount > 0) {
+                events.push({ type: 'pending_redemptions', count: pendingCount });
             }
+
+            // --- 4. Generate AI summary or send static message ---
+            if (events.length > 0) {
+                let message;
+                if (env.KI_API) {
+                    message = await getAISummary(events, env.KI_API);
+                } else {
+                    message = buildFallbackMessage(events);
+                }
+                if (message) await sendTelegramMessage(env, message);
+            }
+
         } catch (err) {
             console.error("Scheduled task error:", err);
         }
     }
 };
+
+async function getAISummary(events, apiKey) {
+    const eventsText = events.map(e => {
+        if (e.type === 'birthday') return `- Geburtstag: ${e.name}${e.isToday ? ' (HEUTE!)' : ' (diese Woche)'}`;
+        if (e.type === 'vip_last_day') return `- VIP letzter Tag: ${e.name} (Tag ${e.day}/${e.total})`;
+        if (e.type === 'vip_expired') return `- VIP abgelaufen: ${e.name}`;
+        if (e.type === 'vip_active') return `- VIP aktiv: ${e.name} (Tag ${e.day}/${e.total})`;
+        if (e.type === 'pending_redemptions') return `- Offene Einlösungsanfragen: ${e.count} Stück`;
+        return '';
+    }).join('\n');
+
+    const prompt = `Du bist ein freundlicher Schulassistent für eine Grundschule. 
+Erstelle eine kurze, motivierende tägliche Zusammenfassung für den Betreuer auf Deutsch.
+Nutze Emojis passend. Maximal 200 Wörter. Sei herzlich und professionell.
+
+Heutige Ereignisse:
+${eventsText}
+
+Schreibe die Zusammenfassung jetzt:`;
+
+    try {
+        const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                contents: [{ parts: [{ text: prompt }] }],
+                generationConfig: { maxOutputTokens: 300, temperature: 0.7 }
+            })
+        });
+        if (!res.ok) return buildFallbackMessage(events);
+        const data = await res.json();
+        return data?.candidates?.[0]?.content?.parts?.[0]?.text || buildFallbackMessage(events);
+    } catch (err) {
+        return buildFallbackMessage(events);
+    }
+}
+
+function buildFallbackMessage(events) {
+    let msg = "📋 Tagesübersicht NACHMI:\n\n";
+    events.forEach(e => {
+        if (e.type === 'birthday') msg += `🎂 Geburtstag: ${e.name}${e.isToday ? ' — HEUTE! 🎉' : ' (diese Woche)'}\n`;
+        if (e.type === 'vip_last_day') msg += `⭐ LETZTER VIP-TAG: ${e.name}!\n`;
+        if (e.type === 'vip_expired') msg += `⏰ VIP abgelaufen: ${e.name}\n`;
+        if (e.type === 'vip_active') msg += `⭐ VIP aktiv: ${e.name} (Tag ${e.day}/${e.total})\n`;
+        if (e.type === 'pending_redemptions') msg += `🎁 ${e.count} offene Einlösungsanfrage(n) ausstehend\n`;
+    });
+    return msg;
+}
 
 async function sendTelegramMessage(env, text) {
     if (!env.TELEGRAM_TOKEN || !env.TELEGRAM_CHAT_ID) return false;
@@ -483,4 +585,3 @@ async function sendTelegramMessage(env, text) {
         return false;
     }
 }
-
