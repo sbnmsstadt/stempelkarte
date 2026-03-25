@@ -77,15 +77,30 @@ function stopSync() {
 async function silentSync() {
     if (!currentStudent) return;
     try {
-        const response = await fetch(`${API_URL}/students/${currentStudent.id}`);
-        if (response.ok) {
-            const freshData = await response.json();
-            if (freshData.stamps !== currentStudent.stamps || 
-                freshData.usedStamps !== currentStudent.usedStamps ||
-                JSON.stringify(freshData.redemptions) !== JSON.stringify(currentStudent.redemptions)) {
+        const [stRes, setRes] = await Promise.all([
+            fetch(`${API_URL}/students/${currentStudent.id}`),
+            fetch(`${API_URL}/settings`)
+        ]);
+
+        if (stRes.ok && setRes.ok) {
+            const freshData = await stRes.json();
+            const freshSettings = await setRes.json();
+            
+            // Check for changes in student data
+            const studentChanged = freshData.stamps !== currentStudent.stamps || 
+                                   freshData.usedStamps !== currentStudent.usedStamps ||
+                                   JSON.stringify(freshData.redemptions) !== JSON.stringify(currentStudent.redemptions);
+            
+            // Check for changes in group reward activation
+            const settingsChanged = JSON.stringify(freshSettings.groupReward) !== JSON.stringify(SETTINGS.groupReward);
+
+            if (studentChanged || settingsChanged) {
                 currentStudent = freshData;
+                SETTINGS = freshSettings;
                 updateStampDisplay(currentStudent);
                 renderRewards(currentStudent);
+                // Also update home screen if needed (community goal)
+                updateCommunityGoal(); 
             }
         }
     } catch (err) {
@@ -573,18 +588,24 @@ async function addStamp() {
     }
 }
 // Community Goal
-async function updateCommunityGoal() {
+async function updateCommunityGoal(providedStudents = null, providedSettings = null) {
     try {
-        const [stRes, setRes] = await Promise.all([
-            fetch(`${API_URL}/students`),
-            fetch(`${API_URL}/settings`)
-        ]);
+        let allStudents = providedStudents;
+        let settings = providedSettings;
+
+        if (!allStudents || !settings) {
+            const [stRes, setRes] = await Promise.all([
+                fetch(`${API_URL}/students`),
+                fetch(`${API_URL}/settings`)
+            ]);
+            if (stRes.ok && setRes.ok) {
+                allStudents = await stRes.json();
+                settings = await setRes.json();
+                SETTINGS = settings;
+            }
+        }
         
-        if (stRes.ok && setRes.ok) {
-            const allStudents = await stRes.json();
-            const settings = await setRes.json();
-            SETTINGS = settings; // Store globally
-            
+        if (allStudents && settings) {
             // 1. Community Goal
             const target = settings.communityTarget || 500;
             const total = allStudents.reduce((sum, s) => sum + (s.stamps || 0), 0);
@@ -604,11 +625,11 @@ async function updateCommunityGoal() {
             const gBar = document.getElementById('group-reward-bar-home');
 
             if (settings.groupReward && gHome) {
-                gHome.style.display = 'block';
-                gTitle.innerText = `${settings.groupReward.icon || '🎬'} ${settings.groupReward.title}`;
-                gStatus.innerText = `${settings.groupReward.current} / ${settings.groupReward.target}`;
+                gHome.style.display = settings.groupReward.active ? 'block' : 'none';
+                if (gTitle) gTitle.innerText = `${settings.groupReward.icon || '🎬'} ${settings.groupReward.title}`;
+                if (gStatus) gStatus.innerText = `${settings.groupReward.current} / ${settings.groupReward.target}`;
                 const gProgress = Math.min(100, (settings.groupReward.current / settings.groupReward.target) * 100);
-                gBar.style.width = `${gProgress}%`;
+                if (gBar) gBar.style.width = `${gProgress}%`;
             }
         }
     } catch (err) {
