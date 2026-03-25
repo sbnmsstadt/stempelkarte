@@ -51,6 +51,35 @@ async function fetchData() {
     }
 }
 
+// ── SMOOTH UPDATE HELPER ───────────────────────
+// Skips DOM update if content unchanged (keeps scroll running).
+// If changed: fade out → update → reset animation → fade in.
+async function smoothUpdate(el, newHTML, { animDuration = null, scrolling = false } = {}) {
+    if (!el) return;
+    const key = newHTML.replace(/\s+/g, '');
+    if (el._contentKey === key) return; // no change → don't touch
+    el._contentKey = key;
+
+    // Fade out
+    el.style.transition = 'opacity 0.35s ease';
+    el.style.opacity = '0';
+    await new Promise(r => setTimeout(r, 380));
+
+    // Update
+    el.innerHTML = newHTML;
+
+    // Reset animation cleanly
+    if (scrolling || el.style.animationName || el.classList.contains('scrolling')) {
+        el.style.animation = 'none';
+        void el.offsetWidth; // force reflow
+        el.style.animation = '';
+        if (animDuration) el.style.animationDuration = animDuration;
+    }
+
+    // Fade in
+    el.style.opacity = '1';
+}
+
 function renderAll() {
     renderKids();
     renderCountdown();
@@ -119,11 +148,8 @@ function renderKids() {
 
     // Duplicate for seamless infinite scroll
     const html = [...sorted, ...sorted].map(makeCard).join('');
-    inner.innerHTML = html;
-
-    // Scroll speed: ~8s per student (min 20s)
-    const duration = Math.max(20, sorted.length * 3.5);
-    inner.style.animationDuration = `${duration}s`;
+    const duration = `${Math.max(20, sorted.length * 3.5)}s`;
+    smoothUpdate(inner, html, { animDuration: duration, scrolling: true });
 }
 
 
@@ -249,15 +275,14 @@ function renderRedemptions() {
         </div>`;
 
     if (pending.length > 2) {
-        // Duplicate for seamless loop
-        el.innerHTML = [...pending, ...pending].map(makeItem).join('');
+        const html = [...pending, ...pending].map(makeItem).join('');
+        const dur = `${Math.max(8, pending.length * 3)}s`;
         el.classList.add('scrolling');
-        const duration = Math.max(8, pending.length * 3);
-        el.style.animationDuration = `${duration}s`;
+        smoothUpdate(el, html, { animDuration: dur, scrolling: true });
     } else {
-        el.innerHTML = pending.map(makeItem).join('');
         el.classList.remove('scrolling');
         el.style.animationDuration = '';
+        smoothUpdate(el, pending.map(makeItem).join(''));
     }
 }
 
@@ -332,11 +357,8 @@ function renderTicker() {
             <span>${it.reason}</span>
         </div>`).join('');
 
-    scroll.innerHTML = html;
-
-    // Adjust animation speed by length
-    const duration = Math.max(20, display.length * 4);
-    scroll.style.animationDuration = `${duration}s`;
+    const duration = `${Math.max(20, display.length * 4)}s`;
+    smoothUpdate(scroll, html, { animDuration: duration, scrolling: true });
 }
 
 // ── INIT ───────────────────────────────────────
@@ -346,6 +368,27 @@ setInterval(updateClock, 1000);
 
 fetchData();
 setInterval(fetchData, 30000);
+
+// ── FILMTAG LIVE POLL (every 5s) ───────────────
+// Only fetches /settings — lightweight, for near-realtime Filmtag updates.
+async function fetchFilmtagLive() {
+    try {
+        const res = await fetch(`${API_URL}/settings`);
+        if (!res.ok) return;
+        const newSettings = await res.json();
+
+        // Compare groupReward.current to detect change
+        const oldCurrent = settings?.groupReward?.current;
+        const newCurrent = newSettings?.groupReward?.current;
+
+        if (oldCurrent !== newCurrent) {
+            settings = newSettings;
+            renderFilmtag(); // only re-render Filmtag bar
+        }
+    } catch (_) { /* silent fail */ }
+}
+
+setInterval(fetchFilmtagLive, 5000);
 
 // Re-layout kids on resize
 window.addEventListener('resize', () => {
