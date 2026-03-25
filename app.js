@@ -10,6 +10,7 @@ const AVATARS = ["🦁", "🐯", "🦊", "🐭", "🐹", "🐰", "🐻", "🐼",
 
 let selectedActivity = "Stempel";
 let selectedActivityEmoji = "🌟";
+let ACTIVITIES = [];
 
 let REWARDS = [];
 
@@ -736,9 +737,35 @@ function renderHistory(history) {
 }
 
 // Activity Picker
-function openActivityOverlay() {
+async function openActivityOverlay() {
     document.getElementById('activity-overlay').classList.add('active');
     document.getElementById('custom-activity').value = '';
+    
+    // Load from server settings
+    try {
+        const res = await fetch(`${API_URL}/settings`);
+        if (res.ok) {
+            const settings = await res.json();
+            ACTIVITIES = settings.activities || [];
+            renderActivityPicker();
+        }
+    } catch (err) {
+        console.error("Fehler beim Laden der Aktivitäten");
+    }
+}
+
+function renderActivityPicker() {
+    const list = document.getElementById('activity-list');
+    if (!list) return;
+    list.innerHTML = '';
+    
+    ACTIVITIES.forEach(act => {
+        const item = document.createElement('div');
+        item.className = 'avatar-item';
+        item.onclick = (e) => selectActivity(act.label, act.emoji, e);
+        item.innerHTML = `${act.emoji}<br><span style="font-size:0.6rem">${act.label}</span>`;
+        list.appendChild(item);
+    });
 }
 
 function closeActivityOverlay() {

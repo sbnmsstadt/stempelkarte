@@ -467,6 +467,21 @@ input[type="number"] {
     padding: 2.5rem;
     border-radius: 32px;
     text-align: center;
+    max-height: 90vh;
+    overflow-y: auto;
+}
+
+/* Activity Picker Scroll Fix */
+#activity-overlay .glass-card {
+    max-height: 85vh;
+    overflow-y: auto;
+    scrollbar-width: thin;
+}
+
+#activity-list {
+    max-height: 300px;
+    overflow-y: auto;
+    padding: 5px;
 }
 
 .pin-display {

@@ -459,21 +459,45 @@ async function loadSettings() {
         if (response.ok) {
             const settings = await response.json();
             document.getElementById('setting-community-target').value = settings.communityTarget || 500;
+            
+            if (settings.activities) {
+                const text = settings.activities.map(a => `${a.emoji} ${a.label}`).join('\n');
+                document.getElementById('setting-activities').value = text;
+            }
         }
     } catch (err) {}
 }
 
 async function saveSettings() {
     const target = parseInt(document.getElementById('setting-community-target').value);
+    const activitiesText = document.getElementById('setting-activities').value;
+    
     if (isNaN(target) || target <= 0) {
         alert("Bitte ein gültiges Ziel eingeben.");
         return;
     }
+
+    // Parse activities: "Emoji Label"
+    const activities = activitiesText.split('\n')
+        .map(line => line.trim())
+        .filter(line => line.length > 0)
+        .map(line => {
+            const firstSpace = line.indexOf(' ');
+            if (firstSpace === -1) return { emoji: "🌟", label: line };
+            return {
+                emoji: line.substring(0, firstSpace).trim(),
+                label: line.substring(firstSpace).trim()
+            };
+        });
+
     try {
         const response = await fetch(`${API_URL}/settings`, {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ communityTarget: target })
+            body: JSON.stringify({ 
+                communityTarget: target,
+                activities: activities 
+            })
         });
         if (response.ok) {
             alert("Einstellungen gespeichert!");

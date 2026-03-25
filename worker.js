@@ -40,7 +40,17 @@ export default {
 
             if (path === "/api/settings" && method === "GET") {
                 const settingsRaw = await env.DATABASE.get("settings");
-                const settings = settingsRaw ? JSON.parse(settingsRaw) : { communityTarget: 500 };
+                const defaultActivities = [
+                    { label: "Sport-AG", emoji: "🏀" },
+                    { label: "Hausaufgaben", emoji: "📝" },
+                    { label: "Hilfe", emoji: "🤝" },
+                    { label: "Lesen", emoji: "📚" },
+                    { label: "Kreativ", emoji: "🎨" },
+                    { label: "Spielen", emoji: "🎲" },
+                    { label: "Projekt", emoji: "🚀" },
+                    { label: "Sonstiges", emoji: "🌟" }
+                ];
+                const settings = settingsRaw ? JSON.parse(settingsRaw) : { communityTarget: 500, activities: defaultActivities };
                 return new Response(JSON.stringify(settings), {
                     headers: { ...corsHeaders, "Content-Type": "application/json" }
                 });
