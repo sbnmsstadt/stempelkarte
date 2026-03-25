@@ -274,6 +274,19 @@ function cancelEditReward() {
     renderRewardDashboard();
 }
 
+function toggleEditActive() {
+    if (!editingReward) return;
+    editingReward.active = editingReward.active === false ? true : false;
+    renderRewardDashboard();
+}
+
+async function quickToggleActive(threshold) {
+    const idx = REWARDS.findIndex(r => r.threshold === threshold);
+    if (idx === -1) return;
+    REWARDS[idx].active = REWARDS[idx].active === false ? true : false;
+    await saveRewardsAPI([...REWARDS]);
+}
+
 function adjustEditThreshold(delta) {
     if (!editingReward) return;
     editingReward.threshold = Math.max(1, (editingReward.threshold || 0) + delta);
@@ -308,7 +321,7 @@ async function saveEditReward() {
     const updated = REWARDS.map(r => {
         if (!replaced && r.threshold === editingReward.oldThreshold) {
             replaced = true;
-            return { threshold: newT, icon: newIcon, title: newTitle, desc: newDesc, active: newActive };
+            return { threshold: newT, icon: newIcon, title: newTitle, desc: newDesc, active: editingReward.active !== false };
         }
         return r;
     });
