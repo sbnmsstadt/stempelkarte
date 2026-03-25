@@ -115,6 +115,13 @@
                 </button>
 
                 <div id="badge-container" class="badge-list"></div>
+                
+                <div class="history-section" style="margin-top:2rem;">
+                    <h3 style="font-size:0.8rem; margin-bottom:12px; color:var(--text-muted);">Letzte Aktivitäten</h3>
+                    <div id="history-list" class="history-list">
+                        <!-- Wird via app.js befüllt -->
+                    </div>
+                </div>
             </div>
 
             <div class="reward-section">
@@ -127,7 +134,33 @@
             </footer>
         </main>
 
-        <!-- PIN Overlay -->
+        <!-- Activity Picker Overlay -->
+    <div id="activity-overlay" class="overlay">
+        <div class="glass-card" style="width:90%; max-width:400px; padding:2rem; text-align:center;">
+            <h2 style="margin-bottom:1.5rem;">Was wurde gemacht?</h2>
+            
+            <div id="activity-list" class="emoji-grid" style="margin-bottom:1.5rem;">
+                <div class="avatar-item" onclick="selectActivity('Sport-AG', '🏀')">🏀<br><span style="font-size:0.6rem">Sport</span></div>
+                <div class="avatar-item" onclick="selectActivity('Hausaufgaben', '📝')">📝<br><span style="font-size:0.6rem">HA</span></div>
+                <div class="avatar-item" onclick="selectActivity('Hilfe', '🤝')">🤝<br><span style="font-size:0.6rem">Hilfe</span></div>
+                <div class="avatar-item" onclick="selectActivity('Lesen', '📚')">📚<br><span style="font-size:0.6rem">Lesen</span></div>
+                <div class="avatar-item" onclick="selectActivity('Kreativ', '🎨')">🎨<br><span style="font-size:0.6rem">Kunst</span></div>
+                <div class="avatar-item" onclick="selectActivity('Spielen', '🎲')">🎲<br><span style="font-size:0.6rem">Spiel</span></div>
+                <div class="avatar-item" onclick="selectActivity('Projekt', '🚀')">🚀<br><span style="font-size:0.6rem">Projekt</span></div>
+                <div class="avatar-item" onclick="selectActivity('Einfacher Stempel', '🌟')">🌟<br><span style="font-size:0.6rem">Sonstiges</span></div>
+            </div>
+
+            <input type="text" id="custom-activity" placeholder="Eigene Beschreibung..." 
+                style="width:100%; padding:10px; border-radius:10px; border:1px solid var(--glass-border); background:rgba(255,255,255,0.05); color:white; margin-bottom:1.5rem;">
+
+            <div style="display:flex; gap:10px;">
+                <button class="add-stamp-btn" onclick="confirmActivity()" style="flex:2">Auswählen</button>
+                <button class="add-stamp-btn" onclick="closeActivityOverlay()" style="flex:1; background:rgba(255,255,255,0.1)">X</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- PIN Overlay -->
         <div id="pin-overlay" class="overlay">
             <div class="pin-container">
                 <h3>PIN erforderlich</h3>

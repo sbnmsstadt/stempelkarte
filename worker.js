@@ -135,7 +135,8 @@ export default {
                 // Handle normal student patch
                 if (pathParts.length === 4) {
                     const id = pathParts[3];
-                    const { stamps, avatar, badges } = await request.json();
+                    const body = await request.json();
+                    const { stamps, avatar, badges, reason } = body;
                     const studentsRaw = await env.DATABASE.get("students");
                     let students = JSON.parse(studentsRaw || "[]");
 
@@ -151,7 +152,10 @@ export default {
                         // If stamps increased, track history
                         if (stamps > students[index].stamps) {
                             const today = new Date().toISOString().split('T')[0];
-                            students[index].history.push(today);
+                            students[index].history.push({ 
+                                date: today, 
+                                reason: reason || "Stempel" 
+                            });
                         }
                         students[index].stamps = stamps;
                     }

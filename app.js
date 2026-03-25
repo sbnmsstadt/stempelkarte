@@ -8,6 +8,9 @@ const STAMPS_PER_LEVEL = 20;
 
 const AVATARS = ["🦁", "🐯", "🦊", "🐭", "🐹", "🐰", "🐻", "🐼", "🐨", "🐸", "🐵", "🦄", "🐙", "🦋", "🦖"];
 
+let selectedActivity = "Stempel";
+let selectedActivityEmoji = "🌟";
+
 let REWARDS = [];
 
 async function fetchRewards() {
@@ -198,6 +201,7 @@ function showDetail(student) {
     updateStampDisplay(student);
     renderRewards(student);
     renderBadges(student);
+    renderHistory(student.history || []);
 
     // Birthday Surprise
     if (student.birthday) {
@@ -466,6 +470,12 @@ function openAdminPin() {
 }
 
 function openStampPin() {
+    // If not supervisor, student must pick activity first
+    if (!isSupervisor && document.getElementById('activity-overlay').classList.contains('active') === false) {
+        openActivityOverlay();
+        return;
+    }
+
     openPinOverlay((pin) => {
         if (pin === PIN_STAMP) {
             addStamp();
@@ -518,12 +528,20 @@ async function addStamp() {
             const response = await fetch(`${API_URL}/students/${currentStudent.id}`, {
                 method: 'PATCH',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ stamps: newCount })
+                body: JSON.stringify({ 
+                    stamps: newCount,
+                    reason: selectedActivity 
+                })
             });
             if (response.ok) {
                 currentStudent = await response.json();
                 updateStampDisplay(currentStudent);
                 renderRewards(currentStudent);
+                renderHistory(currentStudent.history || []);
+                
+                // Reset activity for next time
+                selectedActivity = "Stempel";
+                selectedActivityEmoji = "🌟";
             }
         } catch (err) {
             alert("Fehler beim Speichern.");
@@ -563,8 +581,9 @@ async function updateCommunityGoal() {
 function calculateStreak(history) {
     if (!history || history.length === 0) return 0;
     
-    // Sort and unique dates
-    const dates = [...new Set(history)].sort();
+    // Sort and unique dates, handling both strings and objects
+    const dateStrings = history.map(h => typeof h === 'string' ? h : h.date);
+    const dates = [...new Set(dateStrings)].sort();
     const todayStr = new Date().toISOString().split('T')[0];
     
     // Helper to get date object from string (local time)
@@ -671,4 +690,66 @@ function renderBadges(student) {
         span.innerText = b;
         container.appendChild(span);
     });
+}
+
+function renderHistory(history) {
+    const container = document.getElementById('history-list');
+    if (!container) return;
+    container.innerHTML = '';
+    
+    if (history.length === 0) {
+        container.innerHTML = '<i style="font-size:0.7rem; color:var(--text-muted)">Noch keine Einträge.</i>';
+        return;
+    }
+
+    // Show last 5 entries
+    const lastEntries = [...history].reverse().slice(0, 5);
+    
+    lastEntries.forEach(entry => {
+        const isObj = typeof entry === 'object';
+        const dateStr = isObj ? entry.date : entry;
+        const reason = isObj ? entry.reason : "Stempel";
+        
+        const [y, m, d] = dateStr.split('-');
+        const formattedDate = `${d}.${m}.`;
+
+        const item = document.createElement('div');
+        item.className = 'history-item';
+        item.innerHTML = `
+            <div style="display:flex; align-items:center;">
+                <span class="history-reason">${reason}</span>
+            </div>
+            <span class="history-date">${formattedDate}</span>
+        `;
+        container.appendChild(item);
+    });
+}
+
+// Activity Picker
+function openActivityOverlay() {
+    document.getElementById('activity-overlay').classList.add('active');
+    document.getElementById('custom-activity').value = '';
+}
+
+function closeActivityOverlay() {
+    document.getElementById('activity-overlay').classList.remove('active');
+}
+
+function selectActivity(reason, emoji) {
+    selectedActivity = reason;
+    selectedActivityEmoji = emoji;
+    
+    // Visual feedback
+    document.querySelectorAll('#activity-list .avatar-item').forEach(el => el.style.borderColor = 'transparent');
+    event.currentTarget.style.borderColor = 'var(--primary-light)';
+}
+
+function confirmActivity() {
+    const custom = document.getElementById('custom-activity').value.trim();
+    if (custom) {
+        selectedActivity = custom;
+        selectedActivityEmoji = "🌟";
+    }
+    closeActivityOverlay();
+    openStampPin();
 }

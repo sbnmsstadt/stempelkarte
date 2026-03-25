@@ -443,7 +443,10 @@ async function updateStamps(id, c) {
     await fetch(`${API_URL}/students/${id}`, {
         method: 'PATCH',
         headers: {'Content-Type':'application/json'},
-        body: JSON.stringify({stamps: parseInt(c)})
+        body: JSON.stringify({
+            stamps: parseInt(c),
+            reason: "Admin-Korrektur"
+        })
     });
     fetchStudents();
 }

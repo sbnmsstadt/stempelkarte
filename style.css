@@ -491,3 +491,55 @@ input[type="number"] {
     font-size: 1.5rem;
     font-weight: 700;
 }
+
+.fire-icon {
+    font-size: 0.8rem;
+    background: rgba(255,100,0,0.2);
+    padding: 2px 8px;
+    border-radius: 10px;
+    margin-left: 8px;
+    vertical-align: middle;
+    color: #ff9d00;
+    font-weight: 800;
+}
+
+/* History List */
+.history-section {
+    animation: fadeIn 0.5s ease-out;
+}
+
+.history-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.history-item {
+    background: rgba(255,255,255,0.05);
+    border: 1px solid var(--glass-border);
+    border-radius: 12px;
+    padding: 10px 14px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    transition: all 0.2s;
+}
+
+.history-item:hover {
+    background: rgba(255,255,255,0.08);
+}
+
+.history-date {
+    font-size: 0.7rem;
+    color: var(--text-muted);
+}
+
+.history-reason {
+    font-size: 0.85rem;
+    font-weight: 600;
+}
+
+.history-icon {
+    font-size: 1.1rem;
+    margin-right: 10px;
+}
