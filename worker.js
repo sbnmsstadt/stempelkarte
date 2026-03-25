@@ -246,6 +246,23 @@ export default {
 
                 if (method === "POST") {
                     // Request a redemption (student)
+                    const stamps = students[index].stamps || 0;
+                    const usedStamps = students[index].usedStamps || 0;
+                    const freeStamps = stamps - usedStamps;
+                    const reqThreshold = parseInt(threshold);
+
+                    if (reqThreshold >= 60) {
+                        // Milestone based on total stamps
+                        if (stamps < reqThreshold) {
+                            return new Response("Noch nicht genug Gesamt-Stempel für diesen Meilenstein.", { status: 400, headers: corsHeaders });
+                        }
+                    } else {
+                        // Normal reward based on free stamps
+                        if (freeStamps < reqThreshold) {
+                            return new Response("Zu wenig freie Stempel für diese Belohnung.", { status: 400, headers: corsHeaders });
+                        }
+                    }
+
                     students[index].redemptions[threshold] = "pending";
 
                     // TELEGRAM NOTIFICATION
@@ -260,16 +277,24 @@ export default {
                     // Confirm a redemption (admin) — mark as completed so stamp card stays checked
                     students[index].redemptions[threshold] = "completed";
 
-                    // Migration/Initialization for usedStamps
-                    if (students[index].usedStamps === undefined) {
-                        let sum = 0;
-                        for (const [t, s] of Object.entries(students[index].redemptions)) {
-                            if (s === "completed") sum += parseInt(t);
+                    const reqThreshold = parseInt(threshold);
+                    const isMilestone = reqThreshold >= 60;
+
+                    if (!isMilestone) {
+                        // Migration/Initialization for usedStamps (Normal Rewards only)
+                        if (students[index].usedStamps === undefined) {
+                            let sum = 0;
+                            for (const [t, s] of Object.entries(students[index].redemptions)) {
+                                if (s === "completed" && parseInt(t) < 60) sum += parseInt(t);
+                            }
+                            students[index].usedStamps = sum;
+                        } else {
+                            // Already initialized, just increment for normal rewards
+                            students[index].usedStamps = students[index].usedStamps + reqThreshold;
                         }
-                        students[index].usedStamps = sum;
-                    } else {
-                        // Already initialized, just increment
-                        students[index].usedStamps = students[index].usedStamps + parseInt(threshold);
+                    } else if (students[index].usedStamps === undefined) {
+                         // Initialize to 0 if not exists (Milestones don't count)
+                         students[index].usedStamps = 0;
                     }
 
                     // --- NEW: If reward title is "Filmtag", activate/increment group progress ---

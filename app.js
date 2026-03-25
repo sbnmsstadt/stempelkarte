@@ -297,8 +297,10 @@ function renderRewards(student) {
 
     REWARDS.forEach(reward => {
         const item = document.createElement('div');
-        const isReached = freeStamps >= reward.threshold;
-        const progress = Math.min(100, (freeStamps / reward.threshold) * 100);
+        const reqThreshold = parseInt(reward.threshold);
+        const isMilestone = reqThreshold >= 60;
+        const isReached = isMilestone ? (stamps >= reqThreshold) : (freeStamps >= reqThreshold);
+        const progress = Math.min(100, (isMilestone ? (stamps / reqThreshold) : (freeStamps / reqThreshold)) * 100);
         
         const status = redemptions[reward.threshold]; // undefined, 'pending', 'completed'
         
@@ -309,8 +311,8 @@ function renderRewards(student) {
             if (status === 'pending') {
                 actionHTML = '<span class="reward-status warning">Angefragt ⏳</span>';
             } else if (status === 'completed') {
-                // Only allow re-redemption if student has enough free (blue) stamps
-                if (freeStamps >= reward.threshold) {
+                // Milestone is one-and-done usually, or re-redeemable by total
+                if (isMilestone ? (stamps >= reqThreshold) : (freeStamps >= reqThreshold)) {
                     actionHTML = `<button class="redeem-btn" onclick="requestRedemption(${reward.threshold})">Nochmal</button>`;
                 } else {
                     actionHTML = '<span class="reward-status success">Eingelöst ✅</span>';
