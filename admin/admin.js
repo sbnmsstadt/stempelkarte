@@ -1,7 +1,19 @@
 const API_URL = "https://stempelkarte.sb-nmsstadt.workers.dev/api";
+const PIN_ADMIN = "8520"; 
 let students = [];
 let REWARDS = [];
 let lastStudentsSnapshot = "";
+
+// Simple PIN protection for Admin Dashboard
+if (sessionStorage.getItem('admin_auth') !== PIN_ADMIN) {
+    const pass = prompt("Admin PIN erforderlich:");
+    if (pass === PIN_ADMIN) {
+        sessionStorage.setItem('admin_auth', PIN_ADMIN);
+    } else {
+        alert("Falscher PIN!");
+        window.location.href = '../index.html';
+    }
+}
 
 document.addEventListener('DOMContentLoaded', async () => {
     await fetchRewards();
