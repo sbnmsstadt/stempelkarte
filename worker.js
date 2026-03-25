@@ -311,6 +311,10 @@ export default {
                         return new Response("Gruppen-Belohnung ist aktuell nicht aktiv (muss erst gestartet werden)", { status: 400, headers: corsHeaders });
                     }
 
+                    if (settings.groupReward.current >= settings.groupReward.target) {
+                        return new Response("Ziel bereits erreicht! Es können keine weiteren Stempel gespendet werden.", { status: 400, headers: corsHeaders });
+                    }
+
                     if (freeStamps >= 1) {
                         // Deduct from student (increase usedStamps)
                         student.usedStamps = usedStamps + 1;

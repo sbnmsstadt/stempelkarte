@@ -37,6 +37,7 @@ let pinCallback = null;
 let isSupervisor = false;
 let isDirectLink = false;
 let syncInterval = null;
+let lastRedemptionCount = null;
 
 document.addEventListener('DOMContentLoaded', async () => {
     await fetchRewards();
@@ -95,7 +96,17 @@ async function silentSync() {
             const settingsChanged = JSON.stringify(freshSettings.groupReward) !== JSON.stringify(SETTINGS.groupReward);
 
             if (studentChanged || settingsChanged) {
+                // Check if a new Filmtag approval appeared
+                if (lastRedemptionCount !== null && freshData.redemptions && freshData.redemptions.length > lastRedemptionCount) {
+                    const latest = freshData.redemptions[freshData.redemptions.length - 1];
+                    const text = typeof latest === 'string' ? latest : latest.text;
+                    if (text && text.includes("Filmtag genehmigt")) {
+                        triggerCelebration();
+                    }
+                }
+                
                 currentStudent = freshData;
+                lastRedemptionCount = freshData.redemptions ? freshData.redemptions.length : 0;
                 SETTINGS = freshSettings;
                 updateStampDisplay(currentStudent);
                 renderRewards(currentStudent);
@@ -121,8 +132,10 @@ async function loginWithId(id = null) {
         const response = await fetch(`${API_URL}/students/${studentId}`);
         if (response.ok) {
             currentStudent = await response.json();
+            lastRedemptionCount = currentStudent.redemptions ? currentStudent.redemptions.length : 0;
             localStorage.setItem('studentId', currentStudent.id);
-            showDetail(currentStudent);
+            showHome();
+            startSync();
         } else {
             if (!id && idInput) alert("Kürzel nicht gefunden.");
             localStorage.removeItem('studentId');
@@ -259,7 +272,9 @@ function renderRewards(student) {
     const donateStatus = document.getElementById('group-reward-detail-status');
     if (donateBtn) {
         const isGroupActive = SETTINGS.groupReward && SETTINGS.groupReward.active;
-        if (!isSupervisor && isGroupActive && freeStamps >= 1) {
+        const isFull = isGroupActive && SETTINGS.groupReward.current >= SETTINGS.groupReward.target;
+        
+        if (!isSupervisor && isGroupActive && !isFull && freeStamps >= 1) {
             donateBtn.classList.remove('hidden');
         } else {
             donateBtn.classList.add('hidden');
