@@ -52,6 +52,8 @@ export default {
                 ];
                 const settings = settingsRaw ? JSON.parse(settingsRaw) : { 
                     communityTarget: 500, 
+                    communityTitle: "Pizza-Party",
+                    communityGoalVisible: true,
                     activities: defaultActivities,
                     groupReward: { title: "Filmtag", target: 8, current: 0, icon: "🎬", active: false }
                 };

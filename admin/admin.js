@@ -459,6 +459,8 @@ async function loadSettings() {
         const response = await fetch(`${API_URL}/settings`);
         if (response.ok) {
             const settings = await response.json();
+            document.getElementById('setting-community-visible').checked = settings.communityGoalVisible !== false;
+            document.getElementById('setting-community-title').value = settings.communityTitle || "Pizza-Party";
             document.getElementById('setting-community-target').value = settings.communityTarget || 500;
             
             if (settings.activities) {
@@ -487,7 +489,10 @@ async function loadSettings() {
 }
 
 async function saveSettings() {
+    const communityVisible = document.getElementById('setting-community-visible').checked;
+    const communityTitle = document.getElementById('setting-community-title').value || "Pizza-Party";
     const target = parseInt(document.getElementById('setting-community-target').value);
+    
     const activitiesText = document.getElementById('setting-activities').value;
     const groupTitle = document.getElementById('setting-group-title').value;
     const groupTarget = parseInt(document.getElementById('setting-group-target').value);
@@ -521,12 +526,15 @@ async function saveSettings() {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ 
                 communityTarget: target,
+                communityTitle: communityTitle,
+                communityGoalVisible: communityVisible,
                 activities: activities,
                 groupReward: {
                     title: groupTitle,
                     target: groupTarget,
                     current: currentProgress,
-                    icon: "🎬"
+                    icon: oldSettings.groupReward?.icon || "🎬",
+                    active: oldSettings.groupReward?.active || false
                 }
             })
         });

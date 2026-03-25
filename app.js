@@ -607,15 +607,21 @@ async function updateCommunityGoal(providedStudents = null, providedSettings = n
         
         if (allStudents && settings) {
             // 1. Community Goal
-            const target = settings.communityTarget || 500;
-            const total = allStudents.reduce((sum, s) => sum + (s.stamps || 0), 0);
-            const progress = Math.min(100, (total / target) * 100);
-            
-            const bar = document.getElementById('community-progress-bar');
-            const text = document.getElementById('community-total-text');
-            if (bar && text) {
-                bar.style.width = `${progress}%`;
-                text.innerText = `${total} / ${target}`;
+            const cGoalContainer = document.getElementById('community-goal-container');
+            if (cGoalContainer) {
+                if (settings.communityGoalVisible === false) {
+                    cGoalContainer.style.display = 'none';
+                } else {
+                    cGoalContainer.style.display = 'block';
+                    const target = settings.communityTarget || 500;
+                    const title = settings.communityTitle || "Pizza-Party";
+                    const total = allStudents.reduce((sum, s) => sum + (s.stamps || 0), 0);
+                    const progress = Math.min(100, (total / target) * 100);
+                    
+                    document.getElementById('community-title-label').innerText = `🌍 ${title}`;
+                    document.getElementById('community-total-text').innerText = `${total} / ${target}`;
+                    document.getElementById('community-progress-bar').style.width = `${progress}%`;
+                }
             }
 
             // 2. Group Reward (Filmtag)
