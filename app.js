@@ -932,9 +932,12 @@ async function contributeGroupReward() {
         if (res.ok) {
              const updated = await res.json();
              currentStudent = updated;
+             
+             // IMPORTANT: Force refresh global settings BEFORE showing detail
+             await updateCommunityGoal();
+             
              alert("Danke für deine Spende! 🎬✨");
              showDetail(currentStudent);
-             updateCommunityGoal();
         } else {
              const msg = await res.text();
              alert(msg || "Fehler bei der Spende.");
