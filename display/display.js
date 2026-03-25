@@ -181,9 +181,7 @@ function renderFilmtag() {
 function renderEnergy() {
     const today = new Date();
     today.setHours(23,59,59,999);
-    const wday = today.getDay() || 7;
 
-    // Build 7 day buckets (Mon–today)
     const buckets = Array(7).fill(0);
     const labels  = ['Mo','Di','Mi','Do','Fr','Sa','So'];
 
@@ -194,8 +192,7 @@ function renderEnergy() {
             const hDate = new Date(h.date);
             const daysAgo = Math.floor((today - hDate) / 86400000);
             if (daysAgo >= 0 && daysAgo < 7) {
-                // Which weekday slot?
-                const hWday = (hDate.getDay() || 7) - 1; // 0=Mon
+                const hWday = (hDate.getDay() || 7) - 1;
                 buckets[hWday]++;
                 weekTotal++;
             }
@@ -207,10 +204,16 @@ function renderEnergy() {
     const max = Math.max(...buckets, 1);
     const barsEl = document.getElementById('energy-bars');
     barsEl.innerHTML = buckets.map((v, i) => {
-        const h = Math.max(8, Math.round((v / max) * 32));
+        const heightPct = Math.max(6, Math.round((v / max) * 90));
         const lit = v > 0 ? 'lit' : '';
-        return `<div class="energy-bar-seg ${lit}" style="height:${h}px;" title="${labels[i]}: ${v}"></div>`;
+        return `<div class="energy-bar-seg ${lit}" style="height:${heightPct}px;"></div>`;
     }).join('');
+
+    // Update day labels
+    const labelsEl = document.getElementById('energy-day-labels');
+    if (labelsEl) {
+        labelsEl.innerHTML = labels.map(l => `<span>${l}</span>`).join('');
+    }
 }
 
 // ── REDEMPTIONS ────────────────────────────────

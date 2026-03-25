@@ -437,13 +437,21 @@
 
         .energy-row {
             display: flex;
+            flex-direction: column;
             align-items: center;
-            justify-content: space-between;
-            gap: 16px;
+            justify-content: center;
+            gap: 14px;
+            flex: 1;
+        }
+
+        .energy-top {
+            display: flex;
+            align-items: baseline;
+            gap: 12px;
         }
 
         .energy-number {
-            font-size: 3.5rem;
+            font-size: 4.5rem;
             font-weight: 900;
             background: linear-gradient(135deg, #6ee7b7, var(--success));
             -webkit-background-clip: text;
@@ -453,7 +461,7 @@
         }
 
         .energy-label {
-            font-size: 0.75rem;
+            font-size: 0.8rem;
             color: var(--text-muted);
             font-weight: 700;
             text-transform: uppercase;
@@ -463,23 +471,43 @@
 
         .energy-bar-row {
             display: flex;
-            gap: 4px;
+            gap: 8px;
             align-items: flex-end;
-            height: 32px;
+            height: 90px;
+            width: 100%;
+            padding: 0 8px;
         }
 
         .energy-bar-seg {
             flex: 1;
-            border-radius: 4px;
-            background: rgba(16,185,129,0.2);
-            border: 1px solid rgba(16,185,129,0.2);
+            border-radius: 6px 6px 2px 2px;
+            background: rgba(16,185,129,0.12);
+            border: 1px solid rgba(16,185,129,0.15);
             transition: all 0.6s ease;
+            position: relative;
         }
 
         .energy-bar-seg.lit {
             background: linear-gradient(180deg, #34d399, #10b981);
             border-color: rgba(16,185,129,0.5);
-            box-shadow: 0 0 6px rgba(16,185,129,0.4);
+            box-shadow: 0 0 10px rgba(16,185,129,0.35);
+        }
+
+        .energy-day-label {
+            display: flex;
+            gap: 8px;
+            width: 100%;
+            padding: 0 8px;
+        }
+
+        .energy-day-label span {
+            flex: 1;
+            text-align: center;
+            font-size: 0.6rem;
+            font-weight: 700;
+            color: var(--text-muted);
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
         }
 
         /* Redemptions */
@@ -742,12 +770,16 @@
                 </div>
                 <div class="card-content">
                     <div class="energy-row">
-                        <div>
+                        <div class="energy-top">
                             <div class="energy-number" id="energy-number">0</div>
                             <div class="energy-label">Stempel<br>diese Woche</div>
                         </div>
                         <div class="energy-bar-row" id="energy-bars">
-                            <!-- 7 day bars -->
+                            <!-- 7 day bars filled by JS -->
+                        </div>
+                        <div class="energy-day-label" id="energy-day-labels">
+                            <span>Mo</span><span>Di</span><span>Mi</span>
+                            <span>Do</span><span>Fr</span><span>Sa</span><span>So</span>
                         </div>
                     </div>
                 </div>
