@@ -196,6 +196,13 @@ function renderRewards(student) {
     const stamps = student.stamps;
     const redemptions = student.redemptions || {};
     
+    // Compute highest confirmed threshold to figure out "free" (non-checked) stamps
+    let maxCompletedThreshold = 0;
+    Object.entries(redemptions).forEach(([t, s]) => {
+        if (s === 'completed') maxCompletedThreshold = Math.max(maxCompletedThreshold, parseInt(t));
+    });
+    const freeStamps = stamps - maxCompletedThreshold;
+
     REWARDS.forEach(reward => {
         const item = document.createElement('div');
         const isReached = stamps >= reward.threshold;
@@ -210,8 +217,12 @@ function renderRewards(student) {
             if (status === 'pending') {
                 actionHTML = '<span class="reward-status warning">Angefragt ⏳</span>';
             } else if (status === 'completed') {
-                // Legacy: old data — show button to redeem again
-                actionHTML = `<button class="redeem-btn" onclick="requestRedemption(${reward.threshold})">Nochmal einlösen</button>`;
+                // Only allow re-redemption if student has enough free (blue) stamps
+                if (freeStamps >= reward.threshold) {
+                    actionHTML = `<button class="redeem-btn" onclick="requestRedemption(${reward.threshold})">Nochmal einlösen</button>`;
+                } else {
+                    actionHTML = '<span class="reward-status success">Eingelöst ✅</span>';
+                }
             } else {
                 actionHTML = `<button class="redeem-btn" onclick="requestRedemption(${reward.threshold})">Einlösen</button>`;
             }
