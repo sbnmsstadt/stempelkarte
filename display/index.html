@@ -134,18 +134,18 @@
             display: flex;
             align-items: center;
             gap: 10px;
-            padding: 6px 14px;
-            background: rgba(236,72,153,0.1);
-            border: 1px solid rgba(236,72,153,0.3);
+            padding: 8px 18px;
+            background: rgba(236,72,153,0.12);
+            border: 1px solid rgba(236,72,153,0.35);
             border-radius: 30px;
-            font-size: 0.8rem;
+            font-size: 1.05rem;
             font-weight: 800;
             color: #f9a8d4;
             white-space: nowrap;
         }
 
         .countdown-pill .days {
-            font-size: 1.2rem;
+            font-size: 1.7rem;
             font-weight: 900;
             color: var(--pink);
         }
@@ -189,16 +189,107 @@
             position: relative;
         }
 
-        /* ── KIDS BUBBLE ZONE ─────────────────── */
+        /* ── KIDS SCROLL BAND ──────────────────── */
         .card.birthday-card { border-color: rgba(236,72,153,0.25); }
         .card.birthday-card .card-title { color: #f472b6; }
 
-        /* Random float zone — absolute positioned kids */
-        .bubble-zone {
-            position: relative;
+        /* Vertical scroll band */
+        .scroll-band {
             flex: 1;
-            width: 100%;
+            overflow: hidden;
+            position: relative;
         }
+
+        .scroll-band-inner {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            animation: scrollDown linear infinite;
+        }
+
+        @keyframes scrollDown {
+            0%   { transform: translateY(0); }
+            100% { transform: translateY(-50%); }
+        }
+
+        .kid-card {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            padding: 12px 16px;
+            background: rgba(255,255,255,0.04);
+            border: 1px solid rgba(255,255,255,0.07);
+            border-radius: 14px;
+            flex-shrink: 0;
+            transition: background 0.3s;
+        }
+
+        .kid-card.today {
+            background: rgba(236,72,153,0.1);
+            border-color: rgba(236,72,153,0.35);
+            box-shadow: 0 0 12px rgba(236,72,153,0.2);
+        }
+
+        .kid-card.upcoming {
+            background: rgba(236,72,153,0.05);
+            border-color: rgba(236,72,153,0.18);
+        }
+
+        .kid-card-avatar {
+            width: 52px;
+            height: 52px;
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.6rem;
+            flex-shrink: 0;
+            background: rgba(255,255,255,0.06);
+        }
+
+        .kid-card.today .kid-card-avatar {
+            background: rgba(236,72,153,0.2);
+            box-shadow: 0 0 14px rgba(236,72,153,0.4);
+        }
+
+        .kid-card-info { flex: 1; min-width: 0; }
+
+        .kid-card-name {
+            font-size: 1.05rem;
+            font-weight: 800;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .kid-card.today .kid-card-name { color: #f472b6; }
+
+        .kid-card-date {
+            font-size: 0.78rem;
+            font-weight: 700;
+            color: var(--text-muted);
+            margin-top: 2px;
+        }
+
+        .kid-card.today .kid-card-date { color: #f9a8d4; }
+        .kid-card.upcoming .kid-card-date { color: rgba(236,72,153,0.7); }
+
+        .kid-card-badge {
+            font-size: 0.65rem;
+            font-weight: 900;
+            padding: 3px 8px;
+            border-radius: 6px;
+            letter-spacing: 0.06em;
+            flex-shrink: 0;
+        }
+
+        .kid-card-badge.today-badge {
+            background: rgba(236,72,153,0.2);
+            color: #f472b6;
+            border: 1px solid rgba(236,72,153,0.4);
+            animation: todayBlink 1.2s ease-in-out infinite;
+        }
+
 
         .float-kid {
             position: absolute;
@@ -614,8 +705,8 @@
                 <div class="card-title">Alle Kinder</div>
             </div>
             <div class="card-content">
-                <div class="bubble-zone" id="bubble-zone">
-                    <!-- Dynamically placed -->
+                <div class="scroll-band" id="scroll-band">
+                    <div class="scroll-band-inner" id="scroll-band-inner"></div>
                 </div>
             </div>
         </div>

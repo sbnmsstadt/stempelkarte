@@ -61,21 +61,10 @@ function renderAll() {
     renderTicker();
 }
 
-// ── KIDS: BOUNCING PHYSICS ─────────────────────
-let kidPhysics = [];
-let physicsRunning = false;
-let physicsRAF = null;
-
-function initKidPhysics() {
-    const zone = document.getElementById('bubble-zone');
-    if (!zone || students.length === 0) return;
-
-    zone.innerHTML = '';
-    // Measure zone
-    const W = zone.clientWidth;
-    const H = zone.clientHeight;
-    const ITEM_W = 76; // approximate rendered width of each kid widget
-    const ITEM_H = 96;
+// ── KIDS: SCROLL BAND ─────────────────────────
+function renderKids() {
+    const inner = document.getElementById('scroll-band-inner');
+    if (!inner || students.length === 0) return;
 
     const today = new Date();
     today.setHours(0,0,0,0);
@@ -86,88 +75,57 @@ function initKidPhysics() {
     sunday.setDate(monday.getDate() + 6);
     sunday.setHours(23,59,59,999);
 
-    kidPhysics = students.map((s, idx) => {
-        let isToday = false, isThisWeek = false, dateStr = '';
+    // Sort by: today first → this week → upcoming birthday order
+    const sorted = [...students].sort((a, b) => {
+        const getScore = (s) => {
+            if (!s.birthday) return Infinity;
+            const [,m,d] = s.birthday.split('-').map(Number);
+            let bday = new Date(today.getFullYear(), m-1, d);
+            if (bday < today) bday = new Date(today.getFullYear()+1, m-1, d);
+            const days = Math.round((bday - today) / 86400000);
+            return days;
+        };
+        return getScore(a) - getScore(b);
+    });
+
+    const makeCard = (s) => {
+        let isToday = false, isThisWeek = false, dateStr = '', daysLabel = '';
         if (s.birthday) {
             const [,m,d] = s.birthday.split('-').map(Number);
-            const bday = new Date(today.getFullYear(), m-1, d);
+            let bday = new Date(today.getFullYear(), m-1, d);
             isToday    = bday.toDateString() === today.toDateString();
             isThisWeek = bday >= monday && bday <= sunday;
             dateStr    = `${String(d).padStart(2,'0')}.${String(m).padStart(2,'0')}.`;
+            if (bday < today) bday = new Date(today.getFullYear()+1, m-1, d);
+            const days = Math.round((bday - today) / 86400000);
+            daysLabel  = isToday ? '🎂 HEUTE!' : `in ${days} Tagen`;
         }
+        const cls = isToday ? 'today' : isThisWeek ? 'upcoming' : '';
+        const badge = isToday
+            ? `<div class="kid-card-badge today-badge">🎂 HEUTE!</div>`
+            : isThisWeek
+                ? `<div class="kid-card-badge" style="background:rgba(236,72,153,0.1);color:#f9a8d4;border:1px solid rgba(236,72,153,0.3);">diese Woche</div>`
+                : '';
+        return `
+            <div class="kid-card ${cls}">
+                <div class="kid-card-avatar">${s.avatar || s.name.charAt(0)}</div>
+                <div class="kid-card-info">
+                    <div class="kid-card-name">${s.name}</div>
+                    <div class="kid-card-date">${dateStr}${dateStr && daysLabel ? ' · ' + daysLabel : daysLabel}</div>
+                </div>
+                ${badge}
+            </div>`;
+    };
 
-        // Create DOM element
-        const el = document.createElement('div');
-        el.className = 'float-kid';
-        el.style.position = 'absolute';
-        el.style.animation = 'none'; // disable CSS drift; we control position
+    // Duplicate for seamless infinite scroll
+    const html = [...sorted, ...sorted].map(makeCard).join('');
+    inner.innerHTML = html;
 
-        const avatarClass = isToday ? 'today' : isThisWeek ? 'upcoming' : '';
-        const nameClass   = isToday ? 'today' : '';
-        const bdayClass   = isToday ? 'today' : isThisWeek ? 'upcoming' : '';
-        const todayTag    = isToday ? `<div class="today-tag">🎂 HEUTE!</div>` : '';
-
-        el.innerHTML = `
-            <div class="float-avatar ${avatarClass}">${s.avatar || s.name.charAt(0)}</div>
-            ${todayTag}
-            <div class="float-name ${nameClass}">${s.name.split(' ')[0]}</div>
-            ${dateStr ? `<div class="float-bday ${bdayClass}">${dateStr}</div>` : ''}`;
-
-        zone.appendChild(el);
-
-        // Random start position spread across screen
-        const x = Math.random() * Math.max(1, W - ITEM_W);
-        const y = Math.random() * Math.max(1, H - ITEM_H);
-
-        // Speed — slight variation per kid, slow & gentle
-        const baseSpeed = 0.4 + Math.random() * 0.5;
-        const angle = Math.random() * Math.PI * 2;
-        const vx = Math.cos(angle) * baseSpeed;
-        const vy = Math.sin(angle) * baseSpeed;
-
-        return { el, x, y, vx, vy, w: ITEM_W, h: ITEM_H };
-    });
-
-    // Start physics loop if not already running
-    if (!physicsRunning) {
-        physicsRunning = true;
-        physicsLoop();
-    }
+    // Scroll speed: ~8s per student (min 20s)
+    const duration = Math.max(20, sorted.length * 3.5);
+    inner.style.animationDuration = `${duration}s`;
 }
 
-function physicsLoop() {
-    const zone = document.getElementById('bubble-zone');
-    if (!zone) { physicsRunning = false; return; }
-
-    const W = zone.clientWidth;
-    const H = zone.clientHeight;
-
-    for (const k of kidPhysics) {
-        k.x += k.vx;
-        k.y += k.vy;
-
-        // Bounce X
-        if (k.x <= 0) { k.x = 0; k.vx = Math.abs(k.vx); }
-        if (k.x + k.w >= W) { k.x = W - k.w; k.vx = -Math.abs(k.vx); }
-
-        // Bounce Y
-        if (k.y <= 0) { k.y = 0; k.vy = Math.abs(k.vy); }
-        if (k.y + k.h >= H) { k.y = H - k.h; k.vy = -Math.abs(k.vy); }
-
-        k.el.style.left = `${k.x}px`;
-        k.el.style.top  = `${k.y}px`;
-    }
-
-    physicsRAF = requestAnimationFrame(physicsLoop);
-}
-
-function renderKids() {
-    // Cancel old loop and rebuild
-    if (physicsRAF) cancelAnimationFrame(physicsRAF);
-    physicsRunning = false;
-    kidPhysics = [];
-    initKidPhysics();
-}
 
 // ── COUNTDOWN ──────────────────────────────────
 function renderCountdown() {
