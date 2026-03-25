@@ -1,0 +1,565 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NACHMI NMS-Stadt — Klassen-Board</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;700;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #3b82f6;
+            --primary-light: #60a5fa;
+            --accent: #8b5cf6;
+            --success: #10b981;
+            --gold: #f59e0b;
+            --bg: #0a0a1a;
+            --glass: rgba(255,255,255,0.04);
+            --glass-border: rgba(255,255,255,0.08);
+            --text-muted: rgba(255,255,255,0.4);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Outfit', sans-serif;
+            background: var(--bg);
+            color: white;
+            min-height: 100vh;
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* Animated background */
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background: 
+                radial-gradient(ellipse 80% 60% at 20% 20%, rgba(59,130,246,0.08) 0%, transparent 60%),
+                radial-gradient(ellipse 60% 80% at 80% 80%, rgba(139,92,246,0.08) 0%, transparent 60%),
+                radial-gradient(ellipse 50% 50% at 50% 50%, rgba(16,185,129,0.04) 0%, transparent 70%);
+            animation: bgPulse 12s ease-in-out infinite alternate;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        @keyframes bgPulse {
+            0% { opacity: 0.6; transform: scale(1); }
+            100% { opacity: 1; transform: scale(1.05); }
+        }
+
+        /* Floating particles */
+        .particle {
+            position: fixed;
+            border-radius: 50%;
+            opacity: 0.15;
+            animation: float linear infinite;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        @keyframes float {
+            0% { transform: translateY(110vh) translateX(0); opacity: 0; }
+            10% { opacity: 0.15; }
+            90% { opacity: 0.15; }
+            100% { transform: translateY(-10vh) translateX(30px); opacity: 0; }
+        }
+
+        /* Layout */
+        .board {
+            position: relative;
+            z-index: 1;
+            display: grid;
+            grid-template-columns: 1fr 1.2fr 1fr;
+            grid-template-rows: auto 1fr;
+            gap: 24px;
+            padding: 24px;
+            height: 100vh;
+        }
+
+        /* Header */
+        .header {
+            grid-column: 1 / -1;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px 32px;
+            background: var(--glass);
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            backdrop-filter: blur(20px);
+        }
+
+        .header-logo {
+            font-size: 2rem;
+            font-weight: 900;
+            background: linear-gradient(135deg, var(--primary-light), var(--accent));
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            letter-spacing: -0.02em;
+        }
+
+        .header-title {
+            font-size: 1.1rem;
+            color: var(--text-muted);
+            font-weight: 700;
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+        }
+
+        .clock {
+            font-size: 2.2rem;
+            font-weight: 900;
+            font-variant-numeric: tabular-nums;
+            background: linear-gradient(135deg, white, rgba(255,255,255,0.6));
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        /* Cards */
+        .card {
+            background: var(--glass);
+            border: 1px solid var(--glass-border);
+            border-radius: 24px;
+            padding: 28px;
+            backdrop-filter: blur(20px);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            animation: cardIn 0.6s ease-out both;
+        }
+
+        @keyframes cardIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .card-icon {
+            font-size: 2rem;
+            line-height: 1;
+        }
+
+        .card-title {
+            font-size: 1rem;
+            font-weight: 900;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            color: var(--text-muted);
+        }
+
+        .card-content {
+            flex: 1;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        /* VIP Card */
+        .card.vip-card { border-color: rgba(245,158,11,0.3); }
+        .card.vip-card .card-title { color: var(--gold); }
+
+        .vip-item {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            padding: 14px 18px;
+            background: rgba(245,158,11,0.08);
+            border: 1px solid rgba(245,158,11,0.2);
+            border-radius: 16px;
+            animation: vipSlide 0.5s ease-out both;
+        }
+
+        @keyframes vipSlide {
+            from { opacity: 0; transform: translateX(-16px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+
+        .vip-avatar {
+            width: 52px;
+            height: 52px;
+            border-radius: 14px;
+            background: linear-gradient(135deg, var(--gold), #d97706);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            box-shadow: 0 0 16px rgba(245,158,11,0.4);
+        }
+
+        .vip-name {
+            font-size: 1.4rem;
+            font-weight: 900;
+            flex: 1;
+        }
+
+        .vip-days {
+            font-size: 0.8rem;
+            font-weight: 700;
+            color: var(--gold);
+            background: rgba(245,158,11,0.15);
+            border: 1px solid rgba(245,158,11,0.3);
+            padding: 4px 10px;
+            border-radius: 8px;
+            white-space: nowrap;
+        }
+
+        /* Birthday Card */
+        .card.birthday-card { border-color: rgba(236,72,153,0.3); }
+        .card.birthday-card .card-title { color: #f472b6; }
+
+        .birthday-item {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            padding: 12px 16px;
+            background: rgba(236,72,153,0.07);
+            border: 1px solid rgba(236,72,153,0.15);
+            border-radius: 14px;
+        }
+
+        .birthday-avatar {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            background: linear-gradient(135deg, #ec4899, #be185d);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.4rem;
+        }
+
+        .birthday-name {
+            font-size: 1.3rem;
+            font-weight: 800;
+            flex: 1;
+        }
+
+        .birthday-date {
+            font-size: 0.85rem;
+            font-weight: 700;
+            color: #f472b6;
+            background: rgba(236,72,153,0.12);
+            border: 1px solid rgba(236,72,153,0.25);
+            padding: 4px 10px;
+            border-radius: 8px;
+        }
+
+        .birthday-today {
+            animation: birthdayPulse 1.5s ease-in-out infinite;
+        }
+
+        @keyframes birthdayPulse {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(236,72,153,0.3); }
+            50% { box-shadow: 0 0 0 8px rgba(236,72,153,0); }
+        }
+
+        /* Filmtag Card */
+        .card.filmtag-card { border-color: rgba(59,130,246,0.3); }
+        .card.filmtag-card .card-title { color: var(--primary-light); }
+
+        .filmtag-progress-container {
+            background: rgba(255,255,255,0.05);
+            border-radius: 16px;
+            overflow: hidden;
+            height: 32px;
+            position: relative;
+            border: 1px solid var(--glass-border);
+        }
+
+        .filmtag-progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, var(--primary), var(--accent));
+            border-radius: 16px;
+            transition: width 1.2s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .filmtag-progress-bar::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.3) 50%, transparent 100%);
+            animation: shimmer 2s infinite;
+        }
+
+        @keyframes shimmer {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }
+
+        .filmtag-numbers {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            margin-top: 8px;
+        }
+
+        .filmtag-current {
+            font-size: 3rem;
+            font-weight: 900;
+            background: linear-gradient(135deg, var(--primary-light), var(--accent));
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            line-height: 1;
+        }
+
+        .filmtag-of {
+            font-size: 1rem;
+            color: var(--text-muted);
+            font-weight: 700;
+        }
+
+        .filmtag-target {
+            font-size: 2rem;
+            font-weight: 900;
+            color: var(--text-muted);
+        }
+
+        /* Redemptions Card */
+        .card.redemptions-card { border-color: rgba(16,185,129,0.3); }
+        .card.redemptions-card .card-title { color: #6ee7b7; }
+
+        .redemption-item {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            padding: 12px 16px;
+            background: rgba(16,185,129,0.07);
+            border: 1px solid rgba(16,185,129,0.15);
+            border-radius: 14px;
+        }
+
+        .redemption-avatar {
+            width: 46px;
+            height: 46px;
+            border-radius: 12px;
+            background: linear-gradient(135deg, var(--success), #047857);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.3rem;
+        }
+
+        .redemption-info {
+            flex: 1;
+        }
+
+        .redemption-name {
+            font-size: 1.1rem;
+            font-weight: 800;
+        }
+
+        .redemption-reward {
+            font-size: 0.8rem;
+            color: #6ee7b7;
+            font-weight: 600;
+        }
+
+        .redemption-badge {
+            font-size: 0.7rem;
+            font-weight: 800;
+            padding: 4px 10px;
+            border-radius: 8px;
+            background: rgba(16,185,129,0.15);
+            border: 1px solid rgba(16,185,129,0.3);
+            color: #6ee7b7;
+            letter-spacing: 0.05em;
+        }
+
+        /* Empty states */
+        .empty-state {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1rem;
+            color: var(--text-muted);
+            font-weight: 700;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .empty-icon {
+            font-size: 2.5rem;
+            opacity: 0.4;
+        }
+
+        /* Ticker / status bar */
+        .status-bar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            padding: 10px 32px;
+            background: rgba(0,0,0,0.5);
+            border-top: 1px solid var(--glass-border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            font-weight: 600;
+            backdrop-filter: blur(10px);
+            z-index: 10;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--success);
+            display: inline-block;
+            margin-right: 8px;
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.5; transform: scale(0.8); }
+        }
+
+        /* Scrolling list for many items */
+        .scroll-list {
+            flex: 1;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .scroll-list-inner {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        /* Fade in/out for items */
+        .fade-item {
+            animation: fadeIn 0.5s ease-out both;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Big number display */
+        .big-stat {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            background: var(--glass);
+            border-radius: 18px;
+            border: 1px solid var(--glass-border);
+        }
+
+        .big-stat-number {
+            font-size: 4rem;
+            font-weight: 900;
+            line-height: 1;
+        }
+
+        .big-stat-label {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            margin-top: 8px;
+        }
+    </style>
+</head>
+<body>
+    <div class="board" id="board">
+        <header class="header">
+            <div class="header-logo">✦ NACHMI NMS-Stadt</div>
+            <div class="header-title">Klassen-Infotafel</div>
+            <div class="clock" id="clock">00:00</div>
+        </header>
+
+        <!-- Left: Birthdays -->
+        <div class="card birthday-card" style="animation-delay:0.1s">
+            <div class="card-header">
+                <div class="card-icon">🎂</div>
+                <div class="card-title">Geburtstage</div>
+            </div>
+            <div class="card-content" id="birthday-list">
+                <div class="empty-state">
+                    <div class="empty-icon">🎂</div>
+                    <span>Keine Geburtstage diese Woche</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Center: Filmtag + Redemptions -->
+        <div style="display:flex; flex-direction:column; gap:24px;">
+            <div class="card filmtag-card" style="animation-delay:0.2s">
+                <div class="card-header">
+                    <div class="card-icon">🎬</div>
+                    <div class="card-title" id="filmtag-title">Filmtag Stand</div>
+                </div>
+                <div class="card-content">
+                    <div class="filmtag-progress-container">
+                        <div class="filmtag-progress-bar" id="filmtag-bar" style="width:0%"></div>
+                    </div>
+                    <div class="filmtag-numbers">
+                        <div class="filmtag-current" id="filmtag-current">0</div>
+                        <div class="filmtag-of">von</div>
+                        <div class="filmtag-target" id="filmtag-target">?</div>
+                    </div>
+                    <div id="filmtag-status" style="font-size:0.9rem; color:var(--text-muted); font-weight:700;"></div>
+                </div>
+            </div>
+
+            <div class="card redemptions-card" style="animation-delay:0.3s; flex:1;">
+                <div class="card-header">
+                    <div class="card-icon">🎁</div>
+                    <div class="card-title">Offene Belohnungs-Anfragen</div>
+                </div>
+                <div class="card-content" id="redemption-list">
+                    <div class="empty-state">
+                        <div class="empty-icon">✅</div>
+                        <span>Alles erledigt!</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right: VIP -->
+        <div class="card vip-card" style="animation-delay:0.4s">
+            <div class="card-header">
+                <div class="card-icon">⭐</div>
+                <div class="card-title">Aktuelle VIPs</div>
+            </div>
+            <div class="card-content" id="vip-list">
+                <div class="empty-state">
+                    <div class="empty-icon">⭐</div>
+                    <span>Kein aktiver VIP-Status</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Status bar -->
+    <div class="status-bar">
+        <div><span class="status-dot"></span> Live-Daten</div>
+        <div id="last-updated">Wird geladen...</div>
+        <div>🔄 Aktualisierung alle 30 Sek.</div>
+    </div>
+
+    <script src="display.js"></script>
+</body>
+</html>
