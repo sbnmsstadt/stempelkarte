@@ -71,7 +71,7 @@
             position: relative;
             z-index: 1;
             display: grid;
-            grid-template-columns: 1fr 1.2fr 1fr;
+            grid-template-columns: 1.2fr 1.3fr 0.7fr;
             grid-template-rows: auto 1fr;
             gap: 24px;
             padding: 24px;
@@ -279,6 +279,23 @@
 
         .float-name.today {
             color: #f472b6;
+        }
+
+        .float-bday {
+            font-size: 0.58rem;
+            font-weight: 700;
+            color: rgba(255,255,255,0.35);
+            letter-spacing: 0.03em;
+        }
+
+        .float-bday.today {
+            color: #f472b6;
+            font-weight: 900;
+        }
+
+        .float-bday.upcoming {
+            color: rgba(236,72,153,0.7);
+            font-weight: 800;
         }
 
         /* Birthday Card */

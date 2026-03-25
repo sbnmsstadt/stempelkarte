@@ -77,15 +77,29 @@ function renderBirthdays() {
     sunday.setDate(monday.getDate() + 6);
     sunday.setHours(23, 59, 59, 999);
 
-    const items = students.map((s, idx) => {
+    // Sort all students by their upcoming birthday
+    const sorted = [...students].sort((a, b) => {
+        const getNextBday = (s) => {
+            if (!s.birthday) return Infinity;
+            const [, m, d] = s.birthday.split('-').map(Number);
+            let bday = new Date(today.getFullYear(), m - 1, d);
+            if (bday < today) bday = new Date(today.getFullYear() + 1, m - 1, d);
+            return bday.getTime();
+        };
+        return getNextBday(a) - getNextBday(b);
+    });
+
+    const items = sorted.map((s, idx) => {
         let isToday = false;
         let isThisWeek = false;
+        let dateStr = '';
 
         if (s.birthday) {
             const [, m, d] = s.birthday.split('-').map(Number);
             const bday = new Date(today.getFullYear(), m - 1, d);
             isToday = bday.toDateString() === today.toDateString();
             isThisWeek = bday >= monday && bday <= sunday;
+            dateStr = `${String(d).padStart(2,'0')}.${String(m).padStart(2,'0')}.`;
         }
 
         // Each kid floats at a slightly different speed & delay for organic feel
@@ -94,12 +108,16 @@ function renderBirthdays() {
         const avatarClass = isToday ? 'today' : isThisWeek ? 'upcoming' : '';
         const nameClass = isToday ? 'today' : '';
         const todayTag = isToday ? '<div style="font-size:0.5rem; color:#f472b6; font-weight:900; letter-spacing:0.05em;">🎂 HEUTE</div>' : '';
+        const bdayLabel = dateStr 
+            ? `<div class="float-bday ${isToday ? 'today' : isThisWeek ? 'upcoming' : ''}">${dateStr}</div>` 
+            : '';
 
         return `
             <div class="float-kid" style="animation-duration:${speed}s; animation-delay:-${delay}s;">
                 <div class="float-avatar ${avatarClass}">${s.avatar || s.name.charAt(0)}</div>
                 ${todayTag}
                 <div class="float-name ${nameClass}">${s.name.split(' ')[0]}</div>
+                ${bdayLabel}
             </div>`;
     }).join('');
 
