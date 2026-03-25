@@ -3,73 +3,17 @@ let students = [];
 let REWARDS = [];
 let lastStudentsSnapshot = "";
 
-function getAuthHeaders() {
-    const pw = localStorage.getItem('admin_pw') || "";
-    return {
-        'Content-Type': 'application/json',
-        'Authorization': pw
-    };
-}
-
-function checkUnauthorized(response) {
-    if (response.status === 401) {
-        localStorage.removeItem('admin_pw');
-        document.getElementById('login-overlay').style.display = 'flex';
-        const errMsg = document.getElementById('login-error-msg');
-        if (errMsg) errMsg.style.display = 'block';
-        return true;
-    }
-    return false;
-}
-
-window.loginAdmin = function() {
-    const pwInput = document.getElementById('admin-password-input');
-    const pw = pwInput.value;
-    if (!pw) {
-        pwInput.focus();
-        return;
-    }
-    
-    // Hide error before trying
-    const errMsg = document.getElementById('login-error-msg');
-    if (errMsg) errMsg.style.display = 'none';
-
-    localStorage.setItem('admin_pw', pw);
-    
-    // Attempt to load data
-    fetchRewards();
+document.addEventListener('DOMContentLoaded', async () => {
+    await fetchRewards();
     fetchStudents();
     
-    // We don't hide the overlay immediately; we wait for a successful response 
-    // or checkUnauthorized will pop it back anyway.
-    // However, to make it feel fast, we can hide it and let it reappear if 401.
-    document.getElementById('login-overlay').style.display = 'none';
-};
-
-document.addEventListener('DOMContentLoaded', async () => {
-    // 1. Check Auth & UI early
-    const adminPW = localStorage.getItem('admin_pw');
-    const overlay = document.getElementById('login-overlay');
-    
-    if (!adminPW) {
-        if (overlay) overlay.style.display = 'flex';
-    } else {
-        if (overlay) overlay.style.display = 'none';
-        await fetchRewards();
-        fetchStudents();
-    }
-
-    // 2. Setup Events
-    const loginInput = document.getElementById('admin-password-input');
-    loginInput?.addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') loginAdmin();
-    });
-
+    // Poll every 5 seconds for new data
     setInterval(fetchStudentsSilent, 5000);
     
-    document.getElementById('add-btn')?.addEventListener('click', createNewStudent);
-    document.getElementById('add-reward-btn')?.addEventListener('click', createNewReward);
+    document.getElementById('add-btn').addEventListener('click', createNewStudent);
+    document.getElementById('add-reward-btn').addEventListener('click', createNewReward);
     
+    // Search functionality
     document.getElementById('search-students')?.addEventListener('input', (e) => {
         renderAdminList(e.target.value.toLowerCase());
     });
@@ -77,10 +21,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
 async function fetchRewards() {
     try {
-        const response = await fetch(`${API_URL}/rewards`, {
-            headers: getAuthHeaders()
-        });
-        if (checkUnauthorized(response)) return;
+        const response = await fetch(`${API_URL}/rewards`);
         if (response.ok) {
             REWARDS = await response.json();
             REWARDS.sort((a,b) => a.threshold - b.threshold);
@@ -94,10 +35,7 @@ async function fetchRewards() {
 
 async function fetchStudents() {
     try {
-        const response = await fetch(`${API_URL}/students`, {
-            headers: getAuthHeaders()
-        });
-        if (checkUnauthorized(response)) return;
+        const response = await fetch(`${API_URL}/students`);
         if (response.ok) {
             const raw = await response.text();
             lastStudentsSnapshot = raw;
@@ -115,12 +53,9 @@ async function fetchStudents() {
 }
 
 async function fetchStudentsSilent() {
-    if (document.hidden || !localStorage.getItem('admin_pw')) return;
+    if (document.hidden) return;
     try {
-        const response = await fetch(`${API_URL}/students`, {
-            headers: getAuthHeaders()
-        });
-        if (checkUnauthorized(response)) return;
+        const response = await fetch(`${API_URL}/students`);
         if (response.ok) {
             const raw = await response.text();
             if (raw !== lastStudentsSnapshot) {
@@ -205,10 +140,9 @@ async function confirmRedemption(studentId, threshold) {
     try {
         const response = await fetch(`${API_URL}/students/${studentId}/redeem`, {
             method: 'PATCH',
-            headers: getAuthHeaders(),
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ threshold: threshold, status: 'completed' })
         });
-        if (checkUnauthorized(response)) return;
         if (response.ok) {
             await fetchStudents();
         }
@@ -400,10 +334,9 @@ async function saveRewardsAPI(arr) {
     try {
         const response = await fetch(`${API_URL}/rewards`, {
             method: 'PUT',
-            headers: getAuthHeaders(),
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(arr)
         });
-        if (checkUnauthorized(response)) return;
         if (response.ok) {
             REWARDS = await response.json();
             renderRewardDashboard();
@@ -490,10 +423,9 @@ async function createNewStudent() {
     if (!name) return;
     const response = await fetch(`${API_URL}/students`, {
         method: 'POST',
-        headers: getAuthHeaders(),
+        headers: {'Content-Type': 'application/json'},
         body: JSON.stringify({name, birthday: b})
     });
-    if (checkUnauthorized(response)) return;
     if (response.ok) {
         document.getElementById('new-student-name').value = '';
         fetchStudents();
@@ -502,21 +434,16 @@ async function createNewStudent() {
 
 async function deleteStudent(id) {
     if (!confirm("Löschen?")) return;
-    const response = await fetch(`${API_URL}/students/${id}`, {
-        method:'DELETE',
-        headers: getAuthHeaders()
-    });
-    if (checkUnauthorized(response)) return;
+    await fetch(`${API_URL}/students/${id}`, {method:'DELETE'});
     fetchStudents();
 }
 
 async function updateStamps(id, c) {
-    const response = await fetch(`${API_URL}/students/${id}`, {
+    await fetch(`${API_URL}/students/${id}`, {
         method: 'PATCH',
-        headers: getAuthHeaders(),
+        headers: {'Content-Type':'application/json'},
         body: JSON.stringify({stamps: parseInt(c)})
     });
-    if (checkUnauthorized(response)) return;
     fetchStudents();
 }
 
