@@ -4,129 +4,271 @@ let students = [];
 let settings = {};
 let rewards = [];
 
-// --- Particles ---
+// ── PARTICLES ──────────────────────────────────
 function createParticles() {
-    const colors = ['#3b82f6', '#8b5cf6', '#10b981', '#f59e0b', '#ec4899'];
-    for (let i = 0; i < 18; i++) {
+    const colors = ['#3b82f6','#8b5cf6','#10b981','#f59e0b','#ec4899'];
+    for (let i = 0; i < 16; i++) {
         const p = document.createElement('div');
         p.className = 'particle';
-        const size = Math.random() * 6 + 3;
+        const size = Math.random() * 5 + 3;
         p.style.cssText = `
-            width: ${size}px;
-            height: ${size}px;
-            background: ${colors[Math.floor(Math.random() * colors.length)]};
-            left: ${Math.random() * 100}vw;
-            animation-duration: ${Math.random() * 20 + 15}s;
-            animation-delay: ${Math.random() * 15}s;
-        `;
+            width:${size}px; height:${size}px;
+            background:${colors[i % colors.length]};
+            left:${Math.random() * 100}vw;
+            animation-duration:${Math.random() * 18 + 14}s;
+            animation-delay:${Math.random() * 14}s;`;
         document.body.appendChild(p);
     }
 }
 
-// --- Clock ---
+// ── CLOCK ──────────────────────────────────────
 function updateClock() {
     const now = new Date();
-    const h = String(now.getHours()).padStart(2, '0');
-    const m = String(now.getMinutes()).padStart(2, '0');
+    const h = String(now.getHours()).padStart(2,'0');
+    const m = String(now.getMinutes()).padStart(2,'0');
     document.getElementById('clock').textContent = `${h}:${m}`;
 }
 
-// --- Data Fetch ---
+// ── FETCH ──────────────────────────────────────
 async function fetchData() {
     try {
-        const [studRes, settRes, rewRes] = await Promise.all([
+        const [sRes, stRes, rRes] = await Promise.all([
             fetch(`${API_URL}/students`),
             fetch(`${API_URL}/settings`),
             fetch(`${API_URL}/rewards`)
         ]);
-        students = studRes.ok ? await studRes.json() : [];
-        settings = settRes.ok ? await settRes.json() : {};
-        rewards = rewRes.ok ? await rewRes.json() : [];
+        students = sRes.ok ? await sRes.json() : [];
+        settings = stRes.ok ? await stRes.json() : {};
+        rewards  = rRes.ok ? await rRes.json() : [];
 
         renderAll();
 
         const now = new Date();
         document.getElementById('last-updated').textContent =
-            `Zuletzt aktualisiert: ${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}:${String(now.getSeconds()).padStart(2,'0')}`;
+            `Zuletzt: ${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}:${String(now.getSeconds()).padStart(2,'0')}`;
     } catch (err) {
         console.error('Fetch error:', err);
     }
 }
 
 function renderAll() {
-    renderBirthdays();
-    renderVIPs();
+    renderKids();
+    renderCountdown();
     renderFilmtag();
+    renderEnergy();
     renderRedemptions();
+    renderVIPs();
+    renderTicker();
 }
 
-// --- Birthdays ---
-function renderBirthdays() {
-    const container = document.getElementById('birthday-list');
-    if (students.length === 0) {
-        container.innerHTML = `<div class="empty-state"><div class="empty-icon">🎂</div><span>Keine Schüler eingetragen</span></div>`;
-        return;
-    }
+// ── KIDS: RANDOM FLOAT ─────────────────────────
+function renderKids() {
+    const zone = document.getElementById('bubble-zone');
+    if (!zone || students.length === 0) return;
 
     const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const day = today.getDay() || 7;
+    today.setHours(0,0,0,0);
+    const wDay = today.getDay() || 7;
     const monday = new Date(today);
-    monday.setDate(today.getDate() - day + 1);
+    monday.setDate(today.getDate() - wDay + 1);
     const sunday = new Date(monday);
     sunday.setDate(monday.getDate() + 6);
-    sunday.setHours(23, 59, 59, 999);
+    sunday.setHours(23,59,59,999);
 
-    // Sort all students by their upcoming birthday
+    // Layout params
+    const W = zone.clientWidth  || 360;
+    const H = zone.clientHeight || 420;
+    const ITEM_W = 62;
+    const ITEM_H = 86;
+
+    // Sort: today first, then this-week, then by upcoming birthday
     const sorted = [...students].sort((a, b) => {
-        const getNextBday = (s) => {
+        const score = (s) => {
+            if (!s.birthday) return 3;
+            const [,m,d] = s.birthday.split('-').map(Number);
+            const bday = new Date(today.getFullYear(), m-1, d);
+            if (bday.toDateString() === today.toDateString()) return 0;
+            if (bday >= monday && bday <= sunday) return 1;
+            if (bday < today) return 2.5;
+            return 2;
+        };
+        const sa = score(a), sb = score(b);
+        if (sa !== sb) return sa - sb;
+        // Secondary: next birthday date
+        const nextBday = (s) => {
             if (!s.birthday) return Infinity;
-            const [, m, d] = s.birthday.split('-').map(Number);
-            let bday = new Date(today.getFullYear(), m - 1, d);
-            if (bday < today) bday = new Date(today.getFullYear() + 1, m - 1, d);
+            const [,m,d] = s.birthday.split('-').map(Number);
+            let bday = new Date(today.getFullYear(), m-1, d);
+            if (bday < today) bday = new Date(today.getFullYear()+1, m-1, d);
             return bday.getTime();
         };
-        return getNextBday(a) - getNextBday(b);
+        return nextBday(a) - nextBday(b);
     });
 
-    const items = sorted.map((s, idx) => {
-        let isToday = false;
-        let isThisWeek = false;
-        let dateStr = '';
+    // Place them randomly, no overlaps (simple grid with jitter)
+    const cols = Math.max(3, Math.floor(W / (ITEM_W + 8)));
+    const rows = Math.ceil(sorted.length / cols);
+    const cellW = W / cols;
+    const cellH = Math.min(H / Math.max(rows, 1), ITEM_H + 12);
 
+    const html = sorted.map((s, idx) => {
+        let isToday = false, isThisWeek = false, dateStr = '';
         if (s.birthday) {
-            const [, m, d] = s.birthday.split('-').map(Number);
-            const bday = new Date(today.getFullYear(), m - 1, d);
-            isToday = bday.toDateString() === today.toDateString();
+            const [,m,d] = s.birthday.split('-').map(Number);
+            const bday = new Date(today.getFullYear(), m-1, d);
+            isToday   = bday.toDateString() === today.toDateString();
             isThisWeek = bday >= monday && bday <= sunday;
-            dateStr = `${String(d).padStart(2,'0')}.${String(m).padStart(2,'0')}.`;
+            dateStr   = `${String(d).padStart(2,'0')}.${String(m).padStart(2,'0')}.`;
         }
 
-        // Each kid floats at a slightly different speed & delay for organic feel
-        const speed = (3.5 + (idx % 5) * 0.7).toFixed(1);
-        const delay = ((idx * 0.4) % 4).toFixed(1);
+        // Semi-random position within cell
+        const col = idx % cols;
+        const row = Math.floor(idx / cols);
+        const jitterX = (Math.sin(idx * 2.4) * 0.4 + 0.5) * (cellW - ITEM_W);
+        const jitterY = (Math.cos(idx * 1.7) * 0.4 + 0.5) * (cellH - ITEM_H);
+        const x = Math.round(col * cellW + jitterX);
+        const y = Math.round(row * cellH + jitterY);
+
+        const speed  = (3.2 + (idx % 7) * 0.55).toFixed(1);
+        const delay  = ((idx * 0.37) % 5).toFixed(2);
+
         const avatarClass = isToday ? 'today' : isThisWeek ? 'upcoming' : '';
-        const nameClass = isToday ? 'today' : '';
-        const todayTag = isToday ? '<div style="font-size:0.5rem; color:#f472b6; font-weight:900; letter-spacing:0.05em;">🎂 HEUTE</div>' : '';
-        const bdayLabel = dateStr 
-            ? `<div class="float-bday ${isToday ? 'today' : isThisWeek ? 'upcoming' : ''}">${dateStr}</div>` 
-            : '';
+        const nameClass   = isToday ? 'today' : '';
+        const bdayClass   = isToday ? 'today' : isThisWeek ? 'upcoming' : '';
+        const todayTag    = isToday ? `<div class="today-tag">🎂 HEUTE!</div>` : '';
 
         return `
-            <div class="float-kid" style="animation-duration:${speed}s; animation-delay:-${delay}s;">
+            <div class="float-kid" style="left:${x}px; top:${y}px; animation-duration:${speed}s; animation-delay:-${delay}s;">
                 <div class="float-avatar ${avatarClass}">${s.avatar || s.name.charAt(0)}</div>
                 ${todayTag}
                 <div class="float-name ${nameClass}">${s.name.split(' ')[0]}</div>
-                ${bdayLabel}
+                ${dateStr ? `<div class="float-bday ${bdayClass}">${dateStr}</div>` : ''}
             </div>`;
     }).join('');
 
-    container.innerHTML = `<div class="float-grid">${items}</div>`;
+    zone.innerHTML = html;
 }
 
-// --- VIPs ---
+// ── COUNTDOWN ──────────────────────────────────
+function renderCountdown() {
+    const pill = document.getElementById('countdown-text');
+    if (!pill) return;
+
+    const today = new Date();
+    today.setHours(0,0,0,0);
+
+    const upcoming = students
+        .filter(s => s.birthday)
+        .map(s => {
+            const [,m,d] = s.birthday.split('-').map(Number);
+            let bday = new Date(today.getFullYear(), m-1, d);
+            if (bday < today) bday = new Date(today.getFullYear()+1, m-1, d);
+            const days = Math.round((bday - today) / 86400000);
+            return { name: s.name.split(' ')[0], days, isToday: days === 0 };
+        })
+        .sort((a,b) => a.days - b.days);
+
+    if (upcoming.length === 0) {
+        pill.textContent = 'Keine Geburtstage';
+        return;
+    }
+
+    const next = upcoming[0];
+    if (next.isToday) {
+        pill.innerHTML = `<strong>${next.name}</strong> hat heute Geburtstag! 🎉`;
+    } else {
+        pill.innerHTML = `<strong>${next.name}</strong> in <span class="days">${next.days}</span> Tagen`;
+    }
+}
+
+// ── FILMTAG ────────────────────────────────────
+function renderFilmtag() {
+    const gr = settings.groupReward;
+    if (!gr) {
+        document.getElementById('filmtag-status').textContent = 'Kein Gruppen-Ziel aktiv.';
+        return;
+    }
+    document.getElementById('filmtag-title').textContent  = `${gr.icon||'🎬'} ${gr.title||'Filmtag'}`;
+    document.getElementById('filmtag-current').textContent = gr.current||0;
+    document.getElementById('filmtag-target').textContent  = gr.target||'?';
+    const pct = Math.min(100,((gr.current||0)/(gr.target||1))*100);
+    document.getElementById('filmtag-bar').style.width = `${pct}%`;
+    const left = (gr.target||0)-(gr.current||0);
+    document.getElementById('filmtag-status').innerHTML = left <= 0
+        ? `<span style="color:#10b981">🎉 Ziel erreicht! Genehmigung ausstehend.</span>`
+        : `Noch <strong>${left}</strong> Stempel bis zum Ziel 🎯`;
+}
+
+// ── KLASSEN-ENERGIE ────────────────────────────
+function renderEnergy() {
+    const today = new Date();
+    today.setHours(23,59,59,999);
+    const wday = today.getDay() || 7;
+
+    // Build 7 day buckets (Mon–today)
+    const buckets = Array(7).fill(0);
+    const labels  = ['Mo','Di','Mi','Do','Fr','Sa','So'];
+
+    let weekTotal = 0;
+    students.forEach(s => {
+        (s.history || []).forEach(h => {
+            if (!h.date) return;
+            const hDate = new Date(h.date);
+            const daysAgo = Math.floor((today - hDate) / 86400000);
+            if (daysAgo >= 0 && daysAgo < 7) {
+                // Which weekday slot?
+                const hWday = (hDate.getDay() || 7) - 1; // 0=Mon
+                buckets[hWday]++;
+                weekTotal++;
+            }
+        });
+    });
+
+    document.getElementById('energy-number').textContent = weekTotal;
+
+    const max = Math.max(...buckets, 1);
+    const barsEl = document.getElementById('energy-bars');
+    barsEl.innerHTML = buckets.map((v, i) => {
+        const h = Math.max(8, Math.round((v / max) * 32));
+        const lit = v > 0 ? 'lit' : '';
+        return `<div class="energy-bar-seg ${lit}" style="height:${h}px;" title="${labels[i]}: ${v}"></div>`;
+    }).join('');
+}
+
+// ── REDEMPTIONS ────────────────────────────────
+function renderRedemptions() {
+    const el = document.getElementById('redemption-list');
+    const pending = [];
+    students.forEach(s => {
+        if (!s.redemptions) return;
+        Object.entries(s.redemptions).forEach(([thr, status]) => {
+            if (status !== 'pending') return;
+            const r = rewards.find(x => x.threshold === parseInt(thr));
+            pending.push({
+                student: s,
+                rewardName: r ? `${r.icon||'🎁'} ${r.title}` : `Belohnung (${thr})`
+            });
+        });
+    });
+
+    if (pending.length === 0) {
+        el.innerHTML = `<div class="empty-state"><div class="empty-icon">✅</div><span>Alles erledigt!</span></div>`;
+        return;
+    }
+
+    el.innerHTML = pending.map((p,i) => `
+        <div class="redemption-item fade-in" style="animation-delay:${i*0.07}s">
+            <div class="redemption-avatar">${p.student.avatar||p.student.name.charAt(0)}</div>
+            <div>
+                <div class="redemption-name">${p.student.name}</div>
+                <div class="redemption-reward">${p.rewardName}</div>
+            </div>
+        </div>`).join('');
+}
+
+// ── VIP ────────────────────────────────────────
 function renderVIPs() {
-    const container = document.getElementById('vip-list');
+    const el = document.getElementById('vip-list');
     const vipDuration = settings.vipDurationDays || 3;
     const today = new Date();
     today.setHours(0,0,0,0);
@@ -134,102 +276,83 @@ function renderVIPs() {
     const vips = students.filter(s => s.vip && s.vip.active);
 
     if (vips.length === 0) {
-        container.innerHTML = `<div class="empty-state"><div class="empty-icon">⭐</div><span>Kein aktiver VIP-Status</span></div>`;
+        el.innerHTML = `<div class="empty-state"><div class="empty-icon">⭐</div><span>Kein aktiver VIP</span></div>`;
         return;
     }
 
-    const items = vips.map((s, i) => {
+    el.innerHTML = vips.map(s => {
         let dayText = '';
         if (s.vip.grantedAt) {
-            const granted = new Date(s.vip.grantedAt);
-            granted.setHours(0,0,0,0);
-            const daysDiff = Math.floor((today - granted) / (1000*60*60*24)) + 1;
-            const daysLeft = vipDuration - daysDiff + 1;
-            dayText = daysLeft <= 1 ? '🔴 Letzter Tag!' : `Tag ${daysDiff} / ${vipDuration}`;
+            const g = new Date(s.vip.grantedAt);
+            g.setHours(0,0,0,0);
+            const diff = Math.floor((today - g) / 86400000) + 1;
+            const left = vipDuration - diff + 1;
+            dayText = left <= 1 ? '🔴 Letzter Tag!' : `Tag ${diff} / ${vipDuration}`;
         }
         return `
-            <div class="vip-item fade-item" style="animation-delay:${i * 0.1}s">
-                <div class="vip-avatar">${s.avatar || s.name.charAt(0)}</div>
-                <div class="vip-name">${s.name}</div>
-                ${dayText ? `<div class="vip-days">${dayText}</div>` : ''}
+            <div class="vip-big fade-in">
+                <div class="vip-star">⭐</div>
+                <div class="vip-avatar-big">${s.avatar||s.name.charAt(0)}</div>
+                <div class="vip-name-big">${s.name}</div>
+                ${dayText ? `<div class="vip-days-big">${dayText}</div>` : ''}
             </div>`;
     }).join('');
-
-    container.innerHTML = `<div class="scroll-list-inner">${items}</div>`;
 }
 
-// --- Filmtag ---
-function renderFilmtag() {
-    const gr = settings.groupReward;
-    const titleEl = document.getElementById('filmtag-title');
-    const currentEl = document.getElementById('filmtag-current');
-    const targetEl = document.getElementById('filmtag-target');
-    const barEl = document.getElementById('filmtag-bar');
-    const statusEl = document.getElementById('filmtag-status');
+// ── TICKER ─────────────────────────────────────
+function renderTicker() {
+    const scroll = document.getElementById('ticker-scroll');
+    const items = [];
 
-    if (!gr) {
-        statusEl.textContent = 'Kein Gruppen-Ziel aktiv.';
-        return;
-    }
-
-    titleEl.textContent = `${gr.icon || '🎬'} ${gr.title || 'Filmtag'} Stand`;
-    currentEl.textContent = gr.current || 0;
-    targetEl.textContent = gr.target || '?';
-
-    const progress = Math.min(100, ((gr.current || 0) / (gr.target || 1)) * 100);
-    barEl.style.width = `${progress}%`;
-
-    const remaining = (gr.target || 0) - (gr.current || 0);
-    if (remaining <= 0) {
-        statusEl.innerHTML = `<span style="color:#10b981; font-size:1.2rem;">🎉 Ziel erreicht! Genehmigung ausstehend.</span>`;
-    } else if (gr.active) {
-        statusEl.textContent = `Noch ${remaining} Stempel bis zum Ziel 🎯`;
-    } else {
-        statusEl.textContent = `Spenden-Modus noch nicht aktiv`;
-    }
-}
-
-// --- Redemptions ---
-function renderRedemptions() {
-    const container = document.getElementById('redemption-list');
-    const pending = [];
-
-    for (const s of students) {
-        if (!s.redemptions) continue;
-        for (const [threshold, status] of Object.entries(s.redemptions)) {
-            if (status === 'pending') {
-                const reward = rewards.find(r => r.threshold === parseInt(threshold));
-                pending.push({
-                    student: s,
-                    threshold,
-                    rewardName: reward ? `${reward.icon || '🎁'} ${reward.title}` : `Belohnung (${threshold} Stempel)`
-                });
+    // All recent history across students (last 48h)
+    const cutoff = Date.now() - 48 * 3600 * 1000;
+    students.forEach(s => {
+        (s.history || []).forEach(h => {
+            if (!h.date || !h.reason) return;
+            const ts = new Date(h.date).getTime();
+            if (ts >= cutoff - 86400000) { // last 2 days loosely
+                items.push({ name: s.name.split(' ')[0], reason: h.reason, date: h.date });
             }
-        }
+        });
+    });
+
+    // Sort newest first, take last 20
+    items.sort((a,b) => new Date(b.date) - new Date(a.date));
+    const display = items.slice(0, 20);
+
+    // Add VIP info
+    students.filter(s => s.vip && s.vip.active).forEach(s => {
+        display.unshift({ name: s.name.split(' ')[0], reason: '⭐ VIP-Status aktiv', date: s.vip.grantedAt||'' });
+    });
+
+    if (display.length === 0) {
+        display.push({ name: 'NACHMI', reason: '🌟 Noch keine Aktivitäten', date: '' });
     }
 
-    if (pending.length === 0) {
-        container.innerHTML = `<div class="empty-state"><div class="empty-icon">✅</div><span>Keine offenen Anfragen</span></div>`;
-        return;
-    }
-
-    const items = pending.map((p, i) => `
-        <div class="redemption-item fade-item" style="animation-delay:${i * 0.08}s">
-            <div class="redemption-avatar">${p.student.avatar || p.student.name.charAt(0)}</div>
-            <div class="redemption-info">
-                <div class="redemption-name">${p.student.name}</div>
-                <div class="redemption-reward">${p.rewardName}</div>
-            </div>
-            <div class="redemption-badge">⏳ Ausstehend</div>
+    // Duplicate for seamless loop
+    const html = [...display, ...display].map(it => `
+        <div class="ticker-item">
+            <span class="t-icon">▸</span>
+            <span class="t-name">${it.name}</span>
+            <span>${it.reason}</span>
         </div>`).join('');
 
-    container.innerHTML = `<div class="scroll-list-inner">${items}</div>`;
+    scroll.innerHTML = html;
+
+    // Adjust animation speed by length
+    const duration = Math.max(20, display.length * 4);
+    scroll.style.animationDuration = `${duration}s`;
 }
 
-// --- Init ---
+// ── INIT ───────────────────────────────────────
 createParticles();
 updateClock();
 setInterval(updateClock, 1000);
 
 fetchData();
 setInterval(fetchData, 30000);
+
+// Re-layout kids on resize
+window.addEventListener('resize', () => {
+    if (students.length) renderKids();
+});
