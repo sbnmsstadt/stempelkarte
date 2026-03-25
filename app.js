@@ -11,6 +11,7 @@ const AVATARS = ["🦁", "🐯", "🦊", "🐭", "🐹", "🐰", "🐻", "🐼",
 let selectedActivity = "Stempel";
 let selectedActivityEmoji = "🌟";
 let ACTIVITIES = [];
+let SETTINGS = {};
 
 let REWARDS = [];
 
@@ -238,10 +239,11 @@ function renderRewards(student) {
     }
     const freeStamps = stamps - usedStamps;
 
-    // --- NEW: Group Reward Donation Button ---
+    // --- NEW: Group Reward Donation Button (Conditional) ---
     const donateBtn = document.getElementById('group-contribute-btn');
     if (donateBtn) {
-        if (!isSupervisor && freeStamps >= 1) {
+        const isGroupActive = SETTINGS.groupReward && SETTINGS.groupReward.active;
+        if (!isSupervisor && isGroupActive && freeStamps >= 1) {
             donateBtn.classList.remove('hidden');
         } else {
             donateBtn.classList.add('hidden');
@@ -581,6 +583,7 @@ async function updateCommunityGoal() {
         if (stRes.ok && setRes.ok) {
             const allStudents = await stRes.json();
             const settings = await setRes.json();
+            SETTINGS = settings; // Store globally
             
             // 1. Community Goal
             const target = settings.communityTarget || 500;

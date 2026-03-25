@@ -53,7 +53,7 @@ export default {
                 const settings = settingsRaw ? JSON.parse(settingsRaw) : { 
                     communityTarget: 500, 
                     activities: defaultActivities,
-                    groupReward: { title: "Filmtag", target: 8, current: 0, icon: "🎬" }
+                    groupReward: { title: "Filmtag", target: 8, current: 0, icon: "🎬", active: false }
                 };
                 return new Response(JSON.stringify(settings), {
                     headers: { ...corsHeaders, "Content-Type": "application/json" }
@@ -71,11 +71,34 @@ export default {
             if (path === "/api/settings/group-reset" && method === "POST") {
                 const settingsRaw = await env.DATABASE.get("settings");
                 let settings = JSON.parse(settingsRaw || "{}");
+                
+                const studentsRaw = await env.DATABASE.get("students");
+                let students = JSON.parse(studentsRaw || "[]");
+                
+                const today = new Date().toISOString().split('T')[0];
+                let changed = false;
+
+                // Update all donors
+                students.forEach(s => {
+                    if (s.contributedToCurrent) {
+                        if (!s.history) s.history = [];
+                        s.history.push({ date: today, reason: `${settings.groupReward?.title || 'Filmtag'} genehmigt ✅` });
+                        s.contributedToCurrent = false;
+                        changed = true;
+                    }
+                });
+
                 if (settings.groupReward) {
                     settings.groupReward.current = 0;
+                    settings.groupReward.active = false;
                     await env.DATABASE.put("settings", JSON.stringify(settings));
                 }
-                return new Response(JSON.stringify(settings), {
+                
+                if (changed) {
+                    await env.DATABASE.put("students", JSON.stringify(students));
+                }
+
+                return new Response(JSON.stringify({ settings, students }), {
                     headers: { ...corsHeaders, "Content-Type": "application/json" }
                 });
             }
@@ -220,16 +243,6 @@ export default {
 
                     await sendTelegramMessage(env, `🎁 NEUE ANFRAGE!\n\nSchüler: ${students[index].name}\nBelohnung: ${rewardName}\n\nBitte im Admin-Dashboard bestätigen.`);
 
-                    // --- NEW: If reward title is "Filmtag", increment group progress automatically ---
-                    if (rewardName.toLowerCase().includes("filmtag")) {
-                        const settingsRaw = await env.DATABASE.get("settings");
-                        let settings = JSON.parse(settingsRaw || "{}");
-                        if (settings.groupReward) {
-                            settings.groupReward.current = (settings.groupReward.current || 0) + parseInt(threshold);
-                            await env.DATABASE.put("settings", JSON.stringify(settings));
-                        }
-                    }
-
                 } else if (method === "PATCH") {
                     // Confirm a redemption (admin) — mark as completed so stamp card stays checked
                     students[index].redemptions[threshold] = "completed";
@@ -244,6 +257,22 @@ export default {
                     } else {
                         // Already initialized, just increment
                         students[index].usedStamps = students[index].usedStamps + parseInt(threshold);
+                    }
+
+                    // --- NEW: If reward title is "Filmtag", activate/increment group progress ---
+                    const rewardsRaw = await env.DATABASE.get("rewards");
+                    const rewards = rewardsRaw ? JSON.parse(rewardsRaw) : DEFAULT_REWARDS;
+                    const reward = rewards.find(r => r.threshold === parseInt(threshold));
+                    const rewardName = reward ? reward.title : `Belohnung (${threshold} Stempel)`;
+
+                    if (rewardName.toLowerCase().includes("filmtag")) {
+                        const settingsRaw = await env.DATABASE.get("settings");
+                        let settings = JSON.parse(settingsRaw || "{}");
+                        if (settings.groupReward) {
+                            settings.groupReward.current = (settings.groupReward.current || 0) + parseInt(threshold);
+                            settings.groupReward.active = true;
+                            await env.DATABASE.put("settings", JSON.stringify(settings));
+                        }
                     }
                 }
 
@@ -272,16 +301,22 @@ export default {
                     }
                     const freeStamps = student.stamps - usedStamps;
 
+                    // NEW: Check if group reward is ACTIVE
+                    const settingsRaw = await env.DATABASE.get("settings");
+                    let settings = JSON.parse(settingsRaw || "{}");
+                    
+                    if (!settings.groupReward || !settings.groupReward.active) {
+                        return new Response("Gruppen-Belohnung ist aktuell nicht aktiv (muss erst gestartet werden)", { status: 400, headers: corsHeaders });
+                    }
+
                     if (freeStamps >= 1) {
                         // Deduct from student (increase usedStamps)
                         student.usedStamps = usedStamps + 1;
+                        student.contributedToCurrent = true; // Mark as donor
+
                         if (!student.history) student.history = [];
-                        student.history.push({ date: new Date().toISOString().split('T')[0], reason: "Spende für Gruppen-Ziel" });
+                        student.history.push({ date: new Date().toISOString().split('T')[0], reason: `Spende für ${settings.groupReward.title}` });
                         
-                        // Increment settings
-                        const settingsRaw = await env.DATABASE.get("settings");
-                        let settings = JSON.parse(settingsRaw || "{}");
-                        if (!settings.groupReward) settings.groupReward = { title: "Filmtag", target: 8, current: 0, icon: "🎬" };
                         settings.groupReward.current = (settings.groupReward.current || 0) + 1;
                         
                         await env.DATABASE.put("students", JSON.stringify(students));
