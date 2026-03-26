@@ -286,8 +286,10 @@ function renderVIPs() {
             <div class="vip-big fade-in">
                 <div class="vip-star">⭐</div>
                 <div class="vip-avatar-big">${s.avatar||s.name.charAt(0)}</div>
-                <div class="vip-name-big">${s.name}</div>
-                ${dayText ? `<div class="vip-days-big">${dayText}</div>` : ''}
+                <div class="vip-info-horizontal">
+                    <div class="vip-name-big">${s.name}</div>
+                    ${dayText ? `<div class="vip-days-big" style="width:fit-content;">${dayText}</div>` : ''}
+                </div>
             </div>`;
     }).join('');
 }
