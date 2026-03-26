@@ -56,7 +56,9 @@ export default {
                     communityTitle: "Pizza-Party",
                     communityGoalVisible: true,
                     activities: defaultActivities,
-                    groupReward: { title: "Filmtag", target: 8, current: 0, icon: "🎬", active: false }
+                    groupReward: { title: "Filmtag", target: 8, current: 0, icon: "🎬", active: false },
+                    dailyNotes: "",
+                    currentProjects: ""
                 };
                 return new Response(JSON.stringify(settings), {
                     headers: { ...corsHeaders, "Content-Type": "application/json" }

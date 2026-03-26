@@ -579,27 +579,27 @@
             justify-content: center;
         }
 
-        .vip-star { font-size: 2.4rem; animation: vipPulse 2s ease-in-out infinite; }
+        .vip-star { font-size: 1.8rem; animation: vipPulse 2s ease-in-out infinite; }
 
         @keyframes vipPulse {
-            0%, 100% { filter: drop-shadow(0 0 6px rgba(245,158,11,0.5)); }
-            50% { filter: drop-shadow(0 0 18px rgba(245,158,11,0.9)); }
+            0%, 100% { filter: drop-shadow(0 0 4px rgba(245,158,11,0.5)); }
+            50% { filter: drop-shadow(0 0 12px rgba(245,158,11,0.9)); }
         }
 
         .vip-avatar-big {
-            width: 72px;
-            height: 72px;
-            border-radius: 20px;
+            width: 54px;
+            height: 54px;
+            border-radius: 14px;
             background: linear-gradient(135deg, var(--gold), #b45309);
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 2.2rem;
-            box-shadow: 0 0 24px rgba(245,158,11,0.4);
+            font-size: 1.6rem;
+            box-shadow: 0 0 16px rgba(245,158,11,0.4);
         }
 
         .vip-name-big {
-            font-size: 1.5rem;
+            font-size: 1.1rem;
             font-weight: 900;
             text-align: center;
         }
@@ -612,6 +612,34 @@
             border: 1px solid rgba(245,158,11,0.3);
             padding: 4px 12px;
             border-radius: 8px;
+        }
+
+        /* Right Column Layout */
+        .right-col {
+            display: flex;
+            flex-direction: column;
+            gap: 18px;
+            min-height: 0;
+            overflow: hidden;
+        }
+
+        .card.vip-card {
+            flex-shrink: 0;
+        }
+
+        .daily-notes-content {
+            font-size: 1.1rem;
+            line-height: 1.5;
+            color: rgba(255,255,255,0.9);
+            white-space: pre-wrap;
+            padding: 10px;
+        }
+
+        .projects-content {
+            font-size: 1rem;
+            line-height: 1.4;
+            color: rgba(255,255,255,0.85);
+            white-space: pre-wrap;
         }
 
         /* Empty state */
@@ -808,30 +836,40 @@
                 </div>
             </div>
 
-            <!-- Offene Anfragen -->
-            <div class="card redemptions-card" style="flex:1;">
+            <!-- Aktuelle Projekte -->
+            <div class="card projects-card" style="flex:1;">
                 <div class="card-header">
-                    <div class="card-icon">🎁</div>
-                    <div class="card-title">Offene Anfragen</div>
+                    <div class="card-icon">🚀</div>
+                    <div class="card-title">AKTUELLE PROJEKTE</div>
                 </div>
                 <div class="card-content">
-                    <div class="redemptions-scroll-wrap">
-                        <div class="redemptions-scroll-inner" id="redemption-list">
-                            <div class="empty-state"><div class="empty-icon">✅</div><span>Alles erledigt!</span></div>
-                        </div>
+                    <div id="projects-list" class="projects-content">
+                        Lade Projekte...
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- Right: VIP -->
-        <div class="card vip-card">
-            <div class="card-header">
-                <div class="card-icon">⭐</div>
-                <div class="card-title">Aktueller VIP</div>
+        <!-- Right: VIP & Daily Notes -->
+        <div class="right-col">
+            <div class="card vip-card">
+                <div class="card-header">
+                    <div class="card-icon">⭐</div>
+                    <div class="card-title">Aktueller VIP</div>
+                </div>
+                <div class="card-content" id="vip-list" style="gap: 8px;">
+                    <div class="empty-state"><div class="empty-icon">⭐</div><span>Kein VIP</span></div>
+                </div>
             </div>
-            <div class="card-content" id="vip-list">
-                <div class="empty-state"><div class="empty-icon">⭐</div><span>Kein VIP</span></div>
+
+            <div class="card daily-notes-card" style="flex:1;">
+                <div class="card-header">
+                    <div class="card-icon">📝</div>
+                    <div class="card-title">Wichtiges für heute</div>
+                </div>
+                <div class="card-content" id="daily-notes-list" class="daily-notes-content">
+                    Lade Notizen...
+                </div>
             </div>
         </div>
 

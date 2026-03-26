@@ -85,7 +85,8 @@ function renderAll() {
     renderCountdown();
     renderFilmtag();
     renderEnergy();
-    renderRedemptions();
+    renderProjects();
+    renderDailyNotes();
     renderVIPs();
     renderTicker();
 }
@@ -242,48 +243,20 @@ function renderEnergy() {
     }
 }
 
-// ── REDEMPTIONS ────────────────────────────────
-function renderRedemptions() {
-    const el = document.getElementById('redemption-list');
-    const pending = [];
-    students.forEach(s => {
-        if (!s.redemptions) return;
-        Object.entries(s.redemptions).forEach(([thr, status]) => {
-            if (status !== 'pending') return;
-            const r = rewards.find(x => x.threshold === parseInt(thr));
-            pending.push({
-                student: s,
-                rewardName: r ? `${r.icon||'🎁'} ${r.title}` : `Belohnung (${thr})`
-            });
-        });
-    });
+// ── PROJECTS ──────────────────────────────────
+function renderProjects() {
+    const el = document.getElementById('projects-list');
+    if (!el) return;
+    const txt = settings.currentProjects || "Keine aktuellen Projekte.";
+    el.innerHTML = txt;
+}
 
-    if (pending.length === 0) {
-        el.innerHTML = `<div class="empty-state"><div class="empty-icon">✅</div><span>Alles erledigt!</span></div>`;
-        el.classList.remove('scrolling');
-        el.style.animationDuration = '';
-        return;
-    }
-
-    const makeItem = (p) => `
-        <div class="redemption-item">
-            <div class="redemption-avatar">${p.student.avatar || p.student.name.charAt(0)}</div>
-            <div>
-                <div class="redemption-name">${p.student.name}</div>
-                <div class="redemption-reward">${p.rewardName}</div>
-            </div>
-        </div>`;
-
-    if (pending.length > 2) {
-        const html = [...pending, ...pending].map(makeItem).join('');
-        const dur = `${Math.max(8, pending.length * 3)}s`;
-        el.classList.add('scrolling');
-        smoothUpdate(el, html, { animDuration: dur, scrolling: true });
-    } else {
-        el.classList.remove('scrolling');
-        el.style.animationDuration = '';
-        smoothUpdate(el, pending.map(makeItem).join(''));
-    }
+// ── DAILY NOTES ───────────────────────────────
+function renderDailyNotes() {
+    const el = document.getElementById('daily-notes-list');
+    if (!el) return;
+    const txt = settings.dailyNotes || "Keine besonderen Notizen für heute.";
+    el.innerHTML = txt;
 }
 
 // ── VIP ────────────────────────────────────────

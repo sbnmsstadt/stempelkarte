@@ -565,6 +565,14 @@ async function loadSettings() {
             const vipInput = document.getElementById('setting-vip-duration');
             if (vipInput) vipInput.value = settings.vipDurationDays || 3;
             window._vipDuration = settings.vipDurationDays || 3;
+
+            // Load Daily Notes & Projects
+            if (document.getElementById('setting-daily-notes')) {
+                document.getElementById('setting-daily-notes').value = settings.dailyNotes || "";
+            }
+            if (document.getElementById('setting-current-projects')) {
+                document.getElementById('setting-current-projects').value = settings.currentProjects || "";
+            }
         }
     } catch (err) {}
 }
@@ -611,6 +619,8 @@ async function saveSettings() {
                 communityGoalVisible: communityVisible,
                 activities: activities,
                 vipDurationDays: parseInt(document.getElementById('setting-vip-duration')?.value) || 3,
+                dailyNotes: document.getElementById('setting-daily-notes')?.value || "",
+                currentProjects: document.getElementById('setting-current-projects')?.value || "",
                 groupReward: {
                     title: groupTitle,
                     target: groupTarget,
