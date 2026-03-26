@@ -430,6 +430,7 @@ function renderAdminList(filter = "") {
         let vipDayText = '';
         if (isVip && student.vip.grantedAt) {
             const grantedDate = new Date(student.vip.grantedAt);
+            grantedDate.setHours(0,0,0,0);
             const today = new Date();
             today.setHours(0,0,0,0);
             const daysDiff = Math.floor((today - grantedDate) / (1000 * 60 * 60 * 24)) + 1;
