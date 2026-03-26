@@ -3,6 +3,8 @@ const PIN_ADMIN = "8520";
 let students = [];
 let REWARDS = [];
 let lastStudentsSnapshot = "";
+let currentSettings = null; // Global settings cache
+let lastLoadedValues = {};  // Cache to track what was last put into DOM
 
 const adminApp = document.getElementById('admin-app');
 const loginOverlay = document.getElementById('login-overlay');
@@ -535,36 +537,35 @@ async function loadSettings() {
         const response = await fetch(`${API_URL}/settings`);
         if (response.ok) {
             const settings = await response.json();
-            const commVisEl = document.getElementById('setting-community-visible');
-            if (commVisEl && document.activeElement !== commVisEl) {
-                commVisEl.checked = settings.communityGoalVisible !== false;
-            }
-            const commTitleEl = document.getElementById('setting-community-title');
-            if (commTitleEl && document.activeElement !== commTitleEl) {
-                commTitleEl.value = settings.communityTitle || "Pizza-Party";
-            }
-            const commTargetEl = document.getElementById('setting-community-target');
-            if (commTargetEl && document.activeElement !== commTargetEl) {
-                commTargetEl.value = settings.communityTarget || 500;
-            }
+            currentSettings = settings;
+
+            const updateField = (id, value, isCheckbox = false) => {
+                const el = document.getElementById(id);
+                if (!el) return;
+                // Only update if not focused AND (not changed by user OR first time loading)
+                const isFocused = document.activeElement === el;
+                const hasChangedManually = lastLoadedValues[id] !== undefined && el[isCheckbox ? 'checked' : 'value'] !== lastLoadedValues[id];
+
+                if (!isFocused && !hasChangedManually) {
+                    el[isCheckbox ? 'checked' : 'value'] = value;
+                    lastLoadedValues[id] = value;
+                }
+            };
+
+            updateField('setting-community-visible', settings.communityGoalVisible !== false, true);
+            updateField('setting-community-title', settings.communityTitle || "Pizza-Party");
+            updateField('setting-community-target', settings.communityTarget || 500);
             
-            const activitiesEl = document.getElementById('setting-activities');
-            if (activitiesEl && settings.activities && document.activeElement !== activitiesEl) {
+            if (settings.activities) {
                 const text = settings.activities.map(a => `${a.emoji} ${a.label}`).join('\n');
-                activitiesEl.value = text;
+                updateField('setting-activities', text);
             }
 
             if (settings.groupReward) {
-                const grTitleEl = document.getElementById('setting-group-title');
-                if (grTitleEl && document.activeElement !== grTitleEl) {
-                    grTitleEl.value = settings.groupReward.title || "Filmtag";
-                }
-                const grTargetEl = document.getElementById('setting-group-target');
-                if (grTargetEl && document.activeElement !== grTargetEl) {
-                    grTargetEl.value = settings.groupReward.target || 8;
-                }
+                updateField('setting-group-title', settings.groupReward.title || "Filmtag");
+                updateField('setting-group-target', settings.groupReward.target || 8);
                 
-                // Update Dashboard Card (static displays, no focus check needed)
+                // Static displays
                 document.getElementById('group-reward-title-display').innerText = `${settings.groupReward.icon || '🎬'} ${settings.groupReward.title}`;
                 document.getElementById('group-reward-status').innerText = `${settings.groupReward.current} / ${settings.groupReward.target} Stempel`;
                 const progress = Math.min(100, (settings.groupReward.current / settings.groupReward.target) * 100);
@@ -577,22 +578,11 @@ async function loadSettings() {
                 }
             }
 
-            // Load VIP duration
-            const vipInput = document.getElementById('setting-vip-duration');
-            if (vipInput && document.activeElement !== vipInput) {
-                vipInput.value = settings.vipDurationDays || 3;
-            }
+            updateField('setting-vip-duration', settings.vipDurationDays || 3);
             window._vipDuration = settings.vipDurationDays || 3;
 
-            // Load Daily Notes & Projects
-            const notesEl = document.getElementById('setting-daily-notes');
-            if (notesEl && document.activeElement !== notesEl) {
-                notesEl.value = settings.dailyNotes || "";
-            }
-            const projEl = document.getElementById('setting-current-projects');
-            if (projEl && document.activeElement !== projEl) {
-                projEl.value = settings.currentProjects || "";
-            }
+            updateField('setting-daily-notes', settings.dailyNotes || "");
+            updateField('setting-current-projects', settings.currentProjects || "");
         }
     } catch (err) {}
 }
@@ -603,15 +593,17 @@ async function saveSettings() {
     const target = parseInt(document.getElementById('setting-community-target').value);
     
     const activitiesText = document.getElementById('setting-activities').value;
+    const dailyNotes = document.getElementById('setting-daily-notes')?.value || "";
+    const currentProjects = document.getElementById('setting-current-projects')?.value || "";
     const groupTitle = document.getElementById('setting-group-title').value;
     const groupTarget = parseInt(document.getElementById('setting-group-target').value);
+    const vipDuration = parseInt(document.getElementById('setting-vip-duration')?.value) || 3;
     
     if (isNaN(target) || target <= 0) {
         alert("Bitte ein gültiges Ziel eingeben.");
         return;
     }
 
-    // Parse activities: "Emoji Label"
     const activities = activitiesText.split('\n')
         .map(line => line.trim())
         .filter(line => line.length > 0)
@@ -625,32 +617,33 @@ async function saveSettings() {
         });
 
     try {
-        // Get current current-value to not overwrite it
-        const res = await fetch(`${API_URL}/settings`);
-        const oldSettings = await res.json();
-        const currentProgress = oldSettings.groupReward ? oldSettings.groupReward.current : 0;
+        // Use our cached currentSettings to preserve server-only values (like reward progress)
+        // while updating with the new values from the form.
+        const payload = { 
+            ...(currentSettings || {}),
+            communityTarget: target,
+            communityTitle: communityTitle,
+            communityGoalVisible: communityVisible,
+            activities: activities,
+            vipDurationDays: vipDuration,
+            dailyNotes: dailyNotes,
+            currentProjects: currentProjects,
+            groupReward: {
+                ...(currentSettings?.groupReward || { current: 0, active: false, icon: "🎬" }),
+                title: groupTitle,
+                target: groupTarget
+            }
+        };
 
         const response = await fetch(`${API_URL}/settings`, {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ 
-                communityTarget: target,
-                communityTitle: communityTitle,
-                communityGoalVisible: communityVisible,
-                activities: activities,
-                vipDurationDays: parseInt(document.getElementById('setting-vip-duration')?.value) || 3,
-                dailyNotes: document.getElementById('setting-daily-notes')?.value || "",
-                currentProjects: document.getElementById('setting-current-projects')?.value || "",
-                groupReward: {
-                    title: groupTitle,
-                    target: groupTarget,
-                    current: currentProgress,
-                    icon: oldSettings.groupReward?.icon || "🎬",
-                    active: oldSettings.groupReward?.active || false
-                }
-            })
+            body: JSON.stringify(payload)
         });
         if (response.ok) {
+            // After successful save, update our local cache and clear lastLoaded tracking
+            // so the next poll can update the inputs if needed.
+            lastLoadedValues = {}; 
             alert("Einstellungen gespeichert!");
             loadSettings();
         }
