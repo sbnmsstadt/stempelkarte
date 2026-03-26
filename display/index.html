@@ -660,6 +660,16 @@
             letter-spacing: -0.01em;
         }
 
+        .today-plan-content {
+            font-size: 1.8rem;
+            line-height: 1.4;
+            color: rgba(255,255,255,1);
+            white-space: pre-wrap;
+            padding: 12px;
+            font-weight: 800;
+            letter-spacing: -0.01em;
+        }
+
         /* Empty state */
         .empty-state {
             flex: 1;
@@ -831,25 +841,15 @@
                 </div>
             </div>
 
-            <!-- Klassen-Energie -->
-            <div class="card energy-card">
-                <div class="card-header" style="justify-content: space-between;">
-                    <div style="display:flex; align-items:center; gap:12px;">
-                        <div class="card-icon">🌡️</div>
-                        <div class="card-title">Klassen-Energie</div>
-                    </div>
-                    <div style="display:flex; align-items:baseline; gap:8px;">
-                        <div class="energy-number" id="energy-number">0</div>
-                        <div class="energy-label" style="font-size:0.65rem;">Stempel<br>diese Woche</div>
-                    </div>
+            <!-- Tagesplan -->
+            <div class="card tagesplan-card" style="flex:1;">
+                <div class="card-header">
+                    <div class="card-icon">📅</div>
+                    <div class="card-title">TAGESPLAN</div>
                 </div>
-                <div class="card-content" style="gap:6px;">
-                    <div class="energy-bar-row" id="energy-bars">
-                        <!-- 7 day bars filled by JS -->
-                    </div>
-                    <div class="energy-day-label" id="energy-day-labels">
-                        <span>Mo</span><span>Di</span><span>Mi</span>
-                        <span>Do</span><span>Fr</span><span>Sa</span><span>So</span>
+                <div class="card-content">
+                    <div id="today-plan-list" class="today-plan-content">
+                        Lade Plan...
                     </div>
                 </div>
             </div>

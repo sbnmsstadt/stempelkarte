@@ -84,8 +84,8 @@ function renderAll() {
     renderKids();
     renderCountdown();
     renderFilmtag();
-    renderEnergy();
     renderProjects();
+    renderTodayPlan();
     renderDailyNotes();
     renderVIPs();
     renderTicker();
@@ -204,44 +204,7 @@ function renderFilmtag() {
         : `Noch <strong>${left}</strong> Stempel bis zum Ziel 🎯`;
 }
 
-// ── KLASSEN-ENERGIE ────────────────────────────
-function renderEnergy() {
-    const today = new Date();
-    today.setHours(23,59,59,999);
 
-    const buckets = Array(7).fill(0);
-    const labels  = ['Mo','Di','Mi','Do','Fr','Sa','So'];
-
-    let weekTotal = 0;
-    students.forEach(s => {
-        (s.history || []).forEach(h => {
-            if (!h.date) return;
-            const hDate = new Date(h.date);
-            const daysAgo = Math.floor((today - hDate) / 86400000);
-            if (daysAgo >= 0 && daysAgo < 7) {
-                const hWday = (hDate.getDay() || 7) - 1;
-                buckets[hWday]++;
-                weekTotal++;
-            }
-        });
-    });
-
-    document.getElementById('energy-number').textContent = weekTotal;
-
-    const max = Math.max(...buckets, 1);
-    const barsEl = document.getElementById('energy-bars');
-    barsEl.innerHTML = buckets.map((v, i) => {
-        const heightPct = Math.max(6, Math.round((v / max) * 48));
-        const lit = v > 0 ? 'lit' : '';
-        return `<div class="energy-bar-seg ${lit}" style="height:${heightPct}px;"></div>`;
-    }).join('');
-
-    // Update day labels
-    const labelsEl = document.getElementById('energy-day-labels');
-    if (labelsEl) {
-        labelsEl.innerHTML = labels.map(l => `<span>${l}</span>`).join('');
-    }
-}
 
 // ── PROJECTS ──────────────────────────────────
 function renderProjects() {
@@ -256,6 +219,14 @@ function renderDailyNotes() {
     const el = document.getElementById('daily-notes-list');
     if (!el) return;
     const txt = settings.dailyNotes || "Keine besonderen Notizen für heute.";
+    el.innerHTML = txt;
+}
+
+// ── TODAY PLAN ────────────────────────────────
+function renderTodayPlan() {
+    const el = document.getElementById('today-plan-list');
+    if (!el) return;
+    const txt = settings.todayPlan || "Noch kein Plan für heute eingetragen.";
     el.innerHTML = txt;
 }
 
@@ -311,9 +282,11 @@ function renderTicker() {
         });
     });
 
-    // Sort newest first, take last 20
+    // Sort newest first, filter out "Admin-Korrektur", take last 20
     items.sort((a,b) => new Date(b.date) - new Date(a.date));
-    const display = items.slice(0, 20);
+    const display = items
+        .filter(it => it.reason !== "Admin-Korrektur")
+        .slice(0, 20);
 
     // Add VIP info
     students.filter(s => s.vip && s.vip.active).forEach(s => {

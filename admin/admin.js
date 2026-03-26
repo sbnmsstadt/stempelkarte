@@ -583,6 +583,7 @@ async function loadSettings() {
 
             updateField('setting-daily-notes', settings.dailyNotes || "");
             updateField('setting-current-projects', settings.currentProjects || "");
+            updateField('setting-today-plan', settings.todayPlan || "");
         }
     } catch (err) {}
 }
@@ -595,6 +596,7 @@ async function saveSettings() {
     const activitiesText = document.getElementById('setting-activities').value;
     const dailyNotes = document.getElementById('setting-daily-notes')?.value || "";
     const currentProjects = document.getElementById('setting-current-projects')?.value || "";
+    const todayPlan = document.getElementById('setting-today-plan')?.value || "";
     const groupTitle = document.getElementById('setting-group-title').value;
     const groupTarget = parseInt(document.getElementById('setting-group-target').value);
     const vipDuration = parseInt(document.getElementById('setting-vip-duration')?.value) || 3;
@@ -628,6 +630,7 @@ async function saveSettings() {
             vipDurationDays: vipDuration,
             dailyNotes: dailyNotes,
             currentProjects: currentProjects,
+            todayPlan: todayPlan,
             groupReward: {
                 ...(currentSettings?.groupReward || { current: 0, active: false, icon: "🎬" }),
                 title: groupTitle,
