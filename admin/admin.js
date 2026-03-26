@@ -535,20 +535,36 @@ async function loadSettings() {
         const response = await fetch(`${API_URL}/settings`);
         if (response.ok) {
             const settings = await response.json();
-            document.getElementById('setting-community-visible').checked = settings.communityGoalVisible !== false;
-            document.getElementById('setting-community-title').value = settings.communityTitle || "Pizza-Party";
-            document.getElementById('setting-community-target').value = settings.communityTarget || 500;
+            const commVisEl = document.getElementById('setting-community-visible');
+            if (commVisEl && document.activeElement !== commVisEl) {
+                commVisEl.checked = settings.communityGoalVisible !== false;
+            }
+            const commTitleEl = document.getElementById('setting-community-title');
+            if (commTitleEl && document.activeElement !== commTitleEl) {
+                commTitleEl.value = settings.communityTitle || "Pizza-Party";
+            }
+            const commTargetEl = document.getElementById('setting-community-target');
+            if (commTargetEl && document.activeElement !== commTargetEl) {
+                commTargetEl.value = settings.communityTarget || 500;
+            }
             
-            if (settings.activities) {
+            const activitiesEl = document.getElementById('setting-activities');
+            if (activitiesEl && settings.activities && document.activeElement !== activitiesEl) {
                 const text = settings.activities.map(a => `${a.emoji} ${a.label}`).join('\n');
-                document.getElementById('setting-activities').value = text;
+                activitiesEl.value = text;
             }
 
             if (settings.groupReward) {
-                document.getElementById('setting-group-title').value = settings.groupReward.title || "Filmtag";
-                document.getElementById('setting-group-target').value = settings.groupReward.target || 8;
+                const grTitleEl = document.getElementById('setting-group-title');
+                if (grTitleEl && document.activeElement !== grTitleEl) {
+                    grTitleEl.value = settings.groupReward.title || "Filmtag";
+                }
+                const grTargetEl = document.getElementById('setting-group-target');
+                if (grTargetEl && document.activeElement !== grTargetEl) {
+                    grTargetEl.value = settings.groupReward.target || 8;
+                }
                 
-                // Update Dashboard Card
+                // Update Dashboard Card (static displays, no focus check needed)
                 document.getElementById('group-reward-title-display').innerText = `${settings.groupReward.icon || '🎬'} ${settings.groupReward.title}`;
                 document.getElementById('group-reward-status').innerText = `${settings.groupReward.current} / ${settings.groupReward.target} Stempel`;
                 const progress = Math.min(100, (settings.groupReward.current / settings.groupReward.target) * 100);
@@ -563,15 +579,19 @@ async function loadSettings() {
 
             // Load VIP duration
             const vipInput = document.getElementById('setting-vip-duration');
-            if (vipInput) vipInput.value = settings.vipDurationDays || 3;
+            if (vipInput && document.activeElement !== vipInput) {
+                vipInput.value = settings.vipDurationDays || 3;
+            }
             window._vipDuration = settings.vipDurationDays || 3;
 
             // Load Daily Notes & Projects
-            if (document.getElementById('setting-daily-notes')) {
-                document.getElementById('setting-daily-notes').value = settings.dailyNotes || "";
+            const notesEl = document.getElementById('setting-daily-notes');
+            if (notesEl && document.activeElement !== notesEl) {
+                notesEl.value = settings.dailyNotes || "";
             }
-            if (document.getElementById('setting-current-projects')) {
-                document.getElementById('setting-current-projects').value = settings.currentProjects || "";
+            const projEl = document.getElementById('setting-current-projects');
+            if (projEl && document.activeElement !== projEl) {
+                projEl.value = settings.currentProjects || "";
             }
         }
     } catch (err) {}
