@@ -4,16 +4,34 @@ let students = [];
 let REWARDS = [];
 let lastStudentsSnapshot = "";
 
+const adminApp = document.getElementById('admin-app');
+const loginOverlay = document.getElementById('login-overlay');
+
 // Simple PIN protection for Admin Dashboard
-if (sessionStorage.getItem('admin_auth') !== PIN_ADMIN) {
-    const pass = prompt("Admin PIN erforderlich:");
-    if (pass === PIN_ADMIN) {
-        sessionStorage.setItem('admin_auth', PIN_ADMIN);
+function checkAuth() {
+    if (sessionStorage.getItem('admin_auth') === PIN_ADMIN) {
+        if (loginOverlay) loginOverlay.style.display = 'none';
+        if (adminApp) adminApp.style.display = 'block';
     } else {
-        alert("Falscher PIN!");
-        window.location.href = '../index.html';
+        if (loginOverlay) loginOverlay.style.display = 'flex';
+        if (adminApp) adminApp.style.display = 'none';
+        document.getElementById('admin-pin-input')?.focus();
     }
 }
+
+function verifyAdminPin() {
+    const input = document.getElementById('admin-pin-input');
+    if (input.value === PIN_ADMIN) {
+        sessionStorage.setItem('admin_auth', PIN_ADMIN);
+        checkAuth();
+    } else {
+        alert("Falscher PIN!");
+        input.value = "";
+        input.focus();
+    }
+}
+
+checkAuth();
 
 document.addEventListener('DOMContentLoaded', async () => {
     await fetchRewards();

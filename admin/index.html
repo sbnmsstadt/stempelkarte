@@ -10,6 +10,17 @@
     <link rel="stylesheet" href="admin.css?v=2">
 </head>
 <body>
+    <!-- Login Overlay -->
+    <div id="login-overlay" style="display: none;">
+        <div class="login-card">
+            <h2>Admin Login</h2>
+            <p style="color: var(--text-muted); margin-bottom: 1.5rem; font-size: 0.9rem;">Bitte Admin PIN eingeben</p>
+            <input type="password" id="admin-pin-input" maxlength="4" placeholder="••••" autofocus onkeydown="if(event.key==='Enter') verifyAdminPin()">
+            <button onclick="verifyAdminPin()">Einloggen</button>
+            <button onclick="window.location.href='../index.html'" style="margin-top: 10px; background: transparent; border: 1px solid var(--glass-border);">Abbrechen</button>
+        </div>
+    </div>
+
     <div id="admin-app">
         <header>
             <div class="admin-title-area">
