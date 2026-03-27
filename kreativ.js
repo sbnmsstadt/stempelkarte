@@ -171,6 +171,8 @@ function renderIdeas(ideas) {
 
 // --- Integration with Admin Settings ---
 
+let pendingSaveData = null;
+
 async function addToPlan(textToAdd, targetField) {
     try {
         // 1. Fetch current settings
@@ -179,35 +181,61 @@ async function addToPlan(textToAdd, targetField) {
         
         const settings = await getRes.json();
         
-        // 2. Identify the field we want to update.
-        // The API returns camelCase properties usually, but let's map our UI IDs to the correct properties.
         let propertyName = "";
-        let currentText = "";
+        let modalTitle = "";
         
         if (targetField === 'setting-today-plan') {
             propertyName = 'todayPlan';
+            modalTitle = 'Heutigen Plan bearbeiten';
         } else if (targetField === 'setting-current-projects') {
             propertyName = 'currentProjects';
+            modalTitle = 'Aktuelle Projekte bearbeiten';
         } else {
             throw new Error("Unknown target field");
         }
 
-        currentText = settings[propertyName] || "";
+        const currentText = settings[propertyName] || "";
         
-        // Avoid duplicate appends
-        if (currentText.includes(textToAdd)) {
-            showToast("Dieser Eintrag existiert bereits im Plan.");
-            return;
-        }
+        // 2. Combine text (append to end if there's already text)
+        const combinedText = currentText ? currentText + "\n\n" + textToAdd : textToAdd;
+        
+        // 3. Prepare pending data for save
+        pendingSaveData = {
+            settings: settings,
+            propertyName: propertyName,
+            targetField: targetField
+        };
+        
+        // 4. UI Updates for Modal
+        document.getElementById('edit-plan-title').innerHTML = `<span>✏️</span> ${modalTitle}`;
+        document.getElementById('edit-plan-textarea').value = combinedText;
+        document.getElementById('edit-plan-modal').style.display = 'flex';
+        
+    } catch (err) {
+        console.error("Speicherfehler:", err);
+        showToast("Fehler beim Vorbereiten: " + err.message, true);
+    }
+}
 
-        // 3. Append the text
-        const newText = currentText ? currentText + "\\n" + textToAdd : textToAdd;
+function closePlanModal() {
+    document.getElementById('edit-plan-modal').style.display = 'none';
+    pendingSaveData = null;
+}
+
+async function savePlanEdit() {
+    if (!pendingSaveData) return;
+    
+    const newText = document.getElementById('edit-plan-textarea').value.trim();
+    const btn = document.getElementById('save-plan-btn');
+    const originalBtnHtml = btn.innerHTML;
+    
+    try {
+        btn.innerHTML = '<div class="loading-spinner" style="width:16px; height:16px; border-width:2px; vertical-align: middle;"></div> Speichere...';
+        btn.disabled = true;
         
-        // 4. Update the payload
-        const payload = { ...settings };
-        payload[propertyName] = newText;
+        const payload = { ...pendingSaveData.settings };
+        payload[pendingSaveData.propertyName] = newText;
         
-        // 5. Save back to API
         const putRes = await fetch(`${API_URL}/settings`, {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
@@ -215,14 +243,17 @@ async function addToPlan(textToAdd, targetField) {
         });
         
         if (putRes.ok) {
-            showToast(targetField === 'setting-today-plan' ? "Zum heutigen Plan hinzugefügt!" : "Zu aktuellen Projekten hinzugefügt!");
+            closePlanModal();
+            showToast(pendingSaveData.targetField === 'setting-today-plan' ? "Zum heutigen Plan hinzugefügt!" : "Zu aktuellen Projekten hinzugefügt!");
         } else {
-            throw new Error("Speichern fehlgeschlagen");
+            throw new Error("HTTP Fehler " + putRes.status);
         }
-
     } catch (err) {
-        console.error(err);
-        showToast("Fehler beim Übernehmen in den Plan", true);
+        console.error("Speichern fehlgeschlagen:", err);
+        alert("Speichern fehlgeschlagen: " + err.message);
+    } finally {
+        btn.innerHTML = originalBtnHtml;
+        btn.disabled = false;
     }
 }
 

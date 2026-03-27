@@ -110,6 +110,27 @@
         </div>
     </div>
 
+    <!-- Edit Plan Modal -->
+    <div id="edit-plan-modal" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.8); align-items: center; justify-content: center; z-index: 2000;">
+        <div class="glass-card" style="max-width: 500px; width: 90%; padding: 2rem;">
+            <h2 id="edit-plan-title" style="margin-bottom: 0.5rem; display: flex; align-items: center; gap: 10px;">
+                <span>✏️</span> Eintrag bearbeiten
+            </h2>
+            <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 1.5rem;">
+                Passe den Text an, bevor er auf der Stempelkarte angezeigt wird. Du bearbeitest hier den gesamten aktiven Inhalt!
+            </p>
+            <textarea id="edit-plan-textarea" spellcheck="false" style="width: 100%; height: 200px; padding: 12px; border-radius: 12px; border: 1px solid var(--glass-border); background: rgba(0,0,0,0.2); color: white; margin-bottom: 1.5rem; resize: vertical; font-size: 0.95rem; line-height: 1.5; font-family: inherit; box-sizing: border-box;"></textarea>
+            
+            <div style="display: flex; gap: 10px;">
+                <button id="save-plan-btn" class="add-stamp-btn" onclick="savePlanEdit()" style="flex: 2; display: flex; align-items: center; justify-content: center; gap: 8px;">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
+                    Speichern
+                </button>
+                <button class="btn-outline" onclick="closePlanModal()" style="flex: 1;">Abbrechen</button>
+            </div>
+        </div>
+    </div>
+
     <div id="app-container" style="display: none; max-width: 1000px; margin: 0 auto; padding: 20px;">
         <header style="margin-bottom: 2rem;">
             <div class="admin-title-area">
