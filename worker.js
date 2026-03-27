@@ -433,8 +433,8 @@ export default {
 
             // --- AI Generation Endpoint (Kreative Projekte) ---
             if (path === "/api/ai/generate" && method === "POST") {
-                if (!env.KI_API) {
-                    return new Response("No API Key configured in worker environment (env.KI_API)", { status: 500, headers: corsHeaders });
+                if (!env.KREATIV_API) {
+                    return new Response("No API Key configured in worker environment (env.KREATIV_API)", { status: 500, headers: corsHeaders });
                 }
                 const body = await request.json();
                 const promptText = body.promptText;
@@ -444,7 +444,7 @@ export default {
                 }
 
                 try {
-                    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${env.KI_API}`;
+                    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${env.KREATIV_API}`;
                     const res = await fetch(url, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
