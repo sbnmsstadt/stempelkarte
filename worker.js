@@ -431,6 +431,60 @@ export default {
                 });
             }
 
+            // Generate Creative Ideas (AI Content Lab)
+            if (path === "/api/generate-ideas" && method === "POST") {
+                const { topic, ageGroup, interests } = await request.json();
+                
+                if (!env.KI_API) {
+                    return new Response(JSON.stringify({ error: "API Key fehlt" }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+                }
+
+                const prompt = `Du bist ein pädagogischer Expert für die Nachmittagsbetreuung.
+Generiere 3 kreative und umsetzbare Projektideen (z.B. Basteln, Spielen, Experimente) für Kinder.
+Thema: ${topic || "Allgemein"}
+Altersgruppe: ${ageGroup || "6-14 Jahre"}
+Interessen/Fokus: ${interests || "Kreativität und Spaß"}
+
+Antworte bitte AUSSCHLIESSLICH im folgenden JSON-Format (ein Array aus Objekten), ohne zusätzliche Erklärungen oder Markdown-Formatierung:
+[
+  {
+    "title": "Titel des Projekts",
+    "type": "Kategorie (z.B. Basteln, Sport)",
+    "duration": "Geschätzte Dauer (z.B. 45 Min)",
+    "materials": "Benötigte Materialien (kurz)",
+    "description": "Kurze, motivierende Beschreibung"
+  }
+]`;
+
+                try {
+                    const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${env.KI_API}`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            contents: [{ parts: [{ text: prompt }] }],
+                            generationConfig: { maxOutputTokens: 800, temperature: 0.8 }
+                        })
+                    });
+                    
+                    if (!res.ok) {
+                        return new Response(JSON.stringify({ error: "Fehler bei Gemini API" }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+                    }
+                    const data = await res.json();
+                    let aiText = data?.candidates?.[0]?.content?.parts?.[0]?.text || "[]";
+                    
+                    // Clean up markdown if Gemini includes it
+                    aiText = aiText.replace(/```json/gi, "").replace(/```/g, "").trim();
+                    
+                    const ideas = JSON.parse(aiText);
+                    
+                    return new Response(JSON.stringify({ ideas }), {
+                        headers: { ...corsHeaders, "Content-Type": "application/json" }
+                    });
+                } catch (e) {
+                    return new Response(JSON.stringify({ error: e.message }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+                }
+            }
+
             return new Response(`Not Found: ${method} ${path}`, { status: 404, headers: corsHeaders });
         } catch (err) {
             return new Response(err.message, { status: 500, headers: corsHeaders });
