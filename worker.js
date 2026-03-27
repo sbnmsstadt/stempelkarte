@@ -59,6 +59,7 @@ export default {
                     groupReward: { title: "Filmtag", target: 8, current: 0, icon: "🎬", active: false },
                     dailyNotes: "",
                     currentProjects: "",
+                    upcomingProjects: "",
                     todayPlan: ""
                 };
                 return new Response(JSON.stringify(settings), {
