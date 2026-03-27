@@ -139,7 +139,10 @@ async function generateIdeas() {
     }
 }
 
+let currentGeneratedIdeas = [];
+
 function renderIdeas(ideas) {
+    currentGeneratedIdeas = ideas;
     const container = document.getElementById('results-container');
     container.innerHTML = '';
 
@@ -154,11 +157,9 @@ function renderIdeas(ideas) {
                 <strong>Infoboard Vorschau:</strong><br>${idea.planText}
             </div>
             <div class="ai-action-buttons">
-                <button class="btn-outline btn-outline-accent" onclick="addToPlan('${escapeHtml(idea.planText)}', 'setting-today-plan')" style="flex:1">
-                    📅 In "Heutigen Plan"
-                </button>
-                <button class="btn-outline" onclick="addToPlan('${escapeHtml(idea.title)}', 'setting-current-projects')" style="flex:1">
-                    📌 In "Aktuelle Projekte"
+                <button id="save-btn-${index}" class="add-stamp-btn" onclick="saveToCalendar(${index})" style="width:100%; display:flex; align-items:center; justify-content:center; gap:8px;">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
+                    In Content-Kalender speichern
                 </button>
             </div>
         `;
@@ -169,90 +170,35 @@ function renderIdeas(ideas) {
     });
 }
 
-// --- Integration with Admin Settings ---
+// --- Content Calendar Saving ---
 
-let pendingSaveData = null;
+async function saveToCalendar(index) {
+    const idea = currentGeneratedIdeas[index];
+    if (!idea) return;
 
-async function addToPlan(textToAdd, targetField) {
-    try {
-        // 1. Fetch current settings
-        const getRes = await fetch(`${API_URL}/settings`, { cache: 'no-store' });
-        if (!getRes.ok) throw new Error("Konnte Einstellungen nicht laden");
-        
-        const settings = await getRes.json();
-        
-        let propertyName = "";
-        let modalTitle = "";
-        
-        if (targetField === 'setting-today-plan') {
-            propertyName = 'todayPlan';
-            modalTitle = 'Heutigen Plan bearbeiten';
-        } else if (targetField === 'setting-current-projects') {
-            propertyName = 'currentProjects';
-            modalTitle = 'Aktuelle Projekte bearbeiten';
-        } else {
-            throw new Error("Unknown target field");
-        }
-
-        const currentText = settings[propertyName] || "";
-        
-        // 2. Combine text (append to end if there's already text)
-        const combinedText = currentText ? currentText + "\n\n" + textToAdd : textToAdd;
-        
-        // 3. Prepare pending data for save
-        pendingSaveData = {
-            settings: settings,
-            propertyName: propertyName,
-            targetField: targetField
-        };
-        
-        // 4. UI Updates for Modal
-        document.getElementById('edit-plan-title').innerHTML = `<span>✏️</span> ${modalTitle}`;
-        document.getElementById('edit-plan-textarea').value = combinedText;
-        document.getElementById('edit-plan-modal').style.display = 'flex';
-        
-    } catch (err) {
-        console.error("Speicherfehler:", err);
-        showToast("Fehler beim Vorbereiten: " + err.message, true);
-    }
-}
-
-function closePlanModal() {
-    document.getElementById('edit-plan-modal').style.display = 'none';
-    pendingSaveData = null;
-}
-
-async function savePlanEdit() {
-    if (!pendingSaveData) return;
-    
-    const newText = document.getElementById('edit-plan-textarea').value.trim();
-    const btn = document.getElementById('save-plan-btn');
-    const originalBtnHtml = btn.innerHTML;
+    const btn = document.getElementById(`save-btn-${index}`);
+    const originalHtml = btn.innerHTML;
     
     try {
-        btn.innerHTML = '<div class="loading-spinner" style="width:16px; height:16px; border-width:2px; vertical-align: middle;"></div> Speichere...';
+        btn.innerHTML = '<div class="loading-spinner" style="width:16px; height:16px; border-width:2px; vertical-align:middle;"></div> Speichere...';
         btn.disabled = true;
-        
-        const payload = { ...pendingSaveData.settings };
-        payload[pendingSaveData.propertyName] = newText;
-        
-        const putRes = await fetch(`${API_URL}/settings`, {
-            method: 'PUT',
+
+        const res = await fetch(`${API_URL}/projects`, {
+            method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload)
+            body: JSON.stringify(idea)
         });
+
+        if (!res.ok) throw new Error("Fehler beim Speichern");
+
+        btn.innerHTML = '✅ Gespeichert!';
+        btn.style.background = 'var(--success)';
+        btn.style.borderColor = 'var(--success)';
         
-        if (putRes.ok) {
-            closePlanModal();
-            showToast(pendingSaveData.targetField === 'setting-today-plan' ? "Zum heutigen Plan hinzugefügt!" : "Zu aktuellen Projekten hinzugefügt!");
-        } else {
-            throw new Error("HTTP Fehler " + putRes.status);
-        }
     } catch (err) {
-        console.error("Speichern fehlgeschlagen:", err);
-        alert("Speichern fehlgeschlagen: " + err.message);
-    } finally {
-        btn.innerHTML = originalBtnHtml;
+        console.error(err);
+        showToast("Speichern fehlgeschlagen: " + err.message, true);
+        btn.innerHTML = originalHtml;
         btn.disabled = false;
     }
 }

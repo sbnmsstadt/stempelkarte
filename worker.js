@@ -155,6 +155,48 @@ export default {
                 });
             }
 
+            // --- Projects (Content Calendar) ---
+            if (path === "/api/projects" && method === "GET") {
+                const projectsRaw = await env.DATABASE.get("projects");
+                const projects = projectsRaw ? JSON.parse(projectsRaw) : [];
+                return new Response(JSON.stringify(projects), {
+                    headers: { ...corsHeaders, "Content-Type": "application/json" }
+                });
+            }
+
+            if (path === "/api/projects" && method === "POST") {
+                const body = await request.json();
+                const projectsRaw = await env.DATABASE.get("projects");
+                let projects = projectsRaw ? JSON.parse(projectsRaw) : [];
+                
+                const newProject = {
+                    id: Date.now().toString(),
+                    title: body.title || "Ohne Titel",
+                    description: body.description || "",
+                    materials: body.materials || "",
+                    planText: body.planText || "",
+                    createdAt: new Date().toISOString()
+                };
+                
+                projects.push(newProject);
+                
+                await env.DATABASE.put("projects", JSON.stringify(projects));
+                return new Response(JSON.stringify(newProject), {
+                    status: 201,
+                    headers: { ...corsHeaders, "Content-Type": "application/json" }
+                });
+            }
+
+            if (path.startsWith("/api/projects/") && method === "DELETE") {
+                const id = path.split("/").pop();
+                const projectsRaw = await env.DATABASE.get("projects");
+                let projects = JSON.parse(projectsRaw || "[]");
+
+                projects = projects.filter(p => String(p.id) !== String(id));
+                await env.DATABASE.put("projects", JSON.stringify(projects));
+                return new Response(null, { status: 204, headers: corsHeaders });
+            }
+
             if (path === "/api/students" && method === "GET") {
                 const studentsRaw = await env.DATABASE.get("students");
                 const students = studentsRaw ? JSON.parse(studentsRaw) : [];
