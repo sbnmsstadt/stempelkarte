@@ -572,10 +572,18 @@ async function loadSettings() {
                 const progress = Math.min(100, (settings.groupReward.current / settings.groupReward.target) * 100);
                 document.getElementById('group-reward-bar').style.width = `${progress}%`;
                 
-                if (settings.groupReward.current >= settings.groupReward.target) {
+                const isGoalReached = settings.groupReward.current >= settings.groupReward.target;
+                const isApproved = settings.groupReward.isApproved;
+
+                if (isGoalReached && !isApproved) {
                     document.getElementById('group-reward-approve-btn').classList.remove('hidden');
+                    document.getElementById('group-reward-reset-btn').classList.add('hidden');
+                } else if (isApproved) {
+                    document.getElementById('group-reward-approve-btn').classList.add('hidden');
+                    document.getElementById('group-reward-reset-btn').classList.remove('hidden');
                 } else {
                     document.getElementById('group-reward-approve-btn').classList.add('hidden');
+                    document.getElementById('group-reward-reset-btn').classList.add('hidden');
                 }
             }
 
@@ -657,11 +665,24 @@ async function saveSettings() {
 }
 
 async function approveGroupReward() {
-    if (!confirm("Gruppen-Belohnung (z.B. Filmtag) jetzt genehmigen und Fortschritt zurücksetzen?")) return;
+    if (!confirm("Gruppen-Belohnung (z.B. Filmtag) jetzt genehmigen? Ein Konfetti-Regen wird auf der Infotafel ausgelöst.")) return;
+    try {
+        const response = await fetch(`${API_URL}/settings/group-approve`, { method: 'POST' });
+        if (response.ok) {
+            alert("Belohnung genehmigt! 🎉");
+            loadSettings();
+        }
+    } catch (err) {
+        alert("Fehler bei der Genehmigung.");
+    }
+}
+
+async function resetGroupReward() {
+    if (!confirm("Bist du sicher? Dies setzt den Fortschritt auf 0 zurück. Tu dies erst, wenn der Filmtag vorbei ist.")) return;
     try {
         const response = await fetch(`${API_URL}/settings/group-reset`, { method: 'POST' });
         if (response.ok) {
-            alert("Belohnung genehmigt! Fortschritt wurde zurückgesetzt.");
+            alert("Fortschritt wurde zurückgesetzt.");
             loadSettings();
         }
     } catch (err) {

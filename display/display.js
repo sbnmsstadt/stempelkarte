@@ -199,9 +199,17 @@ function renderFilmtag() {
     const pct = Math.min(100,((gr.current||0)/(gr.target||1))*100);
     document.getElementById('filmtag-bar').style.width = `${pct}%`;
     const left = (gr.target||0)-(gr.current||0);
-    document.getElementById('filmtag-status').innerHTML = left <= 0
-        ? `<span style="color:#10b981">🎉 Ziel erreicht! Genehmigung ausstehend.</span>`
-        : `Noch <strong>${left}</strong> Stempel bis zum Ziel 🎯`;
+    
+    let statusHtml = '';
+    if (gr.isApproved) {
+        statusHtml = `<span style="color:#10b981; font-size:1.1rem; font-weight:900;">🎉 Juhuuu! Filmtag genehmigt! 🍿</span>`;
+    } else if (left <= 0) {
+        statusHtml = `<span style="color:#10b981">🎉 Ziel erreicht! Genehmigung ausstehend.</span>`;
+    } else {
+        statusHtml = `Noch <strong>${left}</strong> Stempel bis zum Ziel 🎯`;
+    }
+    
+    document.getElementById('filmtag-status').innerHTML = statusHtml;
 }
 
 

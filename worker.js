@@ -74,31 +74,12 @@ export default {
                 });
             }
 
-            if (path === "/api/settings/group-reset" && method === "POST") {
+            if (path === "/api/settings/group-approve" && method === "POST") {
                 const settingsRaw = await env.DATABASE.get("settings");
                 let settings = JSON.parse(settingsRaw || "{}");
                 
-                const studentsRaw = await env.DATABASE.get("students");
-                let students = JSON.parse(studentsRaw || "[]");
-                
-                const today = new Date().toISOString().split('T')[0];
-                let changed = false;
-
-                // Update all donors
-                students.forEach(s => {
-                    if (s.contributedToCurrent) {
-                        if (!s.history) s.history = [];
-                        s.history.push({ date: today, reason: `${settings.groupReward?.title || 'Filmtag'} genehmigt ✅` });
-                        s.contributedToCurrent = false;
-                        changed = true;
-                    }
-                });
-
                 if (settings.groupReward) {
-                    // Reset progress but keep other settings
-                    settings.groupReward.current = 0;
-                    settings.groupReward.active = false;
-                    settings.groupReward.contributedToCurrent = [];
+                    settings.groupReward.isApproved = true;
                     
                     // Trigger Celebration
                     settings.celebration = {
@@ -109,12 +90,42 @@ export default {
 
                     await env.DATABASE.put("settings", JSON.stringify(settings));
                 }
-                
+
+                // Update all donors (Milestone achieved!)
+                const studentsRaw = await env.DATABASE.get("students");
+                let students = JSON.parse(studentsRaw || "[]");
+                const today = new Date().toISOString().split('T')[0];
+                let changed = false;
+
+                students.forEach(s => {
+                    if (s.contributedToCurrent) {
+                        if (!s.history) s.history = [];
+                        s.history.push({ date: today, reason: `${settings.groupReward?.title || 'Filmtag'} genehmigt ✅` });
+                        s.contributedToCurrent = false;
+                        changed = true;
+                    }
+                });
+
                 if (changed) {
                     await env.DATABASE.put("students", JSON.stringify(students));
                 }
 
-                return new Response(JSON.stringify({ settings, students }), {
+                return new Response(JSON.stringify({ settings }), {
+                    headers: { ...corsHeaders, "Content-Type": "application/json" }
+                });
+            }
+
+            if (path === "/api/settings/group-reset" && method === "POST") {
+                const settingsRaw = await env.DATABASE.get("settings");
+                let settings = JSON.parse(settingsRaw || "{}");
+                
+                if (settings.groupReward) {
+                    settings.groupReward.current = 0;
+                    settings.groupReward.isApproved = false;
+                    await env.DATABASE.put("settings", JSON.stringify(settings));
+                }
+                
+                return new Response(JSON.stringify({ settings }), {
                     headers: { ...corsHeaders, "Content-Type": "application/json" }
                 });
             }
