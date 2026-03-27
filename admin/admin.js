@@ -670,10 +670,13 @@ async function approveGroupReward() {
         const response = await fetch(`${API_URL}/settings/group-approve`, { method: 'POST' });
         if (response.ok) {
             alert("Belohnung genehmigt! 🎉");
-            loadSettings();
+            await loadSettings();
+        } else {
+            const errBody = await response.text();
+            alert(`Fehler: ${response.status} - ${errBody}`);
         }
     } catch (err) {
-        alert("Fehler bei der Genehmigung.");
+        alert("Verbindungsfehler bei der Genehmigung: " + err.message);
     }
 }
 
@@ -683,9 +686,12 @@ async function resetGroupReward() {
         const response = await fetch(`${API_URL}/settings/group-reset`, { method: 'POST' });
         if (response.ok) {
             alert("Fortschritt wurde zurückgesetzt.");
-            loadSettings();
+            await loadSettings();
+        } else {
+            const errBody = await response.text();
+            alert(`Fehler: ${response.status} - ${errBody}`);
         }
     } catch (err) {
-        alert("Fehler beim Zurücksetzen.");
+        alert("Verbindungsfehler beim Zurücksetzen: " + err.message);
     }
 }
