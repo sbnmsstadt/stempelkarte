@@ -3,158 +3,88 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Kreativ-Labor - Nachmittagsbetreuung</title>
+    <title>Kreative Projekte (AI Lab) - Nachmittagsbetreuung</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Using both base and admin styles to maintain consistent look -->
     <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="admin/admin.css">
     <style>
-        /* Specific Styles for Kreativ-Labor */
-        .lab-header {
-            text-align: center;
-            margin-bottom: 2rem;
-            animation: fadeInDown 0.8s ease;
-        }
-        
-        .lab-header h1 {
-            background: linear-gradient(135deg, #d946ef, #8b5cf6);
-            -webkit-background-clip: text;
-            background-clip: text;
-            -webkit-text-fill-color: transparent;
-            font-size: 2.5rem;
-            margin-bottom: 0.5rem;
-        }
-
-        .input-card {
-            padding: 2rem;
-            margin-bottom: 2rem;
-            animation: fadeInUp 0.8s ease 0.1s backwards;
-        }
-
-        .form-group {
-            margin-bottom: 1.5rem;
-            text-align: left;
-        }
-
-        .form-group label {
-            display: block;
-            margin-bottom: 0.5rem;
-            color: var(--text-muted);
-            font-size: 0.85rem;
-            font-weight: 600;
-        }
-
-        .form-group input, .form-group select {
-            width: 100%;
-            padding: 1rem;
+        .ai-form-card {
             background: rgba(255, 255, 255, 0.05);
             border: 1px solid var(--glass-border);
-            border-radius: 12px;
-            color: white;
-            font-size: 1rem;
-            font-family: inherit;
-        }
-        
-        .form-group input:focus, .form-group select:focus {
-            outline: none;
-            border-color: #d946ef;
-            box-shadow: 0 0 10px rgba(217, 70, 239, 0.2);
-        }
-
-        .generate-btn {
-            background: linear-gradient(135deg, #d946ef, #6366f1);
-            color: white;
-            border: none;
-            padding: 1.2rem;
-            width: 100%;
-            border-radius: 15px;
-            font-size: 1.2rem;
-            font-weight: 800;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 10px;
-        }
-
-        .generate-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 20px rgba(217, 70, 239, 0.3);
-        }
-
-        .generate-btn:disabled {
-            opacity: 0.7;
-            cursor: not-allowed;
-            transform: none;
-        }
-
-        .ideas-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 1.5rem;
-            margin-top: 2rem;
-        }
-
-        .idea-card {
-            text-align: left;
-            padding: 1.5rem;
-            position: relative;
-            overflow: hidden;
-            animation: bounceIn 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55) backwards;
-        }
-        
-        .idea-card::before {
-            content: '';
-            position: absolute;
-            top: 0; left: 0; width: 4px; height: 100%;
-            background: linear-gradient(to bottom, #d946ef, #6366f1);
-            border-radius: 4px 0 0 4px;
-        }
-
-        .idea-tag {
-            display: inline-block;
-            background: rgba(217, 70, 239, 0.2);
-            color: #fbd6ff;
-            padding: 4px 10px;
             border-radius: 20px;
-            font-size: 0.7rem;
-            font-weight: 700;
-            margin-bottom: 1rem;
+            padding: 2rem;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            margin-bottom: 2rem;
         }
 
-        .idea-title {
+        .ai-result-card {
+            background: rgba(0, 0, 0, 0.2);
+            border: 1px solid var(--glass-border);
+            border-radius: 15px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            position: relative;
+        }
+
+        .ai-result-title {
             font-size: 1.2rem;
             font-weight: 700;
-            margin-bottom: 0.8rem;
-            color: white;
+            color: var(--accent);
+            margin-bottom: 0.5rem;
         }
 
-        .idea-meta {
-            display: flex;
-            gap: 15px;
-            font-size: 0.8rem;
-            color: var(--primary-light);
+        .ai-result-desc {
+            font-size: 0.95rem;
+            line-height: 1.5;
+            color: #ddd;
             margin-bottom: 1rem;
-            font-weight: 600;
         }
 
-        .idea-desc {
+        .ai-material-list, .ai-instruction-list {
+            margin-bottom: 1rem;
             font-size: 0.9rem;
             color: var(--text-muted);
-            line-height: 1.5;
-            margin-bottom: 1.5rem;
         }
 
-        .action-row {
+        .ai-action-buttons {
             display: flex;
             gap: 10px;
+            margin-top: 15px;
         }
 
-        .spinner {
+        .btn-outline {
+            background: transparent;
+            border: 1px solid var(--primary-light);
+            color: var(--primary-light);
+            padding: 8px 16px;
+            border-radius: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 0.85rem;
+        }
+
+        .btn-outline:hover {
+            background: rgba(147, 197, 253, 0.1);
+        }
+
+        .btn-outline-accent {
+            border-color: var(--accent);
+            color: var(--accent);
+        }
+
+        .btn-outline-accent:hover {
+            background: rgba(255, 107, 107, 0.1);
+        }
+
+        .loading-spinner {
             display: inline-block;
-            width: 20px;
-            height: 20px;
+            width: 24px;
+            height: 24px;
             border: 3px solid rgba(255,255,255,0.3);
             border-radius: 50%;
             border-top-color: white;
@@ -164,73 +94,125 @@
         @keyframes spin {
             to { transform: rotate(360deg); }
         }
-        
-        .back-nav {
-            position: absolute;
-            top: 20px;
-            left: 20px;
+
+        #api-key-modal {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.8);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
         }
     </style>
 </head>
 <body>
-    <div id="app" style="position: relative;">
-        <!-- Back Button -->
-        <button class="icon-btn back-nav" onclick="window.location.href='admin/index.html'">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
-        </button>
+    <div id="api-key-modal" style="display: none;">
+        <div class="glass-card" style="max-width: 400px; padding: 2rem; text-align: center;">
+            <h2>API Key erforderlich</h2>
+            <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 1.5rem;">
+                Um KI-Ideen zu generieren, benötigst du einen Google Gemini API Key.
+            </p>
+            <input type="password" id="gemini-api-key" placeholder="AIzaSy..." 
+                style="width: 100%; padding: 12px; border-radius: 12px; border: 1px solid var(--glass-border); background: rgba(0,0,0,0.2); color: white; margin-bottom: 1rem; text-align: center;">
+            <button class="add-stamp-btn" onclick="saveApiKey()" style="width: 100%; margin-bottom: 10px;">Speichern</button>
+            <button class="btn-outline" onclick="closeApiKeyModal()" style="width: 100%;">Später</button>
+        </div>
+    </div>
 
-        <header class="lab-header">
-            <div class="brand-tag">NACHMI AI</div>
-            <h1>Kreativ-Labor 🎨</h1>
-            <p class="subtitle">Lass die KI spannende Projekte für die Kids entwerfen!</p>
+    <!-- Login Overlay for Admin PIN -->
+    <div id="login-overlay" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.9); align-items: center; justify-content: center; z-index: 2000;">
+        <div class="glass-card" style="max-width: 400px; padding: 2rem; text-align: center;">
+            <h2>Admin Login</h2>
+            <p style="color: var(--text-muted); margin-bottom: 1.5rem; font-size: 0.9rem;">Bitte Admin PIN eingeben</p>
+            <input type="password" id="admin-pin-input" maxlength="4" placeholder="••••" autofocus onkeydown="if(event.key==='Enter') verifyAdminPin()" 
+                style="width: 100%; padding: 12px; border-radius: 12px; border: 1px solid var(--glass-border); background: rgba(0,0,0,0.2); color: white; margin-bottom: 1rem; text-align: center; font-size: 1.5rem; letter-spacing: 0.5rem;">
+            <button class="add-stamp-btn" onclick="verifyAdminPin()" style="width: 100%;">Einloggen</button>
+            <button onclick="window.location.href='admin/index.html'" style="margin-top: 10px; width: 100%; background: transparent; border: 1px solid var(--glass-border); padding: 12px; border-radius: 12px; color: white; cursor: pointer;">Zurück zum Admin Dashboard</button>
+        </div>
+    </div>
+
+    <div id="app-container" style="display: none; max-width: 1000px; margin: 0 auto; padding: 20px;">
+        <header style="margin-bottom: 2rem;">
+            <div class="admin-title-area">
+                <div class="brand-tag">AI CONTENT LAB</div>
+                <h1 style="font-size: 2rem; margin-bottom: 0.5rem;">Kreative Projekte</h1>
+                <p class="subtitle">Magische Content-Generierung für die Nachmittagsbetreuung</p>
+            </div>
+            <div style="display: flex; gap: 10px;">
+                <button class="btn-outline" onclick="openApiKeyModal()">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: 5px; vertical-align: middle;"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"></path></svg>
+                    API Key
+                </button>
+                <button class="back-btn" onclick="window.location.href='admin/index.html'" style="margin: 0;">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+                    Admin Dashboard
+                </button>
+            </div>
         </header>
 
-        <div class="glass-card input-card">
-            <div class="form-group">
-                <label>Thema / Stichwort</label>
-                <input type="text" id="ai-topic" placeholder="z.B. Frühling, Dinosaurier, Recycling basteln...">
-            </div>
-            <div style="display:flex; gap:15px;">
-                <div class="form-group" style="flex:1;">
-                    <label>Altersgruppe</label>
-                    <select id="ai-age">
-                        <option value="6-10 Jahre">6 - 10 Jahre (VS)</option>
-                        <option value="10-14 Jahre" selected>10 - 14 Jahre (MS)</option>
-                        <option value="Gemischte Gruppe">Gemischte Gruppe</option>
-                    </select>
-                </div>
-                <div class="form-group" style="flex:1;">
-                    <label>Kategorie</label>
-                    <select id="ai-interest">
-                        <option value="Kreativität & Basteln">Kreativität & Basteln</option>
-                        <option value="Bewegung & Sport">Bewegung & Sport</option>
-                        <option value="Spannende Experimente">Experimente & Forschung</option>
-                        <option value="Gruppenspiele">Gruppenspiele</option>
-                    </select>
-                </div>
-            </div>
+        <div style="display: grid; grid-template-columns: 1fr 2fr; gap: 2rem;">
             
-            <button id="gen-btn" class="generate-btn" onclick="generateIdeas()">
-                <span>💡 Ideen generieren</span>
-            </button>
-        </div>
+            <!-- Left Column: Generator Form -->
+            <aside>
+                <div class="ai-form-card">
+                    <h3 style="margin-bottom: 1.5rem; display: flex; align-items: center; gap: 10px;">
+                        <span>✨</span> Neues Projekt Planen
+                    </h3>
 
-        <div id="ideas-container" class="ideas-grid">
-            <!-- Ideas will be injected here -->
-        </div>
+                    <div class="edit-field" style="margin-bottom: 1.2rem;">
+                        <label style="font-size:0.8rem; color:var(--text-muted); font-weight:700;">Thema / Idee</label>
+                        <input type="text" id="prompt-thema" placeholder="z.B. Osterbasteln, Indoor Olympiade..." style="width:100%; padding: 10px; border-radius: 10px; border: 1px solid var(--glass-border); background: rgba(0,0,0,0.2); color: white;">
+                    </div>
 
+                    <div class="edit-field" style="margin-bottom: 1.2rem;">
+                        <label style="font-size:0.8rem; color:var(--text-muted); font-weight:700;">Altersgruppe</label>
+                        <select id="prompt-alter" style="width:100%; padding: 10px; border-radius: 10px; border: 1px solid var(--glass-border); background: #1a1b26; color: white;">
+                            <option value="Alle (10-14 Jahre)">Alle (10-14 Jahre)</option>
+                            <option value="Jüngere (10-12 Jahre)">Jüngere (10-12 Jahre)</option>
+                            <option value="Ältere (12-14 Jahre)">Ältere (12-14 Jahre)</option>
+                        </select>
+                    </div>
+
+                    <div class="edit-field" style="margin-bottom: 1.2rem;">
+                        <label style="font-size:0.8rem; color:var(--text-muted); font-weight:700;">Dauer (in Minuten)</label>
+                        <input type="number" id="prompt-dauer" value="45" min="15" max="180" step="15" style="width:100%; padding: 10px; border-radius: 10px; border: 1px solid var(--glass-border); background: rgba(0,0,0,0.2); color: white;">
+                    </div>
+
+                    <div class="edit-field" style="margin-bottom: 1.5rem;">
+                        <label style="font-size:0.8rem; color:var(--text-muted); font-weight:700;">Besondere Vorgaben (Optional)</label>
+                        <textarea id="prompt-extra" placeholder="z.B. Nur Papier und Schere verfügbar, keine lauten Spiele..." style="width:100%; height:80px; font-size:0.85rem; padding:10px; border-radius:10px; border:1px solid var(--glass-border); background:rgba(0,0,0,0.2); color:white; resize:vertical;"></textarea>
+                    </div>
+
+                    <button id="generate-btn" class="add-stamp-btn" onclick="generateIdeas()" style="width:100%; padding: 15px; font-size: 1.1rem; display: flex; align-items: center; justify-content: center; gap: 10px;">
+                        <span>🚀</span> Ideen Generieren
+                    </button>
+                    
+                    <div id="loading-indicator" style="display: none; text-align: center; margin-top: 15px;">
+                        <div class="loading-spinner"></div>
+                        <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 10px;">KI überlegt...</p>
+                    </div>
+                </div>
+            </aside>
+
+            <!-- Right Column: Results -->
+            <section>
+                <div id="results-container">
+                    <div class="glass-card" style="text-align: center; padding: 4rem 2rem; color: var(--text-muted);">
+                        <div style="font-size: 3rem; margin-bottom: 1rem;">💡</div>
+                        <h3>Noch keine Ideen generiert</h3>
+                        <p style="font-size: 0.9rem; margin-top: 10px;">Fülle das Formular links aus, um kreative Projektvorschläge für die Nachmittagsbetreuung zu erhalten.</p>
+                    </div>
+                </div>
+            </section>
+        </div>
     </div>
 
-    <!-- Celebration/Toast Notification -->
-    <div id="toast" class="view hidden" style="background: rgba(0,0,0,0.85); display: flex; align-items: center; justify-content: center; z-index: 10000; padding: 20px; position: fixed; top: 0; left: 0; right: 0; bottom: 0;">
-        <div class="glass-card" style="text-align:center; max-width:400px; animation: bounceIn 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);">
-            <div style="font-size: 3rem; margin-bottom: 20px;">✅</div>
-            <h2 style="color: var(--success); margin-bottom: 10px;">Erfolgreich!</h2>
-            <p id="toast-text" style="color:var(--text-muted); margin-bottom: 20px;">Projekt zur Infotafel hinzugefügt.</p>
-            <button onclick="closeToast()" class="add-stamp-btn" style="width:100%;">Super</button>
-        </div>
+    <!-- Notification Toast -->
+    <div id="toast" style="position: fixed; bottom: -100px; left: 50%; transform: translateX(-50%); background: var(--success); color: white; padding: 12px 24px; border-radius: 50px; font-weight: 600; font-size: 0.9rem; transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55); z-index: 3000; box-shadow: 0 4px 12px rgba(0,0,0,0.3);">
+        Aktion erfolgreich!
     </div>
 
-    <script src="kreativ.js"></script>
+    <script src="kreativ.js?v=1"></script>
 </body>
 </html>
