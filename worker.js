@@ -444,15 +444,14 @@ export default {
                 }
 
                 try {
-                    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${env.KREATIV_API}`;
+                    const url = `https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${env.KREATIV_API}`;
                     const res = await fetch(url, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({
                             contents: [{ parts: [{ text: promptText }] }],
                             generationConfig: {
-                                temperature: 0.7,
-                                responseMimeType: "application/json"
+                                temperature: 0.7
                             }
                         })
                     });
