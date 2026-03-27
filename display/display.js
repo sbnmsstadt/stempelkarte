@@ -85,6 +85,7 @@ function renderAll() {
     renderCountdown();
     renderFilmtag();
     renderProjects();
+    renderUpcomingProjects();
     renderTodayPlan();
     renderDailyNotes();
     renderVIPs();
@@ -219,6 +220,14 @@ function renderProjects() {
     const el = document.getElementById('projects-list');
     if (!el) return;
     const txt = settings.currentProjects || "Keine aktuellen Projekte.";
+    el.innerHTML = txt;
+}
+
+// ── UPCOMING PROJECTS ─────────────────────────
+function renderUpcomingProjects() {
+    const el = document.getElementById('upcoming-projects-list');
+    if (!el) return;
+    const txt = settings.upcomingProjects || "Keine kommenden Projekte geplant.";
     el.innerHTML = txt;
 }
 

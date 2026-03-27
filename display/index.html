@@ -841,28 +841,44 @@
                 </div>
             </div>
 
-            <!-- Tagesplan -->
-            <div class="card tagesplan-card" style="flex:1;">
-                <div class="card-header">
-                    <div class="card-icon">📅</div>
-                    <div class="card-title">TAGESPLAN</div>
+            <!-- Side-by-Side row -->
+            <div style="display: flex; gap: 18px; flex: 1;">
+                <!-- Tagesplan -->
+                <div class="card tagesplan-card" style="flex:1;">
+                    <div class="card-header">
+                        <div class="card-icon">📅</div>
+                        <div class="card-title">TAGESPLAN</div>
+                    </div>
+                    <div class="card-content">
+                        <div id="today-plan-list" class="today-plan-content">
+                            Lade Plan...
+                        </div>
+                    </div>
                 </div>
-                <div class="card-content">
-                    <div id="today-plan-list" class="today-plan-content">
-                        Lade Plan...
+
+                <!-- Aktuelle Projekte -->
+                <div class="card projects-card" style="flex:1;">
+                    <div class="card-header">
+                        <div class="card-icon">🚀</div>
+                        <div class="card-title">AKTUELLE PROJEKTE</div>
+                    </div>
+                    <div class="card-content">
+                        <div id="projects-list" class="projects-content">
+                            Lade Projekte...
+                        </div>
                     </div>
                 </div>
             </div>
 
-            <!-- Aktuelle Projekte -->
-            <div class="card projects-card" style="flex:1;">
+            <!-- Kommende Projekte -->
+            <div class="card upcoming-projects-card" style="flex:1;">
                 <div class="card-header">
-                    <div class="card-icon">🚀</div>
-                    <div class="card-title">AKTUELLE PROJEKTE</div>
+                    <div class="card-icon">🔜</div>
+                    <div class="card-title" style="color: var(--success);">KOMMENDE PROJEKTE</div>
                 </div>
                 <div class="card-content">
-                    <div id="projects-list" class="projects-content">
-                        Lade Projekte...
+                    <div id="upcoming-projects-list" class="projects-content">
+                        Lade kommende Projekte...
                     </div>
                 </div>
             </div>

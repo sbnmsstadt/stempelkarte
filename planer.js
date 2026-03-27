@@ -111,6 +111,9 @@ function renderProjects(projects) {
                 <button class="btn-outline" onclick="addToPlan('${escapeHtml(project.title)}', 'setting-current-projects')" style="width: 100%;">
                     📌 Als aktuelles Projekt markieren
                 </button>
+                <button class="btn-outline" onclick="addToPlan('${escapeHtml(project.title)}', 'setting-upcoming-projects')" style="width: 100%; border-color: var(--accent); color: var(--accent);">
+                    🔜 Für demnächst planen
+                </button>
             </div>
         `;
         
@@ -155,6 +158,9 @@ async function addToPlan(textToAdd, targetField) {
         } else if (targetField === 'setting-current-projects') {
             propertyName = 'currentProjects';
             modalTitle = 'Aktuelle Projekte bearbeiten';
+        } else if (targetField === 'setting-upcoming-projects') {
+            propertyName = 'upcomingProjects';
+            modalTitle = 'Kommende Projekte bearbeiten';
         } else {
             throw new Error("Unknown target field");
         }
@@ -204,9 +210,11 @@ async function savePlanEdit() {
         });
         
         if (putRes.ok) {
-            const successMsg = pendingSaveData.targetField === 'setting-today-plan' 
-                ? "Zum heutigen Plan hinzugefügt!" 
-                : "Zu aktuellen Projekten hinzugefügt!";
+            let successMsg = "Gespeichert!";
+            if (pendingSaveData.targetField === 'setting-today-plan') successMsg = "Zum heutigen Plan hinzugefügt!";
+            else if (pendingSaveData.targetField === 'setting-current-projects') successMsg = "Zu aktuellen Projekten hinzugefügt!";
+            else if (pendingSaveData.targetField === 'setting-upcoming-projects') successMsg = "Zu kommenden Projekten hinzugefügt!";
+            
             closePlanModal();
             showToast(successMsg);
         } else {
