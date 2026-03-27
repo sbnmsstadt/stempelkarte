@@ -535,7 +535,7 @@ function showStatus(m, t) { console.log(m); }
 // System Settings
 async function loadSettings() {
     try {
-        const response = await fetch(`${API_URL}/settings`);
+        const response = await fetch(`${API_URL}/settings`, { cache: 'no-store' });
         if (response.ok) {
             const settings = await response.json();
             currentSettings = settings;

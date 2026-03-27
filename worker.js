@@ -122,6 +122,13 @@ export default {
                 if (settings.groupReward) {
                     settings.groupReward.current = 0;
                     settings.groupReward.isApproved = false;
+                    settings.groupReward.active = false; // Zurücksetzen auf inaktiv nach Reset
+                    
+                    // Celebration deaktivieren
+                    if (settings.celebration) {
+                        settings.celebration.active = false;
+                    }
+                    
                     await env.DATABASE.put("settings", JSON.stringify(settings));
                 }
                 
@@ -424,7 +431,7 @@ export default {
                 });
             }
 
-            return new Response("Not Found", { status: 404, headers: corsHeaders });
+            return new Response(`Not Found: ${method} ${path}`, { status: 404, headers: corsHeaders });
         } catch (err) {
             return new Response(err.message, { status: 500, headers: corsHeaders });
         }
