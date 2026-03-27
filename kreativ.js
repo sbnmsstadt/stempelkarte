@@ -30,35 +30,6 @@ function verifyAdminPin() {
 
 checkAuth();
 
-// --- API Key Management ---
-document.addEventListener('DOMContentLoaded', () => {
-    const savedKey = localStorage.getItem('gemini_api_key');
-    if (!savedKey) {
-        setTimeout(openApiKeyModal, 500);
-    }
-});
-
-function openApiKeyModal() {
-    document.getElementById('api-key-modal').style.display = 'flex';
-    const savedKey = localStorage.getItem('gemini_api_key');
-    if (savedKey) {
-        document.getElementById('gemini-api-key').value = savedKey;
-    }
-}
-
-function closeApiKeyModal() {
-    document.getElementById('api-key-modal').style.display = 'none';
-}
-
-function saveApiKey() {
-    const val = document.getElementById('gemini-api-key').value.trim();
-    if (val) {
-        localStorage.setItem('gemini_api_key', val);
-        showToast('API Key gespeichert!');
-        closeApiKeyModal();
-    }
-}
-
 function showToast(msg, isError = false) {
     const toast = document.getElementById('toast');
     toast.innerText = msg;
@@ -91,12 +62,6 @@ Deine Antwort MUSS zwingend im folgenden JSON-Format sein, ohne Markdown Code-Bl
 `;
 
 async function generateIdeas() {
-    const apiKey = localStorage.getItem('gemini_api_key');
-    if (!apiKey) {
-        openApiKeyModal();
-        return;
-    }
-
     const thema = document.getElementById('prompt-thema').value.trim();
     const alter = document.getElementById('prompt-alter').value;
     const dauer = document.getElementById('prompt-dauer').value;
@@ -120,18 +85,12 @@ async function generateIdeas() {
         .replace('{extra}', extra || "Keine besonderen Vorgaben.");
 
     try {
-        const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
+        const url = `${API_URL}/ai/generate`;
         
         const response = await fetch(url, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                contents: [{ parts: [{ text: promptText }] }],
-                generationConfig: {
-                    temperature: 0.7,
-                    responseMimeType: "application/json"
-                }
-            })
+            body: JSON.stringify({ promptText })
         });
 
         if (!response.ok) {

@@ -431,6 +431,47 @@ export default {
                 });
             }
 
+            // --- AI Generation Endpoint (Kreative Projekte) ---
+            if (path === "/api/ai/generate" && method === "POST") {
+                if (!env.KI_API) {
+                    return new Response("No API Key configured in worker environment (env.KI_API)", { status: 500, headers: corsHeaders });
+                }
+                const body = await request.json();
+                const promptText = body.promptText;
+
+                if (!promptText) {
+                    return new Response("Missing promptText", { status: 400, headers: corsHeaders });
+                }
+
+                try {
+                    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${env.KI_API}`;
+                    const res = await fetch(url, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            contents: [{ parts: [{ text: promptText }] }],
+                            generationConfig: {
+                                temperature: 0.7,
+                                responseMimeType: "application/json"
+                            }
+                        })
+                    });
+                    
+                    if (!res.ok) {
+                        const errBody = await res.text();
+                        return new Response(`Gemini API Error: ${res.status} - ${errBody}`, { status: res.status, headers: corsHeaders });
+                    }
+
+                    const data = await res.json();
+                    return new Response(JSON.stringify(data), {
+                        headers: { ...corsHeaders, "Content-Type": "application/json" }
+                    });
+
+                } catch (err) {
+                    return new Response(`Backend Error: ${err.message}`, { status: 500, headers: corsHeaders });
+                }
+            }
+
             return new Response(`Not Found: ${method} ${path}`, { status: 404, headers: corsHeaders });
         } catch (err) {
             return new Response(err.message, { status: 500, headers: corsHeaders });
