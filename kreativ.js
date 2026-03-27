@@ -28,7 +28,8 @@ async function generateIdeas() {
         });
 
         if (!res.ok) {
-            throw new Error(`Server Error: ${res.status}`);
+            let errText = await res.text();
+            throw new Error(`Server Error: ${res.status} - ${errText}`);
         }
 
         const data = await res.json();

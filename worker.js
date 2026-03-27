@@ -475,6 +475,12 @@ Antworte bitte AUSSCHLIESSLICH im folgenden JSON-Format (ein Array aus Objekten)
                     // Clean up markdown if Gemini includes it
                     aiText = aiText.replace(/```json/gi, "").replace(/```/g, "").trim();
                     
+                    // Extract only the JSON array to avoid parsing errors
+                    let match = aiText.match(/\[[\s\S]*\]/);
+                    if (match) {
+                        aiText = match[0];
+                    }
+                    
                     const ideas = JSON.parse(aiText);
                     
                     return new Response(JSON.stringify({ ideas }), {
