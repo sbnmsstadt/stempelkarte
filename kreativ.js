@@ -3,7 +3,7 @@
  */
 
 // Replace with actual production URL if hosted elsewhere, otherwise absolute or relative path
-const API_URL = 'https://stempelkarte.f-klavun.workers.dev';
+const API_URL = 'https://stempelkarte.sb-nmsstadt.workers.dev';
 
 async function generateIdeas() {
     const topic = document.getElementById('ai-topic').value;
