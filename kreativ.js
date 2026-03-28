@@ -103,16 +103,28 @@ async function generateIdeas() {
         
         if (jsonText) {
             try {
-                // Cleanup just in case the model ignored the instructions
+                // Robust JSON extraction: Find first [ and last ] to isolate the array
+                const startIdx = jsonText.indexOf('[');
+                const endIdx = jsonText.lastIndexOf(']');
+                
+                if (startIdx !== -1 && endIdx !== -1 && endIdx > startIdx) {
+                    jsonText = jsonText.substring(startIdx, endIdx + 1);
+                }
+
+                // Cleanup common Markdown blocks
                 jsonText = jsonText.replace(/\`\`\`json/g, '').replace(/\`\`\`/g, '').trim();
+                
+                // Fix potential trailing commas (common in AI outputs) before parsing
+                jsonText = jsonText.replace(/,\s*([\]}])/g, '$1');
+                
                 const ideas = JSON.parse(jsonText);
                 renderIdeas(ideas);
             } catch (parseError) {
                 console.error("JSON Parse Error:", parseError, jsonText);
-                throw new Error("Die KI-Antwort war kein gültiges JSON. Erhalten: " + jsonText.substring(0, 100) + "...");
+                throw new Error(`Die KI-Antwort (V5) war kein gültiges JSON. Fehler: ${parseError.message}. Erhalten: ` + jsonText.substring(0, 200) + "...");
             }
         } else {
-            throw new Error("Antwort-Struktur fehlerhaft (V3): Kein Text im 'data.text' Feld.");
+            throw new Error("Antwort-Struktur fehlerhaft (V5): Kein Text im 'data.text' Feld.");
         }
 
     } catch (err) {
