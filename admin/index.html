@@ -90,68 +90,6 @@
                     </div>
                 </div>
 
-                <!-- Badges verwalten -->
-                <div class="glass-card" style="border-color: #ec4899; margin-top: 15px;">
-                    <h3 style="color: #ec4899;">🏅 Abzeichen verwalten</h3>
-                    <div id="badge-list" style="display: flex; flex-wrap: wrap; gap: 8px; margin: 10px 0; min-height: 30px;">
-                        <span style="color: var(--text-muted); font-size: 0.8rem;">Lade Abzeichen...</span>
-                    </div>
-                    <div style="display: flex; flex-direction: column; gap: 8px; margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--glass-border);">
-                        <p style="font-size: 0.75rem; color: var(--text-muted); font-weight: 700;">Neues Abzeichen erstellen:</p>
-                        <div style="display: flex; gap: 8px;">
-                            <input type="text" id="new-badge-emoji" placeholder="🏅" style="width: 55px; text-align: center; font-size: 1.2rem;">
-                            <input type="text" id="new-badge-name" placeholder="Name des Abzeichens" style="flex: 1;">
-                        </div>
-                        <input type="text" id="new-badge-desc" placeholder="Beschreibung (optional)">
-                        <div style="display: flex; gap: 8px; align-items: center;">
-                            <label style="font-size: 0.75rem; color: var(--text-muted);">Farbe:</label>
-                            <input type="color" id="new-badge-color" value="#f59e0b" style="width: 40px; height: 30px; border-radius: 6px; border: none; cursor: pointer; background: none;">
-                        </div>
-                        <button onclick="createBadge()" class="add-stamp-btn" style="background: #ec4899; padding: 8px; font-size: 0.85rem;">Abzeichen erstellen</button>
-                    </div>
-                    <p id="badge-status-msg" style="font-size: 0.8rem; margin-top: 8px; display: none;"></p>
-                </div>
-
-                <!-- Schüler der Woche -->
-                <div class="glass-card" style="border-color: #f59e0b; margin-top: 15px;">
-                    <h3 style="color: #f59e0b;">⭐ Schüler der Woche</h3>
-                    <div style="display: flex; flex-direction: column; gap: 10px; margin-top: 10px;">
-                        <select id="sotw-student-select" style="width: 100%; padding: 10px; border-radius: 10px; border: 1px solid var(--glass-border); background: rgba(0,0,0,0.3); color: white; font-size: 0.9rem;">
-                            <option value="">-- Schüler auswählen --</option>
-                        </select>
-                        <input type="text" id="sotw-reason" placeholder="Grund (z.B. 'Immer hilfsbereit!')" style="width: 100%;">
-                        <div style="display: flex; gap: 8px;">
-                            <button onclick="saveStudentOfWeek()" class="add-stamp-btn" style="flex: 2; padding: 8px; font-size: 0.85rem;">⭐ Speichern</button>
-                            <button onclick="clearStudentOfWeek()" style="flex: 1; padding: 8px; background: transparent; border: 1px solid var(--glass-border); border-radius: 10px; color: var(--text-muted); cursor: pointer; font-size: 0.8rem;">Löschen</button>
-                        </div>
-                        <div id="sotw-current" style="font-size: 0.8rem; color: var(--text-muted); padding: 8px; background: rgba(255,255,255,0.03); border-radius: 8px; display: none;"></div>
-                    </div>
-                </div>
-
-                <!-- Birthdays -->
-                <div class="glass-card" style="border-color: var(--primary-light);">
-                    <h3>🎂 Baldige Geburtstage</h3>
-                    <div id="birthday-dashboard" class="subtitle">
-                        Lade Geburtstage...
-                    </div>
-                </div>
-
-                <!-- Group Reward -->
-                <div class="glass-card" style="border-color: var(--accent);">
-                    <h3 id="group-reward-title-display">🎬 Filmtag</h3>
-                    <div id="group-reward-status" style="font-size: 1.2rem; font-weight: 800; margin: 10px 0;">
-                        0 / 8 Stempel
-                    </div>
-                    <div class="reward-progress-bg" style="height: 10px; margin-bottom: 15px;">
-                        <div id="group-reward-bar" class="reward-progress-bar" style="width: 0%"></div>
-                    </div>
-                    <button id="group-reward-approve-btn" onclick="approveGroupReward()" class="redeem-btn hidden" style="width:100%; background:var(--success);">Filmtag Genehmigen</button>
-                    <button id="group-reward-reset-btn" onclick="resetGroupReward()" class="redeem-btn hidden" style="width:100%; background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.2);">Fortschritt Zurücksetzen</button>
-                    <p style="font-size: 0.7rem; color: var(--text-muted); margin-top: 8px;">
-                        Gesammelte Spenden für das nächste Gruppen-Event.
-                    </p>
-                </div>
-
                 <!-- System Settings -->
                 <div class="glass-card" style="border-color: var(--primary-light);">
                     <h3>⚙️ System-Einstellungen</h3>
@@ -210,6 +148,28 @@
                         </div>
                         <button onclick="saveSettings()" class="add-stamp-btn" style="padding:10px; font-size:0.9rem;">Einstellungen speichern</button>
                     </div>
+                </div>
+
+                <!-- Badges verwalten -->
+                <div class="glass-card" style="border-color: #ec4899; margin-top: 15px;">
+                    <h3 style="color: #ec4899;">🏅 Abzeichen verwalten</h3>
+                    <div id="badge-list" style="display: flex; flex-wrap: wrap; gap: 8px; margin: 10px 0; min-height: 30px;">
+                        <span style="color: var(--text-muted); font-size: 0.8rem;">Lade Abzeichen...</span>
+                    </div>
+                    <div style="display: flex; flex-direction: column; gap: 8px; margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--glass-border);">
+                        <p style="font-size: 0.75rem; color: var(--text-muted); font-weight: 700;">Neues Abzeichen erstellen:</p>
+                        <div style="display: flex; gap: 8px;">
+                            <input type="text" id="new-badge-emoji" placeholder="🏅" style="width: 55px; text-align: center; font-size: 1.2rem;">
+                            <input type="text" id="new-badge-name" placeholder="Name des Abzeichens" style="flex: 1;">
+                        </div>
+                        <input type="text" id="new-badge-desc" placeholder="Beschreibung (optional)">
+                        <div style="display: flex; gap: 8px; align-items: center;">
+                            <label style="font-size: 0.75rem; color: var(--text-muted);">Farbe:</label>
+                            <input type="color" id="new-badge-color" value="#f59e0b" style="width: 40px; height: 30px; border-radius: 6px; border: none; cursor: pointer; background: none;">
+                        </div>
+                        <button onclick="createBadge()" class="add-stamp-btn" style="background: #ec4899; padding: 8px; font-size: 0.85rem;">Abzeichen erstellen</button>
+                    </div>
+                    <p id="badge-status-msg" style="font-size: 0.8rem; margin-top: 8px; display: none;"></p>
                 </div>
 
                 <!-- Reward Management -->

@@ -622,7 +622,7 @@ export default {
                     .map(s => `${s.name} (${s.badges.join(', ')})`)
                     .join('; ');
 
-                const prompt = `Du bist NACHMI, der herzliche KI-Hort-Assistent für Kinder (6-10 Jahre).
+                const prompt = `[PROMPT-ID: ${Date.now()}] Du bist NACHMI, der herzliche KI-Hort-Assistent für Kinder (6-10 Jahre).
 Heute haben wir diesen spannenden Tagesplan: "${planText}".
 
 Hier sind einige Kinder mit ihren Abzeichen (Badges): ${studentsWithBadges || "Aktuell noch keine"}.
@@ -642,8 +642,14 @@ Deine Aufgabe: Schreibe eine begeisterte, motivierende Nachricht für die Infota
                             contents: [{ parts: [{ text: prompt }] }],
                             generationConfig: {
                                 temperature: 0.8,
-                                maxOutputTokens: 250
-                            }
+                                maxOutputTokens: 500
+                            },
+                            safetySettings: [
+                                { category: "HARM_CATEGORY_HARASSMENT", threshold: "BLOCK_NONE" },
+                                { category: "HARM_CATEGORY_HATE_SPEECH", threshold: "BLOCK_NONE" },
+                                { category: "HARM_CATEGORY_SEXUALLY_EXPLICIT", threshold: "BLOCK_NONE" },
+                                { category: "HARM_CATEGORY_DANGEROUS_CONTENT", threshold: "BLOCK_NONE" }
+                            ]
                         })
                     });
                     
@@ -653,7 +659,7 @@ Deine Aufgabe: Schreibe eine begeisterte, motivierende Nachricht für die Infota
                     }
 
                     const data = await res.json();
-                    const generatedText = data?.candidates?.[0]?.content?.parts?.[0]?.text || "Viel Spaß heute!";
+                    const generatedText = data?.candidates?.[0]?.content?.parts?.[0]?.text || `KI-FEHLER (Plan war: ${planText.substring(0, 30)}...)`;
                     
                     return new Response(JSON.stringify({ text: generatedText.trim() }), {
                         headers: { ...corsHeaders, "Content-Type": "application/json" }
