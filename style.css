@@ -611,10 +611,47 @@ input[type="number"] {
     font-size: 1.1rem;
     margin-right: 10px;
 }
-/* Animations */
-@keyframes bounceIn {
-    0% { transform: scale(0.3); opacity: 0; }
-    50% { transform: scale(1.05); opacity: 1; }
-    70% { transform: scale(0.9); }
-    100% { transform: scale(1); }
+@keyframes glowPulse {
+    0%, 100% { border-color: rgba(139, 92, 246, 0.4); box-shadow: 0 4px 20px rgba(0,0,0,0.3); }
+    50% { border-color: rgba(139, 92, 246, 0.8); box-shadow: 0 4px 30px rgba(139, 92, 246, 0.3); }
+}
+
+.ai-card {
+    margin-top: 2rem;
+    border: 1px solid rgba(139, 92, 246, 0.4);
+    background: linear-gradient(135deg, rgba(30, 27, 75, 0.9), rgba(88, 28, 135, 0.7));
+    animation: glowPulse 4s ease-in-out infinite;
+    padding: 1.5rem !important;
+}
+
+.ai-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 12px;
+}
+
+.ai-icon {
+    font-size: 2rem;
+    filter: drop-shadow(0 0 8px rgba(255,255,255,0.3));
+}
+
+.ai-title {
+    font-size: 1.1rem;
+    font-weight: 800;
+    color: white;
+    margin: 0;
+    letter-spacing: 0.02em;
+}
+
+.ai-content {
+    font-size: 1.05rem;
+    line-height: 1.6;
+    font-weight: 500;
+    color: rgba(255,255,255,0.95);
+    font-style: italic;
+    background: rgba(0,0,0,0.2);
+    padding: 12px;
+    border-radius: 10px;
+    border-left: 3px solid var(--accent);
 }

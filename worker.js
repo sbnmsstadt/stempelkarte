@@ -1,7 +1,7 @@
 export default {
     async fetch(request, env) {
         const url = new URL(request.url);
-        const path = url.pathname;
+        const path = url.pathname.replace(/\/$/, ""); // Normalize path (remove trailing slash)
         const method = request.method;
 
         const corsHeaders = {
@@ -608,6 +608,7 @@ export default {
 
             // --- PERSONAL AI Motivation Endpoint (NEW) ---
             if (path === "/api/ai/student-motivation" && method === "GET") {
+                console.log("Personal AI Motivation Request received for path:", path);
                 const urlParams = new URLSearchParams(url.search);
                 const studentId = urlParams.get('id');
                 if (!studentId) return new Response("Missing student id", { status: 400, headers: corsHeaders });

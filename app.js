@@ -240,24 +240,33 @@ function showDetail(student) {
         const cached = sessionStorage.getItem(cacheKey);
 
         if (cached) {
+            console.log("Loading AI message from cache...");
             aiSection.classList.remove('hidden');
             aiText.innerText = cached;
         } else {
+            console.log("Fetching new personal AI motivation for:", student.id);
             aiSection.classList.remove('hidden');
             aiText.innerText = "NACHMI überlegt sich gerade was ganz Besonderes für dich... ✨";
             
             // Fetch personal motivation on demand
             fetch(`${API_URL}/ai/student-motivation?id=${student.id}`)
-                .then(r => r.json())
+                .then(r => {
+                    if (!r.ok) throw new Error("Worker responded with error " + r.status);
+                    return r.json();
+                })
                 .then(data => {
                     if (data.text) {
+                        console.log("AI message received!");
                         aiText.innerText = data.text;
                         sessionStorage.setItem(cacheKey, data.text);
+                    } else {
+                        throw new Error("No text in AI response");
                     }
                 })
                 .catch(err => {
                     console.error("Personal AI error:", err);
-                    aiSection.classList.add('hidden');
+                    aiText.innerText = "NACHMI macht gerade eine kurze Pause. ✨ Sammle weiter Stempel!";
+                    // Do NOT add 'hidden' back if it already flashed, keep the card visible with fallback text
                 });
         }
     }
