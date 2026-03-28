@@ -214,14 +214,13 @@ function renderBadgeGalerie() {
     badgeIndex++;
 
     // Smooth update with fade
-    const parent = document.getElementById('badge-galerie-content');
+    const parent = document.getElementById('badge-refresh-area');
     if (parent) {
-        parent.style.transition = 'opacity 0.6s ease';
         parent.style.opacity = '0';
         setTimeout(() => {
             iconEl.textContent = item.emoji || item.icon;
             nameEl.textContent = item.name;
-            descEl.textContent = item.desc || "-";
+            descEl.textContent = item.description || item.desc || "-";
             parent.style.opacity = '1';
         }, 600);
     }
