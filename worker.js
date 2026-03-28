@@ -768,12 +768,12 @@ Deine Aufgabe: Schreibe eine kurze, begeisterte und persönliche Nachricht (ca. 
 1. Begrüße ${studentName} herzlich.
 2. Beziehe dich auf den heutigen Plan und erwähne mindestens eine Aktivität.
 3. Lobe oder motiviere das Kind passend zu seinen Abzeichen ${logsToday ? "und den heutigen Beobachtungen" : ""}.
-4. Sei extrem positiv, benutze Emojis und beende UNBEDINGT jeden Satz vollständig! Brich niemals mittendrin ab.`;
+4. BEENDUNG: Beende den Text NIEMALS mitten im Satz. Der letzte Satz MUSS vollständig abgeschlossen sein. Brich nicht ab, bevor der Text einen freundlichen Abschied oder ein passendes Emoji-Ende hat.`;
 
                 const apiKey = (env.KREATIV_API || "").trim().replace(/^"|"$/g, '');
                 if (!apiKey || apiKey.length < 10) return new Response("Ungültiger API Key", { status: 500, headers: corsHeaders });
 
-                const result = await callGemini(prompt, apiKey, { temperature: 0.8, maxTokens: 500 });
+                const result = await callGemini(prompt, apiKey, { temperature: 0.8, maxTokens: 1000 });
 
                 if (result.success) {
                     return new Response(JSON.stringify({ text: result.text, model: result.model }), {
