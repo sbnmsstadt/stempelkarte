@@ -231,10 +231,12 @@ function renderKids() {
             const [,m,d] = s.birthday.split('-').map(Number);
             let bday = new Date(today.getFullYear(), m-1, d);
             if (bday < today) bday = new Date(today.getFullYear()+1, m-1, d);
-            const days = Math.round((bday - today) / 86400000);
-            return days;
+            return Math.round((bday - today) / 86400000);
         };
-        return getScore(a) - getScore(b);
+        const sA = getScore(a);
+        const sB = getScore(b);
+        if (sA !== sB) return sA - sB;
+        return a.name.localeCompare(b.name);
     });
 
     const makeCard = (s) => {
@@ -256,13 +258,12 @@ function renderKids() {
                 ? `<div class="kid-card-badge" style="background:rgba(236,72,153,0.1);color:#f9a8d4;border:1px solid rgba(236,72,153,0.3);">diese Woche</div>`
                 : '';
 
-        // Show assigned badge emojis
         const studentBadgeEmojis = (s.badges || [])
             .map(bid => { const b = badges.find(x => x.id === bid); return b ? b.emoji : ''; })
             .filter(Boolean).join(' ');
 
         return `
-            <div class="kid-card ${cls}">
+            <div class="kid-card ${cls}" style="margin-bottom:10px;">
                 <div class="kid-card-avatar">${s.avatar || s.name.charAt(0)}</div>
                 <div class="kid-card-info">
                     <div class="kid-card-name">${s.name}${studentBadgeEmojis ? ' <span style="font-size:0.85em;">' + studentBadgeEmojis + '</span>' : ''}</div>
@@ -272,9 +273,17 @@ function renderKids() {
             </div>`;
     };
 
-    // Duplicate for seamless infinite scroll
-    const html = [...sorted, ...sorted].map(makeCard).join('');
-    const duration = `${Math.max(20, sorted.length * 3.5)}s`;
+    // Ensure we have enough copies to fill the screen for a perfect seamless loop!
+    const copiesNeeded = Math.ceil(15 / Math.max(1, sorted.length));
+    let halfItems = [];
+    for (let i = 0; i < copiesNeeded; i++) halfItems.push(...sorted);
+    
+    const halfHtml = halfItems.map(makeCard).join('');
+    // html contains EXACTLY two identical DOM halves
+    const html = halfHtml + halfHtml; 
+    
+    // Total duration for one half to scroll
+    const duration = `${halfItems.length * 3.5}s`;
     smoothUpdate(inner, html, { animDuration: duration, scrolling: true });
 }
 
@@ -472,15 +481,26 @@ function renderTicker() {
         display.push({ name: 'NACHMI', reason: '🌟 Noch keine Aktivitäten', emoji: '📢' });
     }
 
-    // Duplicate for seamless loop
-    const html = [...display, ...display].map(it => `
+    // Ensure sufficient copies for seamless scrolling on large screens
+    const copiesNeeded = Math.ceil(25 / Math.max(1, display.length));
+    const halfItems = [];
+    for (let i = 0; i < copiesNeeded; i++) {
+        halfItems.push(...display);
+    }
+    
+    // Build HTML for one half
+    const halfHtml = halfItems.map(it => `
         <div class="ticker-item" style="font-size: 1.15em;">
             <span class="t-icon">${it.emoji}</span>
             <span class="t-name">${it.name}</span>
             <span>${it.reason}</span>
         </div>`).join('');
 
-    const duration = `${Math.max(4, display.length * 0.34)}s`;
+    // Full HTML is exactly two halves for perfectly invisible looping
+    const html = halfHtml + halfHtml;
+
+    // Time to scroll one half (-50%). Speed per item: ~0.4 seconds (2.5x faster than 1s)
+    const duration = `${Math.max(4, halfItems.length * 0.4)}s`;
     smoothUpdate(scroll, html, { animDuration: duration, scrolling: true });
 }
 
