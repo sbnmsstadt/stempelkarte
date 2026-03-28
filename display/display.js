@@ -569,12 +569,30 @@ window.addEventListener('resize', () => {
 function initPlanFlip() {
     if (planFlipInterval) clearInterval(planFlipInterval);
 
-    // Toggle every 15 seconds for a more dynamic feel
     planFlipInterval = setInterval(() => {
-        const container = document.querySelector('.flip-container');
+        const container = document.getElementById('tagesplan-card-container');
         if (!container) return;
         
-        container.classList.toggle('flipped');
+        const isFlipped = container.classList.toggle('flipped');
+        const aiEl = document.getElementById('today-plan-ai');
+
+        if (isFlipped && aiEl) {
+            // Auto-scroll logic if content overflows
+            setTimeout(() => {
+                const scrollH = aiEl.scrollHeight;
+                const clientH = aiEl.clientHeight;
+                if (scrollH > clientH + 5) {
+                    const diff = scrollH - clientH;
+                    const speed = 25; // slower, more readable speed
+                    const dur = (diff / speed).toFixed(2);
+                    aiEl.style.transition = `transform ${dur}s linear`;
+                    aiEl.style.transform = `translateY(-${diff + 20}px)`;
+                }
+            }, 2000); 
+        } else if (aiEl) {
+            aiEl.style.transition = 'none';
+            aiEl.style.transform = 'translateY(0)';
+        }
     }, 15000);
 }
 

@@ -629,11 +629,11 @@ Heute haben wir diesen spannenden Tagesplan: "${planText}".
 
 Hier ist die Liste ALLER Kinder im Hort: ${studentsWithBadges}.
 
-Deine Aufgabe: Schreibe eine ausführliche, begeisterte Nachricht für die Infotafel (ca. 45-60 Wörter):
-1. Analysiere den Tagesplan im Detail und nenne mindestens zwei Aktivitäten daraus.
-2. Nenne mindestens 3 Kinder namentlich aus der Liste oben!
-3. Wenn Kinder Abzeichen haben, lobe sie dafür passend zum Tag. Wenn sie keine haben, motiviere sie besonders, heute eines zu sammeln! 
-4. Schreibe MINDESTENS 4 Sätze. Sei extrem herzlich, benutze viele Emojis und beende deine Sätze immer vollständig.`;
+Deine Aufgabe: Schreibe eine ausführliche, begeisterte Nachricht für die Infotafel (ca. 50-70 Wörter):
+1. Analysiere den GESAMTEN Tagesplan und nenne mindestens DREI Aktivitäten daraus.
+2. Nenne mindestens 3-4 Kinder namentlich aus der Liste oben und beziehe dich auf ihre Abzeichen (falls vorhanden) oder motiviere sie gezielt für heute!
+3. Schreibe MINDESTENS 4-5 Sätze. 
+4. Sei extrem herzlich, benutze viele Emojis und stelle sicher, dass jeder Satz grammatikalisch vollständig beendet wird. Brich niemals mitten im Satz ab!`;
 
                 if (!env.KREATIV_API || env.KREATIV_API === "undefined") {
                     return new Response("FEHLER: Cloudflare Secret 'KREATIV_API' fehlt! Bitte in der Cloudflare-Konsole unter 'Settings -> Variables -> Secrets' eintragen.", { 
@@ -684,9 +684,8 @@ Deine Aufgabe: Schreibe eine ausführliche, begeisterte Nachricht für die Infot
                         const data = await res.json();
                         const generatedText = data?.candidates?.[0]?.content?.parts?.[0]?.text;
                         if (generatedText) {
-                            const timeStr = new Date().toLocaleTimeString('de-DE');
                             return new Response(JSON.stringify({ 
-                                text: `[GEN-TIME: ${timeStr}] \n\n${generatedText.trim()}`, 
+                                text: generatedText.trim(), 
                                 model: modelToUse + " " + discoveryLog 
                             }), {
                                 headers: { ...corsHeaders, "Content-Type": "application/json" }

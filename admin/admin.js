@@ -794,8 +794,6 @@ async function saveSettings() {
                             });
 
                             const payload = { planText: todayPlan, students: studentData };
-                            // DEBUG ALERT
-                            alert("Sende Daten an KI:\n" + JSON.stringify(payload).substring(0, 300) + "...");
 
                             const aiRes = await fetch(`${API_URL}/ai/day-plan`, {
                                 method: 'POST',
@@ -806,7 +804,6 @@ async function saveSettings() {
                             if (aiRes.ok) {
                                 const aiData = await aiRes.json();
                                 if (aiData.text) {
-                                    alert("KI ANTWORT ERHALTEN:\n" + aiData.text);
                                 // Fetch latest settings again just to be safe
                                 const sRes = await fetch(`${API_URL}/settings`);
                                 if (sRes.ok) {

@@ -235,18 +235,23 @@
         }
 
         .ai-motivation {
-            font-size: 1.15rem;
-            line-height: 1.6;
-            font-style: italic;
-            padding: 20px;
+            font-size: clamp(1.4rem, 4.5vw, 2.8rem); /* Dynamic scaling: big for short, smaller for long */
+            line-height: 1.35;
+            font-weight: 700;
+            padding: 40px;
             display: flex;
             flex-direction: column;
             justify-content: center;
             align-items: center;
             text-align: center;
-            min-height: 100%; /* Allow it to grow if text is long */
+            height: 100%;
             width: 100%;
+            overflow-y: auto; /* Safety for very long messages */
+            color: white;
+            text-shadow: 0 2px 10px rgba(0,0,0,0.3);
+            scrollbar-width: none; /* Hide scrollbar for TV look */
         }
+        .ai-motivation::-webkit-scrollbar { display: none; }
 
         /* ── KIDS SCROLL BAND ──────────────────── */
         .card.birthday-card { border-color: rgba(236,72,153,0.25); }
@@ -998,7 +1003,7 @@
             <!-- Side-by-Side row (Hauptfokus) -->
             <div style="display: flex; gap: 18px; flex: 1.8;">
                 <!-- Tagesplan (Full Card Flip) -->
-                <div class="flip-container" style="flex:1;">
+                <div class="flip-container" id="tagesplan-card-container" style="flex:1;">
                     <div class="flip-card-inner" id="tagesplan-flipper">
                         
                         <!-- FRONT SIDE: Full Card -->
