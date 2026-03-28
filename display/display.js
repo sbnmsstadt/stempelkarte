@@ -414,8 +414,32 @@ function renderVIPs() {
 }
 
 // ── TICKER ─────────────────────────────────────
+// Hash of ticker-relevant data — only re-render on real admin changes.
+function getTickerHash() {
+    return students.map(s => {
+        const hist = (s.history || [])
+            .filter(h => h.date && h.reason
+                && h.reason !== 'Admin-Korrektur'
+                && !h.reason.toLowerCase().includes('entfernt'))
+            .map(h => `${h.date}|${h.reason}`)
+            .join(',');
+        const vipActive = (s.vip && s.vip.active) ? '1' : '0';
+        const bdg = [...(s.badges || [])].sort().join(',');
+        return `${s.id}:${hist}:${vipActive}:${bdg}`;
+    }).join(';');
+}
+
+let _tickerHash = null;
+
 function renderTicker() {
     const scroll = document.getElementById('ticker-scroll');
+    if (!scroll) return;
+
+    // Bail out if nothing ticker-relevant changed (prevents animation reset on every 15s fetch)
+    const currentHash = getTickerHash();
+    if (currentHash === _tickerHash) return;
+    _tickerHash = currentHash;
+
     const items = [];
 
     // All recent history across students (last 48h)
