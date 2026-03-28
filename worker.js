@@ -606,7 +606,75 @@ export default {
                 }
             }
 
-            // --- AI Generation Endpoint (Tagesplan Motivation) ---
+            // --- PERSONAL AI Motivation Endpoint (NEW) ---
+            if (path === "/api/ai/student-motivation" && method === "GET") {
+                const urlParams = new URLSearchParams(url.search);
+                const studentId = urlParams.get('id');
+                if (!studentId) return new Response("Missing student id", { status: 400, headers: corsHeaders });
+
+                const [studentsRaw, settingsRaw, badgesRaw] = await Promise.all([
+                    env.DATABASE.get("students"),
+                    env.DATABASE.get("settings"),
+                    env.DATABASE.get("badges")
+                ]);
+
+                const students = studentsRaw ? JSON.parse(studentsRaw) : [];
+                const settings = settingsRaw ? JSON.parse(settingsRaw) : {};
+                const badges = badgesRaw ? JSON.parse(badgesRaw) : [];
+
+                const student = students.find(s => String(s.id).toLowerCase() === studentId.toLowerCase());
+                if (!student) return new Response("Student not found", { status: 404, headers: corsHeaders });
+
+                const planText = settings.todayPlan || "noch kein spezieller Plan";
+                const studentName = student.name.split(' ')[0]; // Nur Vorname
+                const studentBadges = (student.badges || []).map(bid => {
+                    const b = badges.find(x => String(x.id) === String(bid));
+                    return b ? b.name : '';
+                }).filter(Boolean).join(', ');
+
+                const prompt = `Du bist NACHMI, der herzliche KI-Hort-Assistent.
+Sprich das Kind direkt mit Namen an: "${studentName}".
+Heute im Hort geplant: "${planText}".
+Das Kind hat diese Abzeichen: ${studentBadges || "noch keine (motiviere es welche zu sammeln!)"}.
+
+Deine Aufgabe: Schreibe eine kurze, begeisterte und persönliche Nachricht (ca. 40-60 Wörter):
+1. Begrüße ${studentName} herzlich.
+2. Beziehe dich auf den heutigen Plan und erwähne mindestens eine Aktivität.
+3. Lobe oder motiviere das Kind passend zu seinen Abzeichen.
+4. Sei extrem positiv, benutze Emojis und beende UNBEDINGT jeden Satz vollständig! Brich niemals mittendrin ab.`;
+
+                const apiKey = env.KREATIV_API?.trim();
+                let modelToUse = "gemini-1.5-flash"; // Default
+
+                try {
+                    const modelRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${modelToUse}:generateContent?key=${apiKey}`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            contents: [{ parts: [{ text: prompt }] }],
+                            generationConfig: { 
+                                temperature: 0.8, 
+                                maxOutputTokens: 400 
+                            }
+                        })
+                    });
+
+                    if (modelRes.ok) {
+                        const data = await modelRes.json();
+                        const text = data?.candidates?.[0]?.content?.parts?.[0]?.text || "Fehler bei der Generierung.";
+                        return new Response(JSON.stringify({ text: text.trim() }), {
+                            headers: { ...corsHeaders, "Content-Type": "application/json" }
+                        });
+                    } else {
+                        const err = await modelRes.text();
+                        return new Response(`API Fehler: ${err}`, { status: 500, headers: corsHeaders });
+                    }
+                } catch (e) {
+                    return new Response(`Fehler: ${e.message}`, { status: 500, headers: corsHeaders });
+                }
+            }
+
+            // --- AI Generation Endpoint (Tagesplan Motivation - Legacy/Global) ---
             if (path === "/api/ai/day-plan" && method === "POST") {
                 const body = await request.json();
                 const planText = body.planText || "";

@@ -768,65 +768,9 @@ async function saveSettings() {
             body: JSON.stringify(payload)
         });
         if (response.ok) {
-            // After successful save, update our local cache and clear lastLoaded tracking
-            // so the next poll can update the inputs if needed.
             lastLoadedValues = {}; 
             alert("Einstellungen gespeichert!");
             loadSettings();
-
-            // --- AI Background Task: Generate Daily Plan Motivation ---
-                if (todayPlan.trim() !== "") {
-                    // We do this in the background, not blocking the user save
-                    (async () => {
-                        try {
-                            // Ensure we have fresh student and badge data for the AI
-                            const sFetch = await fetch(`${API_URL}/students`);
-                            const freshStudents = await sFetch.json();
-                            const bFetch = await fetch(`${API_URL}/badges`);
-                            const freshBadges = await bFetch.json();
-
-                            const studentData = freshStudents.map(s => {
-                                const badgeNames = (s.badges || []).map(bid => {
-                                    const b = freshBadges.find(x => String(x.id) === String(bid));
-                                    return b ? b.name : '';
-                                }).filter(Boolean);
-                                return { name: s.name.split(' ')[0], badges: badgeNames };
-                            });
-
-                            const payload = { planText: todayPlan, students: studentData };
-
-                            const aiRes = await fetch(`${API_URL}/ai/day-plan`, {
-                                method: 'POST',
-                                headers: { 'Content-Type': 'application/json' },
-                                body: JSON.stringify(payload)
-                            });
-
-                            if (aiRes.ok) {
-                                const aiData = await aiRes.json();
-                                if (aiData.text) {
-                                // Fetch latest settings again just to be safe
-                                const sRes = await fetch(`${API_URL}/settings`);
-                                if (sRes.ok) {
-                                    const latestSettings = await sRes.json();
-                                    latestSettings.todayPlanMotivation = aiData.text;
-                                    
-                                    await fetch(`${API_URL}/settings`, {
-                                        method: 'PUT',
-                                        headers: { 'Content-Type': 'application/json' },
-                                        body: JSON.stringify(latestSettings)
-                                    });
-                                    console.log("AI Motivation saved successfully.");
-                                }
-                            }
-                        } else {
-                            console.error("AI Day Plan API error:", aiRes.status);
-                        }
-                    } catch (err) {
-                        console.error("AI Background generation failed:", err);
-                    }
-                })();
-            }
-
         }
     } catch (err) {
         alert("Fehler beim Speichern.");

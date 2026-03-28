@@ -232,17 +232,33 @@ function showDetail(student) {
     renderBadges(student);
     renderHistory(student.history || []);
 
-    // NEW: Render AI Motivation
+    // NEW: Render PERSONAL AI Motivation
     const aiSection = document.getElementById('ai-section');
     const aiText = document.getElementById('ai-motivation-student');
     if (aiSection && aiText) {
-        const motivation = SETTINGS.todayPlanMotivation || "";
-        if (motivation && motivation.trim().length > 0) {
+        const cacheKey = `ai_motivation_${student.id}_${new Date().toISOString().split('T')[0]}`;
+        const cached = sessionStorage.getItem(cacheKey);
+
+        if (cached) {
             aiSection.classList.remove('hidden');
-            aiText.innerText = motivation;
+            aiText.innerText = cached;
         } else {
-            // Keep hidden or show loading if it's during the day
-            aiSection.classList.add('hidden');
+            aiSection.classList.remove('hidden');
+            aiText.innerText = "NACHMI überlegt sich gerade was ganz Besonderes für dich... ✨";
+            
+            // Fetch personal motivation on demand
+            fetch(`${API_URL}/ai/student-motivation?id=${student.id}`)
+                .then(r => r.json())
+                .then(data => {
+                    if (data.text) {
+                        aiText.innerText = data.text;
+                        sessionStorage.setItem(cacheKey, data.text);
+                    }
+                })
+                .catch(err => {
+                    console.error("Personal AI error:", err);
+                    aiSection.classList.add('hidden');
+                });
         }
     }
 
