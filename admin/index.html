@@ -98,6 +98,32 @@
                     </div>
                 </div>
 
+                <!-- Special Highlights -->
+                <div class="glass-card" style="border-color: gold;">
+                    <h3 style="color: gold;">🌟 Extra-Meilensteine & Ehrungen</h3>
+                    
+                    <!-- Student of the Week -->
+                    <div class="edit-field" style="margin-bottom: 20px;">
+                        <label style="font-size:0.75rem; color:gold; font-weight:700;">SCHÜLER DER WOCHE</label>
+                        <select id="setting-student-of-week" style="width:100%; padding:10px; border-radius:10px; background:rgba(0,0,0,0.2); color:white; border:1px solid var(--glass-border);">
+                            <option value="">- Kein Schüler ausgewählt -</option>
+                        </select>
+                    </div>
+
+                    <!-- Badge Manager -->
+                    <div class="edit-field">
+                        <label style="font-size:0.75rem; color:var(--accent); font-weight:700; display:flex; justify-content:space-between;">
+                            SAMMEL-ABZEICHEN (BADGES)
+                            <button onclick="openBadgeModal()" style="background:transparent; border:none; color:var(--accent); cursor:pointer; font-size:0.7rem; text-decoration:underline;">+ Neu erstellen</button>
+                        </label>
+                        <div id="admin-badge-list" style="display:flex; flex-wrap:wrap; gap:8px; margin-top:10px;">
+                            <!-- Badges rendered here -->
+                        </div>
+                    </div>
+                    
+                    <button onclick="saveSpecialSettings()" class="add-stamp-btn" style="width:100%; margin-top:20px; background:linear-gradient(135deg, #f59e0b, #d97706);">Ehrungen speichern</button>
+                </div>
+
                 <!-- Group Reward -->
                 <div class="glass-card" style="border-color: var(--accent);">
                     <h3 id="group-reward-title-display">🎬 Filmtag</h3>
@@ -205,6 +231,60 @@
                     <div class="glass-card" style="text-align:center">Lade Schüler-Daten...</div>
                 </div>
             </section>
+        </div>
+    </div>
+
+    <!-- Badge Modal -->
+    <div id="badge-modal" class="modal-overlay hidden" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:5000; align-items:center; justify-content:center;">
+        <div class="glass-card" style="max-width: 400px; width: 90%; padding: 2rem;">
+            <h2 id="badge-modal-title">Abzeichen erstellen</h2>
+            <div style="display:flex; flex-direction:column; gap:15px; margin: 20px 0;">
+                <div class="edit-field">
+                    <label style="font-size:0.75rem; color:var(--text-muted); font-weight:700;">ICON (EMOJI)</label>
+                    <input type="text" id="badge-icon" placeholder="🏆" style="width:100%; font-size: 1.5rem; text-align: center; padding:10px; border-radius:10px; border:1px solid var(--glass-border); background:rgba(255,255,255,0.05); color:white;">
+                </div>
+                <div class="edit-field">
+                    <label style="font-size:0.75rem; color:var(--text-muted); font-weight:700;">NAME DES ABZEICHENS</label>
+                    <input type="text" id="badge-name" placeholder="Meister-Bastler" style="width:100%; padding:10px; border-radius:10px; border:1px solid var(--glass-border); background:rgba(255,255,255,0.05); color:white;">
+                </div>
+                <div class="edit-field">
+                    <label style="font-size:0.75rem; color:var(--text-muted); font-weight:700;">FARBE (HEX O. NAME)</label>
+                    <input type="text" id="badge-color" placeholder="#8b5cf6" style="width:100%; padding:10px; border-radius:10px; border:1px solid var(--glass-border); background:rgba(255,255,255,0.05); color:white;">
+                </div>
+            </div>
+            <div style="display:flex; gap:10px;">
+                <button onclick="saveBadge()" class="add-stamp-btn" style="flex:2">Speichern</button>
+                <button onclick="closeBadgeModal()" class="redeem-btn" style="flex:1; background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.2);">Abbrechen</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Student Edit Modal -->
+    <div id="student-edit-modal" class="modal-overlay hidden" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:4000; align-items:center; justify-content:center;">
+        <div class="glass-card" style="max-width: 500px; width: 95%; padding: 2rem; max-height: 90vh; overflow-y: auto;">
+            <h2 id="edit-modal-title">Schüler bearbeiten</h2>
+            <div style="display:flex; flex-direction:column; gap:20px; margin: 20px 0;">
+                <input type="hidden" id="edit-student-id">
+                <div class="edit-field">
+                    <label style="font-size:0.75rem; color:var(--text-muted); font-weight:700;">NAME</label>
+                    <input type="text" id="edit-student-name" style="width:100%; padding:10px; border-radius:10px; border:1px solid var(--glass-border); background:rgba(255,255,255,0.05); color:white;">
+                </div>
+                <div class="edit-field">
+                    <label style="font-size:0.75rem; color:var(--text-muted); font-weight:700;">GEBURTSTAG</label>
+                    <input type="date" id="edit-student-birthday" style="width:100%; padding:10px; border-radius:10px; border:1px solid var(--glass-border); background:rgba(255,255,255,0.05); color:white;">
+                </div>
+                
+                <div class="edit-field">
+                    <label style="font-size:0.75rem; color:var(--accent); font-weight:700;">ABZEICHEN / BADGES VERGEBEN</label>
+                    <div id="edit-student-badges-list" style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-top:10px;">
+                        <!-- Badges to select -->
+                    </div>
+                </div>
+            </div>
+            <div style="display:flex; gap:10px;">
+                <button onclick="saveStudentEdit()" class="add-stamp-btn" style="flex:2">Änderungen speichern</button>
+                <button onclick="closeStudentEditModal()" class="redeem-btn" style="flex:1; background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.2);">Abbrechen</button>
+            </div>
         </div>
     </div>
 
