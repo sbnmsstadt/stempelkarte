@@ -60,7 +60,8 @@ export default {
                     dailyNotes: "",
                     currentProjects: "",
                     upcomingProjects: "",
-                    todayPlan: ""
+                    todayPlan: "",
+                    studentOfWeek: null
                 };
                 return new Response(JSON.stringify(settings), {
                     headers: { ...corsHeaders, "Content-Type": "application/json" }
@@ -216,6 +217,60 @@ export default {
                 projects = projects.filter(p => String(p.id) !== String(id));
                 await env.DATABASE.put("projects", JSON.stringify(projects));
                 return new Response(null, { status: 204, headers: corsHeaders });
+            }
+
+            // --- Badges ---
+            if (path === "/api/badges" && method === "GET") {
+                const badgesRaw = await env.DATABASE.get("badges");
+                const badges = badgesRaw ? JSON.parse(badgesRaw) : [];
+                return new Response(JSON.stringify(badges), {
+                    headers: { ...corsHeaders, "Content-Type": "application/json" }
+                });
+            }
+
+            if (path === "/api/badges" && method === "POST") {
+                const body = await request.json();
+                const badgesRaw = await env.DATABASE.get("badges");
+                let badges = badgesRaw ? JSON.parse(badgesRaw) : [];
+                const newBadge = {
+                    id: Date.now().toString(),
+                    emoji: body.emoji || "🏅",
+                    name: body.name || "Abzeichen",
+                    description: body.description || "",
+                    color: body.color || "#f59e0b"
+                };
+                badges.push(newBadge);
+                await env.DATABASE.put("badges", JSON.stringify(badges));
+                return new Response(JSON.stringify(newBadge), {
+                    status: 201,
+                    headers: { ...corsHeaders, "Content-Type": "application/json" }
+                });
+            }
+
+            if (path.startsWith("/api/badges/") && method === "DELETE") {
+                const parts = path.split("/").filter(Boolean);
+                const id = parts[parts.length - 1];
+                const badgesRaw = await env.DATABASE.get("badges");
+                let badges = JSON.parse(badgesRaw || "[]");
+                badges = badges.filter(b => String(b.id) !== String(id));
+                await env.DATABASE.put("badges", JSON.stringify(badges));
+                return new Response(null, { status: 204, headers: corsHeaders });
+            }
+
+            // PUT /api/students/:id/badges — assign/remove badges on a student
+            if (path.match(/^\/api\/students\/[^/]+\/badges$/) && method === "PUT") {
+                const parts = path.split("/").filter(Boolean);
+                const studentId = parts[1];
+                const { badges } = await request.json(); // array of badge IDs
+                const studentsRaw = await env.DATABASE.get("students");
+                let students = JSON.parse(studentsRaw || "[]");
+                const idx = students.findIndex(s => String(s.id) === String(studentId));
+                if (idx === -1) return new Response("Not Found", { status: 404, headers: corsHeaders });
+                students[idx].badges = badges || [];
+                await env.DATABASE.put("students", JSON.stringify(students));
+                return new Response(JSON.stringify(students[idx]), {
+                    headers: { ...corsHeaders, "Content-Type": "application/json" }
+                });
             }
 
             if (path === "/api/students" && method === "GET") {

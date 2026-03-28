@@ -39,6 +39,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     await fetchRewards();
     loadSettings();
     fetchStudents();
+    fetchBadges();
     
     // Poll every 5 seconds for new data
     setInterval(fetchStudentsSilent, 5000);
@@ -77,6 +78,8 @@ async function fetchStudents() {
             renderBirthdayDashboard();
             renderRedemptionDashboard();
             updateStats();
+            populateSotwDropdown();
+            renderSotwCurrent();
         } else {
             showStatus("Fehler beim Laden der Schüler.", "error");
         }
@@ -697,4 +700,141 @@ async function resetGroupReward() {
     } catch (err) {
         alert("Verbindungsfehler beim Zurücksetzen: " + err.message);
     }
+}
+
+// =============================================================
+// BADGE MANAGEMENT
+// =============================================================
+
+let allBadges = [];
+
+async function fetchBadges() {
+    try {
+        const res = await fetch(`${API_URL}/badges`);
+        if (res.ok) {
+            allBadges = await res.json();
+            renderBadgeList();
+        }
+    } catch (err) { console.error('Badge load error:', err); }
+}
+
+function renderBadgeList() {
+    const el = document.getElementById('badge-list');
+    if (!el) return;
+    if (allBadges.length === 0) {
+        el.innerHTML = '<span style="color:var(--text-muted);font-size:0.8rem;">Noch keine Abzeichen erstellt.</span>';
+        return;
+    }
+    el.innerHTML = allBadges.map(b => `
+        <div style="display:inline-flex;align-items:center;gap:6px;padding:5px 10px;background:${b.color}22;border:1px solid ${b.color};border-radius:20px;font-size:0.8rem;">
+            <span>${b.emoji}</span>
+            <span style="font-weight:700;color:${b.color};">${b.name}</span>
+            <button onclick="deleteBadge('${b.id}')" style="background:transparent;border:none;color:#ef4444;cursor:pointer;padding:0;font-size:0.85rem;line-height:1;">✕</button>
+        </div>`).join('');
+}
+
+async function createBadge() {
+    const emoji = document.getElementById('new-badge-emoji').value.trim() || '🏅';
+    const name = document.getElementById('new-badge-name').value.trim();
+    const desc = document.getElementById('new-badge-desc').value.trim();
+    const color = document.getElementById('new-badge-color').value;
+    const msg = document.getElementById('badge-status-msg');
+
+    if (!name) { alert('Bitte einen Namen eingeben!'); return; }
+    try {
+        const res = await fetch(`${API_URL}/badges`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ emoji, name, description: desc, color })
+        });
+        if (res.ok) {
+            document.getElementById('new-badge-emoji').value = '';
+            document.getElementById('new-badge-name').value = '';
+            document.getElementById('new-badge-desc').value = '';
+            msg.textContent = `✅ "${name}" erstellt!`;
+            msg.style.display = 'block';
+            msg.style.color = 'var(--success)';
+            setTimeout(() => msg.style.display = 'none', 3000);
+            await fetchBadges();
+        }
+    } catch (err) { alert('Fehler: ' + err.message); }
+}
+
+async function deleteBadge(id) {
+    if (!confirm('Abzeichen wirklich löschen?')) return;
+    await fetch(`${API_URL}/badges/${id}`, { method: 'DELETE' });
+    await fetchBadges();
+}
+
+async function assignBadgesToStudent(studentId, newBadgeIds) {
+    await fetch(`${API_URL}/students/${studentId}/badges`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ badges: newBadgeIds })
+    });
+    await fetchStudents();
+}
+
+// =============================================================
+// STUDENT OF THE WEEK
+// =============================================================
+
+function populateSotwDropdown() {
+    const sel = document.getElementById('sotw-student-select');
+    if (!sel) return;
+    const current = sel.value;
+    sel.innerHTML = '<option value="">-- Schüler auswählen --</option>';
+    [...students].sort((a,b) => a.name.localeCompare(b.name)).forEach(s => {
+        sel.innerHTML += `<option value="${s.id}" ${s.id === current ? 'selected' : ''}>${s.name}</option>`;
+    });
+}
+
+function renderSotwCurrent() {
+    if (!currentSettings) return;
+    const sotw = currentSettings.studentOfWeek;
+    const el = document.getElementById('sotw-current');
+    if (!el) return;
+    if (sotw && sotw.studentId) {
+        const student = students.find(s => s.id === sotw.studentId);
+        el.style.display = 'block';
+        el.innerHTML = `<strong>Aktuell:</strong> ${student ? student.name : sotw.studentId}${sotw.reason ? ' — ' + sotw.reason : ''}`;
+        document.getElementById('sotw-student-select').value = sotw.studentId;
+        document.getElementById('sotw-reason').value = sotw.reason || '';
+    } else {
+        el.style.display = 'none';
+    }
+}
+
+async function saveStudentOfWeek() {
+    const studentId = document.getElementById('sotw-student-select').value;
+    const reason = document.getElementById('sotw-reason').value.trim();
+    if (!studentId) { alert('Bitte einen Schüler auswählen!'); return; }
+    const payload = {
+        ...(currentSettings || {}),
+        studentOfWeek: { studentId, reason, grantedAt: new Date().toISOString() }
+    };
+    const res = await fetch(`${API_URL}/settings`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+    });
+    if (res.ok) {
+        currentSettings = payload;
+        renderSotwCurrent();
+        alert('⭐ Schüler der Woche gespeichert!');
+    }
+}
+
+async function clearStudentOfWeek() {
+    if (!confirm('Schüler der Woche wirklich löschen?')) return;
+    const payload = { ...(currentSettings || {}), studentOfWeek: null };
+    await fetch(`${API_URL}/settings`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+    });
+    currentSettings = payload;
+    document.getElementById('sotw-student-select').value = '';
+    document.getElementById('sotw-reason').value = '';
+    document.getElementById('sotw-current').style.display = 'none';
 }

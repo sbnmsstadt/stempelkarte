@@ -790,6 +790,89 @@
             from { opacity: 0; transform: translateY(6px); }
             to { opacity: 1; transform: translateY(0); }
         }
+
+        /* ── BIRTHDAY MODE ─────────────────── */
+        .birthday-mode header.header {
+            border-color: #ec4899;
+            background: rgba(236,72,153,0.12);
+            animation: rainbowBorder 3s linear infinite;
+        }
+
+        @keyframes rainbowBorder {
+            0%   { border-color: #ec4899; box-shadow: 0 0 20px rgba(236,72,153,0.4); }
+            25%  { border-color: #f59e0b; box-shadow: 0 0 20px rgba(245,158,11,0.4); }
+            50%  { border-color: #10b981; box-shadow: 0 0 20px rgba(16,185,129,0.4); }
+            75%  { border-color: #8b5cf6; box-shadow: 0 0 20px rgba(139,92,246,0.4); }
+            100% { border-color: #ec4899; box-shadow: 0 0 20px rgba(236,72,153,0.4); }
+        }
+
+        .birthday-confetti {
+            position: fixed;
+            top: -20px;
+            width: 12px;
+            height: 12px;
+            border-radius: 2px;
+            opacity: 0;
+            pointer-events: none;
+            z-index: 100;
+            animation: confettiFall linear forwards;
+        }
+
+        @keyframes confettiFall {
+            0% { transform: translateY(-20px) rotate(0deg); opacity: 1; }
+            100% { transform: translateY(110vh) rotate(720deg); opacity: 0; }
+        }
+
+        /* ── STUDENT OF THE WEEK ────────── */
+        .card.sotw-card { border-color: rgba(245,158,11,0.4); }
+        .card.sotw-card .card-title { color: var(--gold); }
+
+        .sotw-content {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            flex: 1;
+            padding: 8px 0;
+        }
+
+        .sotw-avatar {
+            width: 60px;
+            height: 60px;
+            border-radius: 14px;
+            background: linear-gradient(135deg, var(--gold), #b45309);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            flex-shrink: 0;
+            box-shadow: 0 0 18px rgba(245,158,11,0.45);
+            border: 2px solid rgba(255,255,255,0.2);
+        }
+
+        .sotw-info { flex: 1; }
+        .sotw-name {
+            font-size: 1.3rem;
+            font-weight: 900;
+            color: white;
+            letter-spacing: -0.01em;
+        }
+        .sotw-reason {
+            font-size: 0.85rem;
+            color: var(--gold);
+            font-weight: 700;
+            margin-top: 4px;
+        }
+
+        /* Left column: stack vertically */
+        .left-col {
+            display: flex;
+            flex-direction: column;
+            gap: 18px;
+            overflow: hidden;
+        }
+
+        .left-col .card.birthday-card { flex: 1.4; }
+        .left-col .card.sotw-card { flex: 0; min-height: 110px; }
     </style>
 </head>
 <body>
@@ -807,15 +890,31 @@
             </div>
         </header>
 
-        <!-- Left: All Kids -->
-        <div class="card birthday-card">
-            <div class="card-header">
-                <div class="card-icon">🎈</div>
-                <div class="card-title">GEBURTSTAGE</div>
+        <!-- Left: Geburtstage + Schüler der Woche -->
+        <div class="left-col">
+            <!-- Geburtstage -->
+            <div class="card birthday-card">
+                <div class="card-header">
+                    <div class="card-icon" id="bday-icon">🎈</div>
+                    <div class="card-title" id="bday-title">GEBURTSTAGE</div>
+                </div>
+                <div class="card-content">
+                    <div class="scroll-band" id="scroll-band">
+                        <div class="scroll-band-inner" id="scroll-band-inner"></div>
+                    </div>
+                </div>
             </div>
-            <div class="card-content">
-                <div class="scroll-band" id="scroll-band">
-                    <div class="scroll-band-inner" id="scroll-band-inner"></div>
+
+            <!-- Schüler der Woche -->
+            <div class="card sotw-card" id="sotw-card" style="display:none;">
+                <div class="card-header">
+                    <div class="card-icon">⭐</div>
+                    <div class="card-title">SCHÜLER DER WOCHE</div>
+                </div>
+                <div class="card-content">
+                    <div class="sotw-content" id="sotw-content">
+                        <!-- Rendered by JS -->
+                    </div>
                 </div>
             </div>
         </div>

@@ -90,7 +90,89 @@ function renderAll() {
     renderDailyNotes();
     renderVIPs();
     renderTicker();
+    renderStudentOfWeek();
+    checkBirthdayMode();
 }
+
+// ── STUDENT OF THE WEEK ────────────────────────
+function renderStudentOfWeek() {
+    const card = document.getElementById('sotw-card');
+    const content = document.getElementById('sotw-content');
+    if (!card || !content) return;
+
+    const sotw = settings?.studentOfWeek;
+    if (!sotw || !sotw.studentId) {
+        card.style.display = 'none';
+        return;
+    }
+
+    const student = students.find(s => String(s.id) === String(sotw.studentId));
+    if (!student) { card.style.display = 'none'; return; }
+
+    const avatar = student.avatar || student.name.charAt(0).toUpperCase();
+    card.style.display = 'flex';
+    content.innerHTML = `
+        <div class="sotw-avatar">${avatar}</div>
+        <div class="sotw-info">
+            <div class="sotw-name">${student.name.split(' ')[0]}</div>
+            ${sotw.reason ? `<div class="sotw-reason">"${sotw.reason}"</div>` : ''}
+        </div>
+        <div style="font-size:2.5rem; animation: vipPulse 2s ease-in-out infinite;">⭐</div>
+    `;
+}
+
+// ── BIRTHDAY MODE ──────────────────────────────
+let birthdayModeActive = false;
+let confettiInterval = null;
+
+function checkBirthdayMode() {
+    const today = new Date();
+    const todayMD = `${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`;
+
+    const hasToday = students.some(s => {
+        if (!s.birthday) return false;
+        const bMD = s.birthday.substring(5); // MM-DD
+        return bMD === todayMD;
+    });
+
+    const titleEl = document.getElementById('bday-title');
+    const iconEl = document.getElementById('bday-icon');
+
+    if (hasToday && !birthdayModeActive) {
+        birthdayModeActive = true;
+        document.body.classList.add('birthday-mode');
+        if (titleEl) titleEl.textContent = '🎂 HEUTE GEBURTSTAG!';
+        if (iconEl) iconEl.textContent = '🎂';
+        startConfetti();
+    } else if (!hasToday && birthdayModeActive) {
+        birthdayModeActive = false;
+        document.body.classList.remove('birthday-mode');
+        if (titleEl) titleEl.textContent = 'GEBURTSTAGE';
+        if (iconEl) iconEl.textContent = '🎈';
+        stopConfetti();
+    }
+}
+
+function startConfetti() {
+    const colors = ['#ec4899','#f59e0b','#10b981','#8b5cf6','#3b82f6','#ef4444'];
+    stopConfetti();
+    confettiInterval = setInterval(() => {
+        const el = document.createElement('div');
+        el.className = 'birthday-confetti';
+        el.style.left = Math.random() * 100 + 'vw';
+        el.style.background = colors[Math.floor(Math.random() * colors.length)];
+        const dur = (Math.random() * 2 + 2).toFixed(1) + 's';
+        el.style.animationDuration = dur;
+        el.style.width = el.style.height = (Math.random() * 8 + 8) + 'px';
+        document.body.appendChild(el);
+        setTimeout(() => el.remove(), parseFloat(dur) * 1000 + 100);
+    }, 250);
+}
+
+function stopConfetti() {
+    if (confettiInterval) { clearInterval(confettiInterval); confettiInterval = null; }
+}
+
 
 // ── KIDS: SCROLL BAND ─────────────────────────
 function renderKids() {
