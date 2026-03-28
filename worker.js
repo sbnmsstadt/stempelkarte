@@ -578,7 +578,7 @@ export default {
                 }
 
                 try {
-                    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${env.KREATIV_API}`;
+                    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${env.KREATIV_API}`;
                     const res = await fetch(url, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
@@ -616,9 +616,9 @@ export default {
                     return new Response("Missing planText", { status: 400, headers: corsHeaders });
                 }
 
-                // Format students for the prompt
+                // Format students (they come pre-resolved from admin.js as {name, badges: ["Name1", "Name2"]})
                 const studentsWithBadges = studentList
-                    .filter(s => s.badges.length > 0)
+                    .filter(s => s.badges && s.badges.length > 0)
                     .map(s => `${s.name} (${s.badges.join(', ')})`)
                     .join('; ');
 
@@ -627,40 +627,101 @@ Heute haben wir diesen spannenden Tagesplan: "${planText}".
 
 Hier sind einige Kinder mit ihren Abzeichen (Badges): ${studentsWithBadges || "Aktuell noch keine"}.
 
-Deine Aufgabe: Schreibe eine begeisterte, motivierende Nachricht für die Infotafel (ca. 40 Wörter):
-1. Beziehe dich direkt auf die Aktivitäten des Tagesplans.
-2. Wenn Kinder (aus der Liste oben) Abzeichen haben, die prima zu den heutigen Aktivitäten passen, lobe sie namentlich!
+Deine Aufgabe: Schreibe eine ausführliche, begeisterte Nachricht für die Infotafel (ca. 45-60 Wörter):
+1. Analysiere den Tagesplan im Detail und nenne mindestens zwei Aktivitäten daraus.
+2. Wenn Kinder (aus der Liste oben) Abzeichen haben, die prima zu den heutigen Aktivitäten passen, lobe sie unbedingt namentlich (z.B. "Lukas, als unser Künstler...")!
 3. Motiviere alle anderen Kinder, heute ebenfalls fleißig zu sein, um neue Abzeichen zu sammeln.
-4. Sei extrem herzlich, benutze viele Emojis und beende deine Sätze immer vollständig.`;
+4. Schreibe MINDESTENS 4 Sätze. Sei extrem herzlich, benutze viele Emojis und beende deine Sätze immer vollständig.`;
+
+                if (!env.KREATIV_API || env.KREATIV_API === "undefined") {
+                    return new Response("FEHLER: Cloudflare Secret 'KREATIV_API' fehlt! Bitte in der Cloudflare-Konsole unter 'Settings -> Variables -> Secrets' eintragen.", { 
+                        status: 401, 
+                        headers: corsHeaders 
+                    });
+                }
+
+                const apiKey = env.KREATIV_API.trim();
+                let modelToUse = "gemini-1.5-flash"; // Fallback
+                let discoveryLog = "";
 
                 try {
-                    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${env.KREATIV_API}`;
+                    const listRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${apiKey}`);
+                    if (listRes.ok) {
+                        const listData = await listRes.json();
+                        const models = listData.models || [];
+                        const bestModel = models.find(m => 
+                            m.supportedGenerationMethods.includes("generateContent") && 
+                            (m.name.includes("flash") || m.name.includes("pro"))
+                        );
+                        if (bestModel) {
+                            modelToUse = bestModel.name.split('/').pop();
+                            discoveryLog = `(Auto-Discovery: ${modelToUse})`;
+                        }
+                    }
+                } catch (e) {
+                    discoveryLog = `(Auto-Discovery Error: ${e.message})`;
+                }
+
+                const url = `https://generativelanguage.googleapis.com/v1beta/models/${modelToUse}:generateContent?key=${apiKey}`;
+                
+                try {
                     const res = await fetch(url, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({
                             contents: [{ parts: [{ text: prompt }] }],
-                            generationConfig: {
-                                temperature: 0.8,
-                                maxOutputTokens: 300
-                            }
+                            generationConfig: { temperature: 0.8, maxOutputTokens: 500 }
                         })
                     });
                     
-                    if (!res.ok) {
-                        const errBody = await res.text();
-                        return new Response(`Gemini API Error: ${res.status} - ${errBody}`, { status: res.status, headers: corsHeaders });
+                    if (res.ok) {
+                        const data = await res.json();
+                        const generatedText = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+                        if (generatedText) {
+                            return new Response(JSON.stringify({ 
+                                text: generatedText.trim(), 
+                                model: modelToUse + " " + discoveryLog 
+                            }), {
+                                headers: { ...corsHeaders, "Content-Type": "application/json" }
+                            });
+                        }
+                    } else {
+                        const errTxt = await res.text();
+                        return new Response(`KI-Fehler bei ${modelToUse}: ${res.status}\n${errTxt}`, { 
+                            status: 500, 
+                            headers: corsHeaders 
+                        });
                     }
+                } catch (e) {
+                    return new Response(`KI-Verbindungsfehler: ${e.message}`, { status: 500, headers: corsHeaders });
+                }
+            }
 
+            // --- AI Model Discovery Endpoint ---
+            if (path === "/api/ai/models" && method === "GET") {
+                const apiKey = env.KREATIV_API?.trim();
+                if (!apiKey) return new Response("Secret KREATIV_API not found", { status: 401, headers: corsHeaders });
+                try {
+                    const url = `https://generativelanguage.googleapis.com/v1beta/models?key=${apiKey}`;
+                    const res = await fetch(url);
                     const data = await res.json();
-                    const generatedText = data?.candidates?.[0]?.content?.parts?.[0]?.text || "Keine KI-Daten verfügbar (Bitte Admin-Save prüfen)";
                     
-                    return new Response(JSON.stringify({ text: generatedText.trim() }), {
+                    // Simple Test Generation to see if POST works here
+                    const testRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ contents: [{ parts: [{ text: "Hi" }] }] })
+                    });
+                    const testData = await testRes.json();
+
+                    return new Response(JSON.stringify({ 
+                        availableModels: data, 
+                        postTest: { status: testRes.status, data: testData }
+                    }), {
                         headers: { ...corsHeaders, "Content-Type": "application/json" }
                     });
-
                 } catch (err) {
-                    return new Response(`Backend Error: ${err.message}`, { status: 500, headers: corsHeaders });
+                    return new Response(`Error listing models: ${err.message}`, { status: 500, headers: corsHeaders });
                 }
             }
 
@@ -794,7 +855,7 @@ ${eventsText}
 Schreibe die Zusammenfassung jetzt:`;
 
     try {
-        const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`, {
+        const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${apiKey}`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
