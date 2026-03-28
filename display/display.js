@@ -4,6 +4,7 @@ let students = [];
 let settings = {};
 let rewards = [];
 let planFlipInterval = null; 
+let _celebrationSignaled = false; // Prevents repeated popups
 
 // ── PARTICLES ──────────────────────────────────
 function createParticles() {
@@ -343,6 +344,31 @@ function renderFilmtag() {
     }
 
     document.getElementById('filmtag-status').innerHTML = statusHtml;
+
+    // --- CELEBRATION LOGIC (NEW) ---
+    if (left <= 0 && !_celebrationSignaled && gr.active) {
+        showGoalCelebration();
+        _celebrationSignaled = true;
+    } else if (left > 0) {
+        _celebrationSignaled = false; // Allow reset if stamps removed
+    }
+}
+
+function showGoalCelebration() {
+    const overlay = document.getElementById('celebration-overlay');
+    if (!overlay) return;
+
+    // Show overlay
+    overlay.classList.add('active');
+    
+    // Intense Confetti
+    startConfetti();
+    
+    // Auto-hide after 20 seconds
+    setTimeout(() => {
+        overlay.classList.remove('active');
+        stopConfetti();
+    }, 20000);
 }
 
 

@@ -934,6 +934,46 @@
 
         .left-col .card.birthday-card { flex: 1; min-height: 0; }
         .left-col .card.sotw-card { flex-shrink: 0; min-height: 120px; }
+
+        /* ── CELEBRATION OVERLAY ────────── */
+        .celebration-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,10,0.9);
+            backdrop-filter: blur(20px);
+            z-index: 9999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 1s ease;
+        }
+        .celebration-overlay.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+        .celebration-card {
+            background: linear-gradient(135deg, rgba(59,130,246,0.3), rgba(139,92,246,0.3));
+            padding: 80px 100px;
+            border-radius: 40px;
+            border: 2px solid rgba(255,255,255,0.3);
+            text-align: center;
+            box-shadow: 0 0 150px rgba(59,130,246,0.5);
+            animation: celebratePop 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        @keyframes celebratePop {
+            0% { transform: scale(0.6); opacity: 0; }
+            100% { transform: scale(1.0); opacity: 1; }
+        }
+        .celebration-icon { font-size: 10rem; margin-bottom: 30px; animation: celebrationBounce 2s ease-in-out infinite; }
+        .celebration-title { font-size: 5rem; font-weight: 900; background: linear-gradient(to right, #fff, #60a5fa); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin: 0; line-height: 1.1; }
+        .celebration-text { font-size: 2.5rem; color: rgba(255,255,255,0.9); margin-top: 20px; font-weight: 700; }
+        
+        @keyframes celebrationBounce {
+            0%, 100% { transform: translateY(0) scale(1); }
+            50% { transform: translateY(-40px) scale(1.1); }
+        }
     </style>
 </head>
 <body>
@@ -1082,6 +1122,15 @@
         <div id="last-updated">Wird geladen...</div>
         <div>🔄 alle 15 Sek.</div>
         <div style="opacity:0.3; font-size:0.6rem;">v2.1-AI</div>
+    </div>
+
+    <!-- Celebration Overlay (Filmtag) -->
+    <div id="celebration-overlay" class="celebration-overlay">
+        <div class="celebration-card">
+            <div class="celebration-icon">🎬</div>
+            <h2 class="celebration-title">ZIEL ERREICHT!</h2>
+            <p class="celebration-text">Der Filmtag ist gesichert! 🎉🍿</p>
+        </div>
     </div>
 
     <script src="display.js?v=200000"></script>
