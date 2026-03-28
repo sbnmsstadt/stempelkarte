@@ -64,12 +64,23 @@ async function smoothUpdate(el, newHTML, { animDuration = null, scrolling = fals
     if (el._contentKey === key) return; // no change → don't touch
     el._contentKey = key;
 
-    // Fade out
-    el.style.transition = 'opacity 0.35s ease';
-    el.style.opacity = '0';
-    await new Promise(r => setTimeout(r, 380));
+    // For scrolling elements, we record the current progress to attempt a seamless resume
+    let resumeDelay = null;
+    if (scrolling) {
+        const oldDur = parseFloat(el.style.animationDuration || 0);
+        if (oldDur > 0 && el._lastAnimStart) {
+            const elapsed = (Date.now() - el._lastAnimStart) / 1000;
+            // Record current position within the loop
+            resumeDelay = -(elapsed % oldDur);
+        }
+    } else {
+        // Fade out ONLY for static elements (scrolling items should just swap data instantly)
+        el.style.transition = 'opacity 0.3s ease';
+        el.style.opacity = '0';
+        await new Promise(r => setTimeout(r, 320));
+    }
 
-    // Update
+    // Update content
     el.innerHTML = newHTML;
 
     // Reset animation cleanly
@@ -78,10 +89,19 @@ async function smoothUpdate(el, newHTML, { animDuration = null, scrolling = fals
         void el.offsetWidth; // force reflow
         el.style.animation = '';
         if (animDuration) el.style.animationDuration = animDuration;
+        
+        if (scrolling) {
+            // Store start time for next sync
+            if (!el._lastAnimStart) el._lastAnimStart = Date.now();
+            if (resumeDelay !== null) {
+                el.style.animationDelay = `${resumeDelay}s`;
+            }
+        }
     }
 
-    // Fade in
-    el.style.opacity = '1';
+    if (!scrolling) {
+        el.style.opacity = '1';
+    }
 }
 
 function renderAll() {
@@ -460,7 +480,7 @@ updateClock();
 setInterval(updateClock, 1000);
 
 fetchData();
-setInterval(fetchData, 30000);
+setInterval(fetchData, 60000); // alle 60 Sek. (statt 30, für längere Loops)
 
 // ── FILMTAG LIVE POLL (every 5s) ───────────────
 // Only fetches /settings — lightweight, for near-realtime Filmtag updates.
