@@ -444,6 +444,20 @@ function renderAdminList(filter = "") {
                 : `⭐ VIP — <span style="color:gold">Tag ${daysDiff}/${vipDuration}</span>`;
         }
 
+        // Badge chips + toggle
+        const studentBadgeIds = student.badges || [];
+        const hasBadges = allBadges.length > 0;
+        const badgeSection = hasBadges ? `
+            <div style="margin-top:10px; padding-top:8px; border-top:1px solid rgba(255,255,255,0.08);">
+                <div style="font-size:0.7rem; color:var(--text-muted); font-weight:700; margin-bottom:6px;">ABZEICHEN:</div>
+                <div style="display:flex; flex-wrap:wrap; gap:6px;">
+                    ${allBadges.map(b => {
+                        const active = studentBadgeIds.includes(b.id);
+                        return `<button onclick="toggleStudentBadge('${student.id}', '${b.id}')" title="${b.description || b.name}" style="display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:20px;font-size:0.72rem;font-weight:700;cursor:pointer;transition:0.2s;border:1px solid ${b.color};background:${active ? b.color + '33' : 'transparent'};color:${active ? b.color : 'rgba(255,255,255,0.3)'};">\n                            ${b.emoji} ${b.name}\n                        </button>`;
+                    }).join('')}
+                </div>
+            </div>` : '';
+
         item.innerHTML = `
             <div class="student-info">
                 <div class="avatar" style="${isVip ? 'box-shadow: 0 0 12px gold; border: 2px solid gold;' : ''}">${student.avatar || student.name.charAt(0)}</div>
@@ -451,6 +465,7 @@ function renderAdminList(filter = "") {
                     <div style="font-weight:700; font-size:1.1rem">${student.name} ${isVip ? `<span style="font-size:0.7rem; font-weight:900; letter-spacing:0.05em;">${vipDayText}</span>` : ''}</div>
                     <div class="subtitle" style="font-size:0.75rem">ID: ${student.id} · ${fullCards} volle Karte(n)</div>
                     ${student.birthday ? `<div style="font-size:0.75rem">🎂 ${formatDate(student.birthday)}</div>` : ''}
+                    ${badgeSection}
                 </div>
             </div>
             <div class="admin-row-actions">
@@ -469,6 +484,16 @@ function renderAdminList(filter = "") {
         `;
         container.appendChild(item);
     });
+}
+
+async function toggleStudentBadge(studentId, badgeId) {
+    const student = students.find(s => s.id === studentId);
+    if (!student) return;
+    const current = student.badges || [];
+    const newBadges = current.includes(badgeId)
+        ? current.filter(id => id !== badgeId)
+        : [...current, badgeId];
+    await assignBadgesToStudent(studentId, newBadges);
 }
 
 function formatDate(s) { const [y,m,d] = s.split('-'); return `${d}.${m}.${y}`; }
@@ -597,6 +622,9 @@ async function loadSettings() {
             updateField('setting-current-projects', settings.currentProjects || "");
             updateField('setting-upcoming-projects', settings.upcomingProjects || "");
             updateField('setting-today-plan', settings.todayPlan || "");
+
+            // Restore Student of the Week
+            renderSotwCurrent();
         }
     } catch (err) {}
 }

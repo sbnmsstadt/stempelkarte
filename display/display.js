@@ -30,16 +30,20 @@ function updateClock() {
 }
 
 // ── FETCH ──────────────────────────────────────
+let badges = [];
+
 async function fetchData() {
     try {
-        const [sRes, stRes, rRes] = await Promise.all([
+        const [sRes, stRes, rRes, bRes] = await Promise.all([
             fetch(`${API_URL}/students`),
             fetch(`${API_URL}/settings`),
-            fetch(`${API_URL}/rewards`)
+            fetch(`${API_URL}/rewards`),
+            fetch(`${API_URL}/badges`)
         ]);
         students = sRes.ok ? await sRes.json() : [];
         settings = stRes.ok ? await stRes.json() : {};
         rewards  = rRes.ok ? await rRes.json() : [];
+        badges   = bRes.ok ? await bRes.json() : [];
 
         renderAll();
 
@@ -214,19 +218,25 @@ function renderKids() {
             daysLabel  = isToday ? '🎂 HEUTE!' : `in ${days} Tagen`;
         }
         const cls = isToday ? 'today' : isThisWeek ? 'upcoming' : '';
-        const badge = isToday
+        const badgePill = isToday
             ? `<div class="kid-card-badge today-badge">🎂 HEUTE!</div>`
             : isThisWeek
                 ? `<div class="kid-card-badge" style="background:rgba(236,72,153,0.1);color:#f9a8d4;border:1px solid rgba(236,72,153,0.3);">diese Woche</div>`
                 : '';
+
+        // Show assigned badge emojis
+        const studentBadgeEmojis = (s.badges || [])
+            .map(bid => { const b = badges.find(x => x.id === bid); return b ? b.emoji : ''; })
+            .filter(Boolean).join(' ');
+
         return `
             <div class="kid-card ${cls}">
                 <div class="kid-card-avatar">${s.avatar || s.name.charAt(0)}</div>
                 <div class="kid-card-info">
-                    <div class="kid-card-name">${s.name}</div>
+                    <div class="kid-card-name">${s.name}${studentBadgeEmojis ? ' <span style="font-size:0.85em;">' + studentBadgeEmojis + '</span>' : ''}</div>
                     <div class="kid-card-date">${dateStr}${dateStr && daysLabel ? ' · ' + daysLabel : daysLabel}</div>
                 </div>
-                ${badge}
+                ${badgePill}
             </div>`;
     };
 
