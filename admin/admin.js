@@ -773,6 +773,47 @@ async function saveSettings() {
             lastLoadedValues = {}; 
             alert("Einstellungen gespeichert!");
             loadSettings();
+
+            // --- AI Background Task: Generate Daily Plan Motivation ---
+            if (todayPlan.trim() !== "") {
+                // We do this in the background, not blocking the user save
+                (async () => {
+                    try {
+                        const studentData = students.map(s => {
+                            const badgeNames = (s.badges || []).map(bid => {
+                                const b = allBadges.find(x => x.id === bid);
+                                return b ? b.name : '';
+                            }).filter(Boolean);
+                            return { name: s.name.split(' ')[0], badges: badgeNames };
+                        });
+
+                        const aiRes = await fetch(`${API_URL}/api/ai/day-plan`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ planText: todayPlan, students: studentData })
+                        });
+
+                        if (aiRes.ok) {
+                            const aiData = await aiRes.json();
+                            if (aiData.text) {
+                                // Fetch latest settings again just to be safe
+                                const sRes = await fetch(`${API_URL}/settings`);
+                                const latestSettings = await sRes.json();
+                                latestSettings.todayPlanMotivation = aiData.text;
+                                
+                                await fetch(`${API_URL}/settings`, {
+                                    method: 'PUT',
+                                    headers: { 'Content-Type': 'application/json' },
+                                    body: JSON.stringify(latestSettings)
+                                });
+                            }
+                        }
+                    } catch (err) {
+                        console.error("AI Background generation failed:", err);
+                    }
+                })();
+            }
+
         }
     } catch (err) {
         alert("Fehler beim Speichern.");

@@ -606,6 +606,61 @@ export default {
                 }
             }
 
+            // --- AI Generation Endpoint (Tagesplan Motivation) ---
+            if (path === "/api/ai/day-plan" && method === "POST") {
+                const body = await request.json();
+                const planText = body.planText || "";
+                const studentList = body.students || [];
+
+                if (!planText) {
+                    return new Response("Missing planText", { status: 400, headers: corsHeaders });
+                }
+
+                // Format students for the prompt
+                const studentsWithBadges = studentList
+                    .filter(s => s.badges.length > 0)
+                    .map(s => `${s.name} (${s.badges.join(', ')})`)
+                    .join('; ');
+
+                const prompt = `Du bist ein freundlicher Hort-Betreuer (NACHMI) für Kinder (6-10 Jahre).
+Heute stehen folgende Aktivitäten auf dem Plan:
+${planText}
+
+Einige Kinder haben schon Abzeichen (Badges): ${studentsWithBadges || "noch keine"}.
+Schreibe eine kurze, begeisterte und motivierende Nachricht (max 40 Wörter!) für die Infotafel.
+Beziehe dich auf den Plan und lobe, wer schon passende Abzeichen hat, oder motiviere alle anderen, heute welche zu sammeln. Verwende Emojis. Sei sehr herzlich!`;
+
+                try {
+                    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${env.KREATIV_API}`;
+                    const res = await fetch(url, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            contents: [{ parts: [{ text: prompt }] }],
+                            generationConfig: {
+                                temperature: 0.8,
+                                maxOutputTokens: 150
+                            }
+                        })
+                    });
+                    
+                    if (!res.ok) {
+                        const errBody = await res.text();
+                        return new Response(`Gemini API Error: ${res.status} - ${errBody}`, { status: res.status, headers: corsHeaders });
+                    }
+
+                    const data = await res.json();
+                    const generatedText = data?.candidates?.[0]?.content?.parts?.[0]?.text || "Viel Spaß heute!";
+                    
+                    return new Response(JSON.stringify({ text: generatedText.trim() }), {
+                        headers: { ...corsHeaders, "Content-Type": "application/json" }
+                    });
+
+                } catch (err) {
+                    return new Response(`Backend Error: ${err.message}`, { status: 500, headers: corsHeaders });
+                }
+            }
+
             return new Response(`Not Found: ${method} ${path}`, { status: 404, headers: corsHeaders });
         } catch (err) {
             return new Response(err.message, { status: 500, headers: corsHeaders });

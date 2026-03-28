@@ -192,6 +192,53 @@
             position: relative;
         }
 
+        /* ── 3D FLIP CARD ─────────────────────── */
+        .flip-container {
+            perspective: 1000px;
+        }
+
+        .flip-card-inner {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            transition: transform 1.2s cubic-bezier(0.4, 0, 0.2, 1);
+            transform-style: preserve-3d;
+        }
+
+        .flip-container.flipped .flip-card-inner {
+            transform: rotateY(180deg);
+        }
+
+        .flip-card-front, .flip-card-back {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            -webkit-backface-visibility: hidden;
+            backface-visibility: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .flip-card-back {
+            transform: rotateY(180deg);
+            background: rgba(255,255,255,0.02);
+            border-radius: 12px;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+        }
+
+        .ai-motivation {
+            font-size: 1.1rem;
+            line-height: 1.5;
+            font-style: italic;
+            padding: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+        }
+
         /* ── KIDS SCROLL BAND ──────────────────── */
         .card.birthday-card { border-color: rgba(236,72,153,0.25); }
         .card.birthday-card .card-title { color: #f472b6; }
@@ -942,14 +989,23 @@
             <!-- Side-by-Side row (Hauptfokus) -->
             <div style="display: flex; gap: 18px; flex: 1.8;">
                 <!-- Tagesplan -->
-                <div class="card tagesplan-card" style="flex:1;">
+                <div class="card tagesplan-card flip-container" style="flex:1;">
                     <div class="card-header">
                         <div class="card-icon">📅</div>
-                        <div class="card-title">TAGESPLAN</div>
+                        <div class="card-title" id="tagesplan-card-title">TAGESPLAN</div>
                     </div>
-                    <div class="card-content">
-                        <div id="today-plan-list" class="today-plan-content">
-                            Lade Plan...
+                    <div class="card-content" style="perspective: 1000px; padding:0; overflow:visible;">
+                        <div class="flip-card-inner" id="tagesplan-flipper">
+                            <div class="flip-card-front" style="padding:12px; height:100%; overflow:hidden;">
+                                <div id="today-plan-list" class="today-plan-content" style="padding:0;">
+                                    Lade Plan...
+                                </div>
+                            </div>
+                            <div class="flip-card-back" style="padding:12px; height:100%; overflow:hidden;">
+                                <div id="today-plan-ai" class="today-plan-content ai-motivation" style="padding:0; color: #fcd34d;">
+                                    Bereite Motivation vor...
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>

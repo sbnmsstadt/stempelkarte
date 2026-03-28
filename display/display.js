@@ -175,7 +175,7 @@ function checkBirthdayMode() {
     if (hasToday && !birthdayModeActive) {
         birthdayModeActive = true;
         document.body.classList.add('birthday-mode');
-        if (titleEl) titleEl.textContent = 'HEUTE GEBURTSTAG!';
+        if (titleEl) titleEl.textContent = '🎂 HEUTE GEBURTSTAG!';
         if (iconEl) iconEl.textContent = '🎂';
         startConfetti();
     } else if (!hasToday && birthdayModeActive) {
@@ -373,10 +373,17 @@ function renderDailyNotes() {
 // ── TODAY PLAN ────────────────────────────────
 function renderTodayPlan() {
     const el = document.getElementById('today-plan-list');
+    const aiEl = document.getElementById('today-plan-ai');
     if (!el) return;
+    
     const txt = settings.todayPlan || "Noch kein Plan für heute eingetragen.";
     el.innerHTML = txt;
+
+    if (aiEl) {
+        aiEl.innerHTML = settings.todayPlanMotivation || "Die KI bereitet gerade eine motivierende Nachricht vor... ✨";
+    }
 }
+
 
 // ── VIP ────────────────────────────────────────
 function renderVIPs() {
@@ -527,6 +534,10 @@ setInterval(fetchData, 15000); // alle 15 Sek.
 // Start the ticker RAF loop immediately (it runs forever)
 startTickerLoop();
 
+// Start the 3D Plan Flip loop
+initPlanFlip();
+
+
 // ── FILMTAG LIVE POLL (every 5s) ───────────────
 // Only fetches /settings — lightweight, for near-realtime Filmtag updates.
 async function fetchFilmtagLive() {
@@ -552,3 +563,31 @@ setInterval(fetchFilmtagLive, 5000);
 window.addEventListener('resize', () => {
     if (students.length) renderKids();
 });
+
+// ── 3D PLAN FLIP LOGIC ────────────────────────
+let planFlipInterval = null;
+function initPlanFlip() {
+    if (planFlipInterval) clearInterval(planFlipInterval);
+    
+    // Toggle every 25 seconds
+    planFlipInterval = setInterval(() => {
+        const container = document.querySelector('.tagesplan-card.flip-container');
+        const titleEl = document.getElementById('tagesplan-card-title');
+        
+        // Only flip if we actually have AI motivation data
+        if (!container || !settings.todayPlanMotivation) return;
+        
+        container.classList.toggle('flipped');
+        
+        if (titleEl) {
+            const isFlipped = container.classList.contains('flipped');
+            titleEl.textContent = isFlipped ? "HORT-ASSISTENT" : "TAGESPLAN";
+            
+            const iconEl = container.querySelector('.card-icon');
+            if (iconEl) {
+                iconEl.textContent = isFlipped ? "🤖" : "📅";
+            }
+        }
+    }, 25000);
+}
+
