@@ -251,7 +251,7 @@ function renderKids() {
         }
         const cls = isToday ? 'today' : isThisWeek ? 'upcoming' : '';
         const badgePill = isToday
-            ? `<div class="kid-card-badge today-badge">🎂 HEUTE!</div>`
+            ? `<div class="kid-card-badge today-badge">HEUTE!</div>`
             : isThisWeek
                 ? `<div class="kid-card-badge" style="background:rgba(236,72,153,0.1);color:#f9a8d4;border:1px solid rgba(236,72,153,0.3);">diese Woche</div>`
                 : '';
