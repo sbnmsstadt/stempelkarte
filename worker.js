@@ -616,21 +616,23 @@ export default {
                     return new Response("Missing planText", { status: 400, headers: corsHeaders });
                 }
 
-                // Format students (they come pre-resolved from admin.js as {name, badges: ["Name1", "Name2"]})
+                // Format ENTIRE student list (even those without badges) for the AI
                 const studentsWithBadges = studentList
-                    .filter(s => s.badges && s.badges.length > 0)
-                    .map(s => `${s.name} (${s.badges.join(', ')})`)
+                    .map(s => {
+                        const bText = (s.badges && s.badges.length > 0) ? ` (Badges: ${s.badges.join(', ')})` : " (noch keine Badges)";
+                        return `${s.name}${bText}`;
+                    })
                     .join('; ');
 
                 const prompt = `[PROMPT-ID: ${Date.now()}] Du bist NACHMI, der herzliche KI-Hort-Assistent für Kinder (6-10 Jahre).
 Heute haben wir diesen spannenden Tagesplan: "${planText}".
 
-Hier sind einige Kinder mit ihren Abzeichen (Badges): ${studentsWithBadges || "Aktuell noch keine"}.
+Hier ist die Liste ALLER Kinder im Hort: ${studentsWithBadges}.
 
 Deine Aufgabe: Schreibe eine ausführliche, begeisterte Nachricht für die Infotafel (ca. 45-60 Wörter):
 1. Analysiere den Tagesplan im Detail und nenne mindestens zwei Aktivitäten daraus.
-2. Wenn Kinder (aus der Liste oben) Abzeichen haben, die prima zu den heutigen Aktivitäten passen, lobe sie unbedingt namentlich (z.B. "Lukas, als unser Künstler...")!
-3. Motiviere alle anderen Kinder, heute ebenfalls fleißig zu sein, um neue Abzeichen zu sammeln.
+2. Nenne mindestens 3 Kinder namentlich aus der Liste oben!
+3. Wenn Kinder Abzeichen haben, lobe sie dafür passend zum Tag. Wenn sie keine haben, motiviere sie besonders, heute eines zu sammeln! 
 4. Schreibe MINDESTENS 4 Sätze. Sei extrem herzlich, benutze viele Emojis und beende deine Sätze immer vollständig.`;
 
                 if (!env.KREATIV_API || env.KREATIV_API === "undefined") {

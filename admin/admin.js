@@ -775,32 +775,38 @@ async function saveSettings() {
             loadSettings();
 
             // --- AI Background Task: Generate Daily Plan Motivation ---
-            if (todayPlan.trim() !== "") {
-                // We do this in the background, not blocking the user save
-                (async () => {
-                    try {
-                        const studentData = students.map(s => {
-                            const badgeNames = (s.badges || []).map(bid => {
-                                const b = allBadges.find(x => String(x.id) === String(bid));
-                                return b ? b.name : '';
-                            }).filter(Boolean);
-                            return { name: s.name.split(' ')[0], badges: badgeNames };
-                        });
+                if (todayPlan.trim() !== "") {
+                    // We do this in the background, not blocking the user save
+                    (async () => {
+                        try {
+                            // Ensure we have fresh student and badge data for the AI
+                            const sFetch = await fetch(`${API_URL}/students`);
+                            const freshStudents = await sFetch.json();
+                            const bFetch = await fetch(`${API_URL}/badges`);
+                            const freshBadges = await bFetch.json();
 
-                        const payload = { planText: todayPlan, students: studentData };
-                        // DEBUG ALERT
-                        alert("Sende Payload an KI:\n" + JSON.stringify(payload));
+                            const studentData = freshStudents.map(s => {
+                                const badgeNames = (s.badges || []).map(bid => {
+                                    const b = freshBadges.find(x => String(x.id) === String(bid));
+                                    return b ? b.name : '';
+                                }).filter(Boolean);
+                                return { name: s.name.split(' ')[0], badges: badgeNames };
+                            });
 
-                        const aiRes = await fetch(`${API_URL}/ai/day-plan`, {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify(payload)
-                        });
+                            const payload = { planText: todayPlan, students: studentData };
+                            // DEBUG ALERT
+                            alert("Sende Daten an KI:\n" + JSON.stringify(payload).substring(0, 300) + "...");
 
-                        if (aiRes.ok) {
-                            const aiData = await aiRes.json();
-                            if (aiData.text) {
-                                alert("KI ANTWORT ERHALTEN:\n" + aiData.text);
+                            const aiRes = await fetch(`${API_URL}/ai/day-plan`, {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify(payload)
+                            });
+
+                            if (aiRes.ok) {
+                                const aiData = await aiRes.json();
+                                if (aiData.text) {
+                                    alert("KI ANTWORT ERHALTEN:\n" + aiData.text);
                                 // Fetch latest settings again just to be safe
                                 const sRes = await fetch(`${API_URL}/settings`);
                                 if (sRes.ok) {
