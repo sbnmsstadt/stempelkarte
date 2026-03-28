@@ -444,19 +444,29 @@ function renderAdminList(filter = "") {
                 : `⭐ VIP — <span style="color:gold">Tag ${daysDiff}/${vipDuration}</span>`;
         }
 
-        // Badge chips + toggle
+        // Badge chips + toggle using data attributes (avoids inline onclick escaping issues)
         const studentBadgeIds = student.badges || [];
         const hasBadges = allBadges.length > 0;
-        const badgeSection = hasBadges ? `
-            <div style="margin-top:10px; padding-top:8px; border-top:1px solid rgba(255,255,255,0.08);">
-                <div style="font-size:0.7rem; color:var(--text-muted); font-weight:700; margin-bottom:6px;">ABZEICHEN:</div>
-                <div style="display:flex; flex-wrap:wrap; gap:6px;">
-                    ${allBadges.map(b => {
-                        const active = studentBadgeIds.includes(b.id);
-                        return `<button onclick="toggleStudentBadge('${student.id}', '${b.id}')" title="${b.description || b.name}" style="display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:20px;font-size:0.72rem;font-weight:700;cursor:pointer;transition:0.2s;border:1px solid ${b.color};background:${active ? b.color + '33' : 'transparent'};color:${active ? b.color : 'rgba(255,255,255,0.3)'};">\n                            ${b.emoji} ${b.name}\n                        </button>`;
-                    }).join('')}
-                </div>
-            </div>` : '';
+        let badgeSection = '';
+        if (hasBadges) {
+            const badgeChips = allBadges.map(b => {
+                const active = studentBadgeIds.includes(b.id);
+                return `<button 
+                    data-student="${student.id}" 
+                    data-badge="${b.id}"
+                    class="badge-chip-btn"
+                    title="${b.description || b.name}"
+                    style="display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:20px;font-size:0.72rem;font-weight:700;cursor:pointer;transition:all 0.2s;border:1px solid ${b.color};background:${active ? b.color + '33' : 'transparent'};color:${active ? b.color : 'rgba(255,255,255,0.3)'};">
+                    ${b.emoji} ${b.name}
+                </button>`;
+            }).join('');
+
+            badgeSection = `
+                <div style="margin-top:10px; padding-top:8px; border-top:1px solid rgba(255,255,255,0.08);">
+                    <div style="font-size:0.7rem; color:var(--text-muted); font-weight:700; margin-bottom:6px;">ABZEICHEN:</div>
+                    <div style="display:flex; flex-wrap:wrap; gap:6px;">${badgeChips}</div>
+                </div>`;
+        }
 
         item.innerHTML = `
             <div class="student-info">
@@ -484,9 +494,50 @@ function renderAdminList(filter = "") {
         `;
         container.appendChild(item);
     });
+
+    // Event delegation for badge chip buttons (data-student + data-badge)
+    container.addEventListener('click', async (e) => {
+        const btn = e.target.closest('.badge-chip-btn');
+        if (!btn) return;
+        const studentId = btn.dataset.student;
+        const badgeId = btn.dataset.badge;
+        if (!studentId || !badgeId) return;
+
+        btn.style.opacity = '0.5';
+        btn.disabled = true;
+
+        const student = students.find(s => s.id === studentId);
+        if (!student) { btn.style.opacity = '1'; btn.disabled = false; return; }
+
+        const current = student.badges || [];
+        const newBadges = current.includes(badgeId)
+            ? current.filter(id => id !== badgeId)
+            : [...current, badgeId];
+
+        try {
+            const res = await fetch(`${API_URL}/students/${studentId}/badges`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ badges: newBadges })
+            });
+            if (res.ok) {
+                await fetchStudents(); // Re-render with updated state
+            } else {
+                const errText = await res.text();
+                alert(`Fehler beim Zuweisen: ${res.status} — ${errText}`);
+                btn.style.opacity = '1';
+                btn.disabled = false;
+            }
+        } catch (err) {
+            alert('Verbindungsfehler: ' + err.message);
+            btn.style.opacity = '1';
+            btn.disabled = false;
+        }
+    }); // Fresh listener added each time renderAdminList rebuilds the container
 }
 
 async function toggleStudentBadge(studentId, badgeId) {
+    // Fallback (kept for compatibility)
     const student = students.find(s => s.id === studentId);
     if (!student) return;
     const current = student.badges || [];
