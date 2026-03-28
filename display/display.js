@@ -64,42 +64,34 @@ async function smoothUpdate(el, newHTML, { animDuration = null, scrolling = fals
     if (el._contentKey === key) return; // no change → don't touch
     el._contentKey = key;
 
-    // For scrolling elements, we record the current progress to attempt a seamless resume
-    let resumeDelay = null;
-    if (scrolling) {
-        const oldDur = parseFloat(el.style.animationDuration || 0);
-        if (oldDur > 0 && el._lastAnimStart) {
-            const elapsed = (Date.now() - el._lastAnimStart) / 1000;
-            // Record current position within the loop
-            resumeDelay = -(elapsed % oldDur);
-        }
-    } else {
-        // Fade out ONLY for static elements (scrolling items should just swap data instantly)
+    if (!scrolling) {
+        // Fade out ONLY for static elements
         el.style.transition = 'opacity 0.3s ease';
         el.style.opacity = '0';
         await new Promise(r => setTimeout(r, 320));
     }
 
-    // Update content
+    // Update content natively
     el.innerHTML = newHTML;
 
-    // Reset animation cleanly
-    if (scrolling || el.style.animationName || el.classList.contains('scrolling')) {
-        el.style.animation = 'none';
-        void el.offsetWidth; // force reflow
-        el.style.animation = '';
-        if (animDuration) el.style.animationDuration = animDuration;
-        
-        if (scrolling) {
-            // Store start time for next sync
-            if (!el._lastAnimStart) el._lastAnimStart = Date.now();
-            if (resumeDelay !== null) {
-                el.style.animationDelay = `${resumeDelay}s`;
-            }
+    // For scrolling, ONLY reset the CSS animation if the duration itself changed.
+    // Otherwise, let the browser continue the CSS animation uninterrupted from its current physical position!
+    if (scrolling) {
+        const oldDur = el.style.animationDuration;
+        if (oldDur !== animDuration) {
+            el.style.animation = 'none';
+            void el.offsetWidth; // force reflow
+            el.style.animation = '';
+            if (animDuration) el.style.animationDuration = animDuration;
         }
-    }
-
-    if (!scrolling) {
+    } else {
+        // Reset animation cleanly for static elements
+        if (el.style.animationName || el.classList.contains('scrolling')) {
+            el.style.animation = 'none';
+            void el.offsetWidth;
+            el.style.animation = '';
+            if (animDuration) el.style.animationDuration = animDuration;
+        }
         el.style.opacity = '1';
     }
 }
