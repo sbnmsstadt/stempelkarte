@@ -374,15 +374,10 @@ function renderDailyNotes() {
 // ── TODAY PLAN ────────────────────────────────
 function renderTodayPlan() {
     const el = document.getElementById('today-plan-list');
-    const aiEl = document.getElementById('today-plan-ai');
     if (!el) return;
 
     const txt = settings.todayPlan || "Noch kein Plan für heute eingetragen.";
     el.innerHTML = txt;
-
-    if (aiEl) {
-        aiEl.innerHTML = settings.todayPlanMotivation || "Die KI bereitet gerade eine motivierende Nachricht vor... ✨";
-    }
 }
 
 
@@ -535,10 +530,6 @@ setInterval(fetchData, 15000); // alle 15 Sek.
 // Start the ticker RAF loop immediately (it runs forever)
 startTickerLoop();
 
-// Start the 3D Plan Flip loop
-initPlanFlip();
-
-
 // ── FILMTAG LIVE POLL (every 5s) ───────────────
 // Only fetches /settings — lightweight, for near-realtime Filmtag updates.
 async function fetchFilmtagLive() {
@@ -565,35 +556,5 @@ window.addEventListener('resize', () => {
     if (students.length) renderKids();
 });
 
-// ── 3D PLAN FLIP LOGIC ────────────────────────
-function initPlanFlip() {
-    if (planFlipInterval) clearInterval(planFlipInterval);
-
-    planFlipInterval = setInterval(() => {
-        const container = document.getElementById('tagesplan-card-container');
-        if (!container) return;
-        
-        const isFlipped = container.classList.toggle('flipped');
-        const aiEl = document.getElementById('today-plan-ai');
-
-        if (isFlipped && aiEl) {
-            // Auto-scroll logic if content overflows
-            setTimeout(() => {
-                const scrollH = aiEl.scrollHeight;
-                const clientH = aiEl.clientHeight;
-                if (scrollH > clientH + 5) {
-                    const diff = scrollH - clientH;
-                    const speed = 25; // slower, more readable speed
-                    const dur = (diff / speed).toFixed(2);
-                    aiEl.style.transition = `transform ${dur}s linear`;
-                    aiEl.style.transform = `translateY(-${diff + 20}px)`;
-                }
-            }, 2000); 
-        } else if (aiEl) {
-            aiEl.style.transition = 'none';
-            aiEl.style.transform = 'translateY(0)';
-        }
-    }, 15000);
-}
 
 

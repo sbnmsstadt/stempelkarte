@@ -1002,36 +1002,16 @@
 
             <!-- Side-by-Side row (Hauptfokus) -->
             <div style="display: flex; gap: 18px; flex: 1.8;">
-                <!-- Tagesplan (Full Card Flip) -->
-                <div class="flip-container" id="tagesplan-card-container" style="flex:1;">
-                    <div class="flip-card-inner" id="tagesplan-flipper">
-                        
-                        <!-- FRONT SIDE: Full Card -->
-                        <div class="flip-card-front card" style="padding:22px;">
-                            <div class="card-header">
-                                <div class="card-icon">📅</div>
-                                <div class="card-title">TAGESPLAN</div>
-                            </div>
-                            <div class="card-content" style="padding:0; margin-top:16px; overflow:auto;">
-                                <div id="today-plan-list" class="today-plan-content">
-                                    Lade Plan...
-                                </div>
-                            </div>
+                <!-- Tagesplan (Static) -->
+                <div class="card tagesplan-card" style="flex:1;">
+                    <div class="card-header">
+                        <div class="card-icon">📅</div>
+                        <div class="card-title">TAGESPLAN</div>
+                    </div>
+                    <div class="card-content" style="padding:0; margin-top:16px; overflow:auto;">
+                        <div id="today-plan-list" class="today-plan-content">
+                            Lade Plan...
                         </div>
-
-                        <!-- BACK SIDE: Full Card (AI) -->
-                        <div class="flip-card-back card" style="padding:22px;">
-                            <div class="card-header">
-                                <div class="card-icon">🤖</div>
-                                <div class="card-title">HORT-ASSISTENT</div>
-                            </div>
-                            <div class="card-content" style="padding:0; margin-top:16px; overflow:auto;">
-                                <div id="today-plan-ai" class="today-plan-content ai-motivation" style="color:#fcd34d;">
-                                    Bereite Motivation vor...
-                                </div>
-                            </div>
-                        </div>
-
                     </div>
                 </div>
 

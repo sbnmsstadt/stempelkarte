@@ -232,6 +232,20 @@ function showDetail(student) {
     renderBadges(student);
     renderHistory(student.history || []);
 
+    // NEW: Render AI Motivation
+    const aiSection = document.getElementById('ai-section');
+    const aiText = document.getElementById('ai-motivation-student');
+    if (aiSection && aiText) {
+        const motivation = SETTINGS.todayPlanMotivation || "";
+        if (motivation && motivation.trim().length > 0) {
+            aiSection.classList.remove('hidden');
+            aiText.innerText = motivation;
+        } else {
+            // Keep hidden or show loading if it's during the day
+            aiSection.classList.add('hidden');
+        }
+    }
+
     // Birthday Surprise
     if (student.birthday) {
         const today = new Date();
