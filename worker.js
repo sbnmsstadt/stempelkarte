@@ -493,9 +493,10 @@ export default {
                         const settingsRaw = await env.DATABASE.get("settings");
                         let settings = JSON.parse(settingsRaw || "{}");
                         if (settings.groupReward) {
-                            settings.groupReward.current = 0; // Start collective goal at 0
-                            settings.groupReward.active = true; // Show donation button for everyone
+                            settings.groupReward.current = 1; // Der Initiator zählt als erster Spender
+                            settings.groupReward.active = true; // Spendenrunde starten
                             settings.groupReward.isApproved = false; // Reset approval state
+                            students[index].contributedToCurrent = true; // Initiator als Spender markieren
                             await env.DATABASE.put("settings", JSON.stringify(settings));
                         }
                     }
