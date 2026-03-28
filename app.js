@@ -784,35 +784,59 @@ async function selectAvatar(emoji) {
     }
 }
 
-function renderBadges(student) {
-    const container = document.getElementById('badge-container');
-    if (!container) return;
-    container.innerHTML = '';
-    
-    // Auto-calculate badges based on current state
-    const badges = [];
-    if (student.stamps > 0) badges.push("Erster Stempel! ✨");
-    if (student.stamps >= 10) badges.push("Stempel-Held ⭐");
-    if (student.stamps >= 20) badges.push("Profi-Karte 🔓");
-    if (student.stamps >= 40) badges.push("Legenden-Status 👑");
-    
-    const streak = calculateStreak(student.history || []);
-    if (streak >= 3) badges.push("Streak-Meister 🔥");
-    if (streak >= 5) badges.push("Nicht zu stoppen! ⚡");
+async function renderBadges(student) {
+    const section = document.getElementById('badge-section');
+    const list = document.getElementById('student-badge-list');
+    if (!section || !list) return;
 
-    // Add manual badges from student data if any
-    if (student.badges && Array.isArray(student.badges)) {
-        student.badges.forEach(b => {
-            if (!badges.includes(b)) badges.push(b);
-        });
+    const studentBadgeIds = student.badges || [];
+    if (studentBadgeIds.length === 0) {
+        section.classList.add('hidden');
+        return;
     }
 
-    badges.forEach(b => {
-        const span = document.createElement('span');
-        span.className = 'badge-tag';
-        span.innerText = b;
-        container.appendChild(span);
-    });
+    // Fetch badge definitions
+    let allBadges = [];
+    try {
+        const res = await fetch(`${API_URL}/badges`);
+        if (res.ok) allBadges = await res.json();
+    } catch (e) { /* silently skip */ }
+
+    const earned = allBadges.filter(b => studentBadgeIds.includes(b.id));
+    if (earned.length === 0) {
+        section.classList.add('hidden');
+        return;
+    }
+
+    section.classList.remove('hidden');
+    list.innerHTML = earned.map(b => `
+        <div style="
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            padding: 12px 16px;
+            background: ${b.color}15;
+            border: 1px solid ${b.color}55;
+            border-radius: 14px;
+            animation: fadeIn 0.4s ease-out both;
+        ">
+            <div style="
+                font-size: 2rem;
+                width: 48px;
+                height: 48px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                background: ${b.color}25;
+                border-radius: 12px;
+                flex-shrink: 0;
+            ">${b.emoji}</div>
+            <div>
+                <div style="font-weight: 900; font-size: 1rem; color: ${b.color};">${b.name}</div>
+                ${b.description ? `<div style="font-size: 0.78rem; color: rgba(255,255,255,0.6); margin-top: 2px;">${b.description}</div>` : ''}
+            </div>
+        </div>
+    `).join('');
 }
 
 function renderHistory(history) {
