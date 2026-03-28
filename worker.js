@@ -605,29 +605,15 @@ export default {
                 }
 
                 try {
-                    const url = `https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${env.KREATIV_API}`;
-                    const res = await fetch(url, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                            contents: [{ parts: [{ text: promptText }] }],
-                            generationConfig: {
-                                temperature: 0.7,
-                                responseMimeType: "application/json"
-                            }
-                        })
-                    });
+                    const result = await callGemini(promptText, env.KREATIV_API, { temperature: 0.7 });
                     
-                    if (!res.ok) {
-                        const errBody = await res.text();
-                        return new Response(`Gemini API Error: ${res.status} - ${errBody}`, { status: res.status, headers: corsHeaders });
+                    if (result.success) {
+                        return new Response(JSON.stringify({ text: result.text, model: result.model }), {
+                            headers: { ...corsHeaders, "Content-Type": "application/json" }
+                        });
+                    } else {
+                        return new Response(`Gemini API Error: ${result.error}`, { status: 500, headers: corsHeaders });
                     }
-
-                    const data = await res.json();
-                    return new Response(JSON.stringify(data), {
-                        headers: { ...corsHeaders, "Content-Type": "application/json" }
-                    });
-
                 } catch (err) {
                     return new Response(`Backend Error: ${err.message}`, { status: 500, headers: corsHeaders });
                 }
@@ -664,52 +650,21 @@ export default {
                 const apiKey = (env.KREATIV_API || "").trim().replace(/^"|"$/g, '');
                 if (!apiKey || apiKey.length < 10) return new Response("Ungültiger API Key", { status: 500, headers: corsHeaders });
 
-                const combos = [
-                    { ver: 'v1beta', m: 'gemini-1.5-flash' },
-                    { ver: 'v1', m: 'gemini-1.5-flash' },
-                    { ver: 'v1beta', m: 'gemini-1.5-pro' },
-                    { ver: 'v1', m: 'gemini-1.5-pro' },
-                    { ver: 'v1beta', m: 'gemini-1.5-flash-8b' }
-                ];
-                let errors = [];
-
-                for (const c of combos) {
-                    try {
-                        const url = `https://generativelanguage.googleapis.com/${c.ver}/models/${c.m}:generateContent?key=${apiKey}`;
-                        const res = await fetch(url, {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({
-                                contents: [{ parts: [{ text: prompt }] }],
-                                generationConfig: { temperature: 0.7, maxOutputTokens: 1000 }
-                            })
-                        });
-
-                        if (res.ok) {
-                            const data = await res.json();
-                            const text = data?.candidates?.[0]?.content?.parts?.[0]?.text;
-                            if (text) {
-                                return new Response(JSON.stringify({ text: text.trim(), model: `${c.ver}/${c.m}` }), {
-                                    headers: { ...corsHeaders, "Content-Type": "application/json" }
-                                });
-                            }
-                        }
-                        const errTxt = await res.text();
-                        errors.push(`[${c.ver}/${c.m}] ${res.status}: ${errTxt.substring(0, 100)}`);
-                    } catch (e) {
-                        errors.push(`[${c.ver}/${c.m}] Fetch Error: ${e.message}`);
-                    }
+                const result = await callGemini(prompt, apiKey, { temperature: 0.7, maxTokens: 1000 });
+                
+                if (result.success) {
+                    return new Response(JSON.stringify({ text: result.text, model: result.model }), {
+                        headers: { ...corsHeaders, "Content-Type": "application/json" }
+                    });
+                } else {
+                    return new Response(JSON.stringify({ 
+                        text: `KI-Fehler: ${result.error}`, 
+                        details: result.details 
+                    }), { 
+                        status: 500, 
+                        headers: { ...corsHeaders, "Content-Type": "application/json" } 
+                    });
                 }
-
-                const errorSummary = `KI-Fehler (Alle Kombinationen fehlgeschlagen):\n${errors.join('\n')}`;
-                return new Response(JSON.stringify({ 
-                    text: errorSummary,
-                    error: "Alle KI-Kombinationen fehlgeschlagen", 
-                    details: errors 
-                }), { 
-                    status: 500, 
-                    headers: { ...corsHeaders, "Content-Type": "application/json" } 
-                });
             }
 
             // --- PERSONAL AI Motivation Endpoint (NEW) ---
@@ -753,50 +708,21 @@ Deine Aufgabe: Schreibe eine kurze, begeisterte und persönliche Nachricht (ca. 
                 const apiKey = (env.KREATIV_API || "").trim().replace(/^"|"$/g, '');
                 if (!apiKey || apiKey.length < 10) return new Response("Ungültiger API Key", { status: 500, headers: corsHeaders });
 
-                const combos = [
-                    { ver: 'v1beta', m: 'gemini-1.5-flash' },
-                    { ver: 'v1', m: 'gemini-1.5-flash' },
-                    { ver: 'v1beta', m: 'gemini-1.5-pro' },
-                    { ver: 'v1', m: 'gemini-1.5-pro' },
-                    { ver: 'v1beta', m: 'gemini-1.5-flash-8b' }
-                ];
-                let errors = [];
+                const result = await callGemini(prompt, apiKey, { temperature: 0.8, maxTokens: 500 });
 
-                for (const c of combos) {
-                    try {
-                        const modelRes = await fetch(`https://generativelanguage.googleapis.com/${c.ver}/models/${c.m}:generateContent?key=${apiKey}`, {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({
-                                contents: [{ parts: [{ text: prompt }] }],
-                                generationConfig: { temperature: 0.8, maxOutputTokens: 500 }
-                            })
-                        });
-
-                        if (modelRes.ok) {
-                            const data = await modelRes.json();
-                            const text = data?.candidates?.[0]?.content?.parts?.[0]?.text;
-                            if (text) {
-                                return new Response(JSON.stringify({ text: text.trim(), model: `${c.ver}/${c.m}` }), {
-                                    headers: { ...corsHeaders, "Content-Type": "application/json" }
-                                });
-                            }
-                        }
-                        const errTxt = await modelRes.text();
-                        errors.push(`[${c.ver}/${c.m}] ${modelRes.status}: ${errTxt.substring(0, 100)}`);
-                    } catch (e) {
-                        errors.push(`[${c.ver}/${c.m}] Fetch Error: ${e.message}`);
-                    }
+                if (result.success) {
+                    return new Response(JSON.stringify({ text: result.text, model: result.model }), {
+                        headers: { ...corsHeaders, "Content-Type": "application/json" }
+                    });
+                } else {
+                    return new Response(JSON.stringify({ 
+                        text: `Motivation fehlgeschlagen: ${result.error}`, 
+                        details: result.details 
+                    }), { 
+                        status: 500, 
+                        headers: { ...corsHeaders, "Content-Type": "application/json" }
+                    });
                 }
-                const errorSummary = `Motivation fehlgeschlagen (Alle Modelle):\n${errors.join('\n')}`;
-                return new Response(JSON.stringify({ 
-                    text: errorSummary,
-                    error: "Motivation fehlgeschlagen (Alle Modelle)", 
-                    details: errors 
-                }), { 
-                    status: 500, 
-                    headers: { ...corsHeaders, "Content-Type": "application/json" }
-                });
             }
 
             // --- AI Generation Endpoint (Tagesplan Motivation - Legacy/Global) ---
@@ -835,64 +761,18 @@ Deine Aufgabe: Schreibe eine ausführliche, begeisterte Nachricht für die Infot
                     });
                 }
 
-                const apiKey = env.KREATIV_API.trim();
-                let modelToUse = "gemini-1.5-flash"; // Fallback
-                let discoveryLog = "";
-
-                try {
-                    const listRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${apiKey}`);
-                    if (listRes.ok) {
-                        const listData = await listRes.json();
-                        const models = listData.models || [];
-                        const bestModel = models.find(m => 
-                            m.supportedGenerationMethods.includes("generateContent") && 
-                            (m.name.includes("flash") || m.name.includes("pro"))
-                        );
-                        if (bestModel) {
-                            modelToUse = bestModel.name.split('/').pop();
-                            discoveryLog = `(Auto-Discovery: ${modelToUse})`;
-                        }
-                    }
-                } catch (e) {
-                    discoveryLog = `(Auto-Discovery Error: ${e.message})`;
-                }
-
-                const url = `https://generativelanguage.googleapis.com/v1beta/models/${modelToUse}:generateContent?key=${apiKey}`;
+                const apiKey = (env.KREATIV_API || "").trim().replace(/^"|"$/g, '');
+                const result = await callGemini(prompt, apiKey, { temperature: 0.9, maxTokens: 600 });
                 
-                try {
-                    const res = await fetch(url, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                            contents: [{ parts: [{ text: prompt }] }],
-                            generationConfig: { 
-                                temperature: 0.9, 
-                                maxOutputTokens: 600,
-                                stopSequences: [] 
-                            }
-                        })
+                if (result.success) {
+                    return new Response(JSON.stringify({ 
+                        text: result.text, 
+                        model: result.model 
+                    }), {
+                        headers: { ...corsHeaders, "Content-Type": "application/json" }
                     });
-                    
-                    if (res.ok) {
-                        const data = await res.json();
-                        const generatedText = data?.candidates?.[0]?.content?.parts?.[0]?.text;
-                        if (generatedText) {
-                            return new Response(JSON.stringify({ 
-                                text: generatedText.trim(), 
-                                model: modelToUse + " " + discoveryLog 
-                            }), {
-                                headers: { ...corsHeaders, "Content-Type": "application/json" }
-                            });
-                        }
-                    } else {
-                        const errTxt = await res.text();
-                        return new Response(`KI-Fehler bei ${modelToUse}: ${res.status}\n${errTxt}`, { 
-                            status: 500, 
-                            headers: corsHeaders 
-                        });
-                    }
-                } catch (e) {
-                    return new Response(`KI-Verbindungsfehler: ${e.message}`, { status: 500, headers: corsHeaders });
+                } else {
+                    return new Response(`KI-Verbindungsfehler: ${result.error}`, { status: 500, headers: corsHeaders });
                 }
             }
 
@@ -1053,21 +933,75 @@ ${eventsText}
 
 Schreibe die Zusammenfassung jetzt:`;
 
+    const result = await callGemini(prompt, apiKey, { maxTokens: 300, temperature: 0.7 });
+    return result.success ? result.text : buildFallbackMessage(events);
+}
+
+/**
+ * Universal Gemini API Helper with Model Discovery
+ * Ensures compatibility across regions and accounts.
+ */
+async function callGemini(prompt, apiKey, options = {}) {
+    const apiVersions = ['v1beta', 'v1'];
+    let discoveredModel = null;
+    let errors = [];
+
+    // Step 1: Discover available models
     try {
-        const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                contents: [{ parts: [{ text: prompt }] }],
-                generationConfig: { maxOutputTokens: 300, temperature: 0.7 }
-            })
-        });
-        if (!res.ok) return buildFallbackMessage(events);
-        const data = await res.json();
-        return data?.candidates?.[0]?.content?.parts?.[0]?.text || buildFallbackMessage(events);
-    } catch (err) {
-        return buildFallbackMessage(events);
+        const listRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${apiKey}`);
+        if (listRes.ok) {
+            const data = await listRes.json();
+            const models = data.models || [];
+            
+            // Preference: flash 1.5 -> flash newest -> pro 1.5 -> pro newest -> anything else
+            const best = models.find(m => m.name.includes("gemini-1.5-flash") && m.supportedGenerationMethods.includes("generateContent")) ||
+                         models.find(m => m.name.includes("flash") && m.supportedGenerationMethods.includes("generateContent")) ||
+                         models.find(m => m.name.includes("pro") && m.supportedGenerationMethods.includes("generateContent")) ||
+                         models.find(m => m.supportedGenerationMethods.includes("generateContent"));
+            
+            if (best) {
+                discoveredModel = best.name.startsWith("models/") ? best.name : `models/${best.name}`;
+            }
+        } else {
+            errors.push(`Discovery Failed: ${listRes.status} ${await listRes.text()}`);
+        }
+    } catch (e) {
+        errors.push(`Discovery Fetch Error: ${e.message}`);
     }
+
+    // Step 2: Try discovered model or hardcoded fallback list
+    const candidates = discoveredModel ? [discoveredModel] : ["models/gemini-1.5-flash", "models/gemini-1.5-pro", "models/gemini-pro"];
+    
+    for (const ver of apiVersions) {
+        for (const modelName of candidates) {
+            try {
+                const url = `https://generativelanguage.googleapis.com/${ver}/${modelName}:generateContent?key=${apiKey}`;
+                const res = await fetch(url, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        contents: [{ parts: [{ text: prompt }] }],
+                        generationConfig: {
+                            temperature: options.temperature || 0.7,
+                            maxOutputTokens: options.maxTokens || 1000
+                        }
+                    })
+                });
+
+                if (res.ok) {
+                    const data = await res.json();
+                    const text = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+                    if (text) return { success: true, text: text.trim(), model: `${ver}/${modelName}` };
+                }
+                const errTxt = await res.text();
+                errors.push(`[${ver}/${modelName}] ${res.status}: ${errTxt.substring(0, 150)}`);
+            } catch (e) {
+                errors.push(`[${ver}/${modelName}] Error: ${e.message}`);
+            }
+        }
+    }
+
+    return { success: false, error: "Keine verfügbare KI-Kombination gefunden.", details: errors };
 }
 
 function buildFallbackMessage(events) {
