@@ -5,6 +5,7 @@ let settings = {};
 let rewards = [];
 let planFlipInterval = null; 
 let _celebrationSignaled = false; // Prevents repeated popups
+let _lastCelebrationId = null;   // Tracks last seen celebration event
 
 // ── PARTICLES ──────────────────────────────────
 function createParticles() {
@@ -116,6 +117,19 @@ function renderAll() {
     renderTicker();
     renderStudentOfWeek();
     checkBirthdayMode();
+    checkCelebrationMode(); // NEW: Check for group milestone celebrations
+}
+
+// ── CELEBRATION MODE ───────────────────────────
+function checkCelebrationMode() {
+    if (!settings || !settings.celebration || !settings.celebration.active) return;
+    
+    const celebId = settings.celebration.id;
+    if (celebId && celebId !== _lastCelebrationId) {
+        console.log("New Celebration detected!", celebId);
+        showGoalCelebration(settings.celebration.title);
+        _lastCelebrationId = celebId;
+    }
 }
 
 // ── STUDENT OF THE WEEK ────────────────────────
@@ -344,19 +358,17 @@ function renderFilmtag() {
     }
 
     document.getElementById('filmtag-status').innerHTML = statusHtml;
-
-    // --- CELEBRATION LOGIC (NEW) ---
-    if (left <= 0 && !_celebrationSignaled && gr.active) {
-        showGoalCelebration();
-        _celebrationSignaled = true;
-    } else if (left > 0) {
-        _celebrationSignaled = false; // Allow reset if stamps removed
-    }
 }
 
-function showGoalCelebration() {
+function showGoalCelebration(title = "Filmtag") {
     const overlay = document.getElementById('celebration-overlay');
     if (!overlay) return;
+
+    // Update text if title provided
+    if (title) {
+        const textEl = overlay.querySelector('.celebration-text');
+        if (textEl) textEl.textContent = `Das Ziel "${title}" ist gesichert! 🎉🍿`;
+    }
 
     // Show overlay
     overlay.classList.add('active');
@@ -564,13 +576,16 @@ async function fetchFilmtagLive() {
         if (!res.ok) return;
         const newSettings = await res.json();
 
-        // Compare groupReward.current to detect change
+        // Compare groupReward.current AND celebration.id to detect change
         const oldCurrent = settings?.groupReward?.current;
         const newCurrent = newSettings?.groupReward?.current;
+        const oldCelebId = settings?.celebration?.id;
+        const newCelebId = newSettings?.celebration?.id;
 
-        if (oldCurrent !== newCurrent) {
+        if (oldCurrent !== newCurrent || oldCelebId !== newCelebId) {
             settings = newSettings;
-            renderFilmtag(); // only re-render Filmtag bar
+            renderFilmtag(); // update progress bar
+            checkCelebrationMode(); // trigger popup if id is new
         }
     } catch (_) { /* silent fail */ }
 }
