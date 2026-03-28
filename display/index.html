@@ -194,7 +194,7 @@
 
         /* ── 3D FLIP CARD ─────────────────────── */
         .flip-container {
-            perspective: 2000px; /* Erhöhter Wert für sanfteren Effekt */
+            perspective: 2000px;
             overflow: visible !important;
         }
 
@@ -212,32 +212,40 @@
 
         .flip-card-front, .flip-card-back {
             position: absolute;
+            inset: 0;
             width: 100%;
             height: 100%;
             -webkit-backface-visibility: hidden;
             backface-visibility: hidden;
             display: flex;
             flex-direction: column;
+            background: #0f172a; /* Solid background prevents mirroring/ghosting */
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+
+        .flip-card-front {
+            transform: rotateY(0deg) translateZ(1px);
         }
 
         .flip-card-back {
-            transform: rotateY(180deg);
-            background: rgba(255,255,255,0.02);
-            border-radius: 12px;
+            transform: rotateY(180deg) translateZ(1px);
             justify-content: center;
             align-items: center;
             text-align: center;
         }
 
         .ai-motivation {
-            font-size: 1.1rem;
-            line-height: 1.5;
+            font-size: 1.15rem;
+            line-height: 1.6;
             font-style: italic;
-            padding: 10px;
+            padding: 15px;
             display: flex;
-            align-items: center;
+            align-items: center; /* Vertically centered if short */
             justify-content: center;
             height: 100%;
+            overflow-y: auto;     /* Scroll if too long */
+            scrollbar-width: thin;
         }
 
         /* ── KIDS SCROLL BAND ──────────────────── */
@@ -997,13 +1005,13 @@
                     </div>
                     <div class="card-content" style="padding:0; overflow:visible;">
                         <div class="flip-card-inner" id="tagesplan-flipper">
-                            <div class="flip-card-front" style="padding:12px; height:100%; overflow:hidden;">
-                                <div id="today-plan-list" class="today-plan-content" style="padding:0;">
+                            <div class="flip-card-front" style="padding:15px; height:100%; overflow:auto;">
+                                <div id="today-plan-list" class="today-plan-content">
                                     Lade Plan...
                                 </div>
                             </div>
-                            <div class="flip-card-back" style="padding:12px; height:100%; overflow:hidden;">
-                                <div id="today-plan-ai" class="today-plan-content ai-motivation" style="padding:0; color: #fcd34d;">
+                            <div class="flip-card-back">
+                                <div id="today-plan-ai" class="today-plan-content ai-motivation" style="color: #fcd34d;">
                                     Bereite Motivation vor...
                                 </div>
                             </div>

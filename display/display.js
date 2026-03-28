@@ -1,8 +1,5 @@
 const API_URL = "https://stempelkarte.sb-nmsstadt.workers.dev/api";
 
-window.onerror = function(m, u, l) { alert("JS Error: " + m + " at line " + l); };
-console.log("🚀 Infoboard script loading...");
-
 let students = [];
 let settings = {};
 let rewards = [];
@@ -541,8 +538,6 @@ startTickerLoop();
 // Start the 3D Plan Flip loop
 initPlanFlip();
 
-alert("BOOT COMPLETE v2.1-AI");
-
 
 // ── FILMTAG LIVE POLL (every 5s) ───────────────
 // Only fetches /settings — lightweight, for near-realtime Filmtag updates.
@@ -580,11 +575,9 @@ function initPlanFlip() {
         const titleEl = document.getElementById('tagesplan-card-title');
 
         if (!container) {
-            console.warn("Flip-Container nicht gefunden! .tagesplan-card.flip-container fehlt im DOM.");
             return;
         }
         
-        console.log("3D Plan Flip! isFlipped before:", container.classList.contains('flipped'), "Plan:", settings.todayPlan);
         container.classList.toggle('flipped');
 
         if (titleEl) {
