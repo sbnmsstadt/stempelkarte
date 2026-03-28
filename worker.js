@@ -690,8 +690,8 @@ export default {
 
                 const prompt = `Du bist NACHMI, ein erfahrener pädagogischer Assistent. \nHier sind die Beobachtungen für den Tag (${date}):\n${logsText}\n\nErstelle daraus eine strukturierte Zusammenfassung (ca. 100-150 Wörter).\n1. Was war heute besonders positiv?\n2. Welche Herausforderungen gab es?\n3. Ein kurzes Fazit für das Team.\n\nSchreibe professionell, aber herzlich auf Deutsch. Benutze Emojis.`;
 
-                const apiKey = (env.KREATIV_API || "").trim().replace(/^"|"$/g, '');
-                if (!apiKey || apiKey.length < 10) return new Response("Ungültiger API Key", { status: 500, headers: corsHeaders });
+                const apiKey = (env.KREATIV_API || env.KI_API || "").trim().replace(/^"|"$/g, '');
+                if (!apiKey || apiKey.length < 10) return new Response("Ungültiger API Key (KREATIV_API oder KI_API fehlt)", { status: 500, headers: corsHeaders });
 
                 const result = await callGemini(prompt, apiKey, { temperature: 0.7, maxTokens: 2000 });
                 
@@ -791,8 +791,8 @@ Deine Aufgabe: Schreibe eine kurze, begeisterte und persönliche Nachricht (ca. 
 4. FORMAT: Antworte NUR mit dem reinen Text. Benutze KEIN Markdown (keine Sternchen, keine Backticks wie \`\`\`). 
 5. ABSCHLUSS: Der Text MUSS mit einem vollständigen Satz und einem Punkt oder Ausrufezeichen enden. Brich NIEMALS mittendrin ab.`;
 
-                const apiKey = (env.KREATIV_API || "").trim().replace(/^"|"$/g, '');
-                if (!apiKey || apiKey.length < 10) return new Response("Ungültiger API Key", { status: 500, headers: corsHeaders });
+                const apiKey = (env.KREATIV_API || env.KI_API || "").trim().replace(/^"|"$/g, '');
+                if (!apiKey || apiKey.length < 10) return new Response("Ungültiger API Key (KREATIV_API oder KI_API fehlt)", { status: 500, headers: corsHeaders });
 
                 const result = await callGemini(prompt, apiKey, { temperature: 0.8, maxTokens: 1500 });
 
@@ -841,14 +841,14 @@ Deine Aufgabe: Schreibe eine ausführliche, begeisterte Nachricht für die Infot
 3. Schreibe MINDESTENS 4-5 Sätze. 
 4. Sei extrem herzlich, benutze viele Emojis und stelle sicher, dass jeder Satz grammatikalisch vollständig beendet wird. Brich niemals mitten im Satz ab!`;
 
-                if (!env.KREATIV_API || env.KREATIV_API === "undefined") {
-                    return new Response("FEHLER: Cloudflare Secret 'KREATIV_API' fehlt! Bitte in der Cloudflare-Konsole unter 'Settings -> Variables -> Secrets' eintragen.", { 
+                const apiKey = (env.KREATIV_API || env.KI_API || "").trim().replace(/^"|"$/g, '');
+                if (!apiKey || apiKey === "undefined" || apiKey.length < 10) {
+                    return new Response("FEHLER: Cloudflare Secret 'KREATIV_API' oder 'KI_API' fehlt! Bitte in der Cloudflare-Konsole unter 'Settings -> Variables -> Secrets' eintragen.", { 
                         status: 401, 
                         headers: corsHeaders 
                     });
                 }
 
-                const apiKey = (env.KREATIV_API || "").trim().replace(/^"|"$/g, '');
                 const result = await callGemini(prompt, apiKey, { temperature: 0.9, maxTokens: 600 });
                 
                 if (result.success) {
@@ -865,8 +865,8 @@ Deine Aufgabe: Schreibe eine ausführliche, begeisterte Nachricht für die Infot
 
             // --- AI Model Discovery Endpoint ---
             if (path === "/api/ai/models" && method === "GET") {
-                const apiKey = env.KREATIV_API?.trim();
-                if (!apiKey) return new Response("Secret KREATIV_API not found", { status: 401, headers: corsHeaders });
+                const apiKey = (env.KREATIV_API || env.KI_API || "").trim().replace(/^"|"$/g, '');
+                if (!apiKey) return new Response("Secret KREATIV_API or KI_API not found", { status: 401, headers: corsHeaders });
                 try {
                     const url = `https://generativelanguage.googleapis.com/v1beta/models?key=${apiKey}`;
                     const res = await fetch(url);
@@ -987,8 +987,9 @@ Deine Aufgabe: Schreibe eine ausführliche, begeisterte Nachricht für die Infot
             // --- 4. Generate AI summary or send static message ---
             if (events.length > 0) {
                 let message;
-                if (env.KI_API) {
-                    message = await getAISummary(events, env.KI_API);
+                const apiKey = (env.KI_API || env.KREATIV_API || "").trim().replace(/^"|"$/g, '');
+                if (apiKey) {
+                    message = await getAISummary(events, apiKey);
                 } else {
                     message = buildFallbackMessage(events);
                 }
@@ -1029,6 +1030,10 @@ Schreibe die Zusammenfassung jetzt:`;
  * Ensures compatibility across regions and accounts.
  */
 async function callGemini(prompt, apiKey, options = {}) {
+    if (!apiKey || apiKey.length < 5) {
+        return { success: false, error: "API Key fehlt oder ist ungültig. Bitte prüfe deine Cloudflare Secrets (KREATIV_API oder KI_API)." };
+    }
+
     const apiVersions = ['v1beta', 'v1'];
     let discoveredModel = null;
     let errors = [];
@@ -1043,6 +1048,7 @@ async function callGemini(prompt, apiKey, options = {}) {
             // Preference: flash 1.5 (8B) -> flash 1.5 -> flash newest -> pro 1.5 -> pro newest -> anything else
             const best = models.find(m => m.name.includes("gemini-1.5-flash-8b") && m.supportedGenerationMethods.includes("generateContent")) ||
                          models.find(m => m.name.includes("gemini-1.5-flash") && m.supportedGenerationMethods.includes("generateContent")) ||
+                         models.find(m => m.name.includes("gemini-2.0-flash") && m.supportedGenerationMethods.includes("generateContent")) ||
                          models.find(m => m.name.includes("flash") && m.supportedGenerationMethods.includes("generateContent")) ||
                          models.find(m => m.name.includes("pro") && m.supportedGenerationMethods.includes("generateContent")) ||
                          models.find(m => m.supportedGenerationMethods.includes("generateContent"));
@@ -1051,22 +1057,28 @@ async function callGemini(prompt, apiKey, options = {}) {
                 discoveredModel = best.name.startsWith("models/") ? best.name : `models/${best.name}`;
             }
         } else {
-            errors.push(`Discovery Failed: ${listRes.status} ${await listRes.text()}`);
+            const errTxt = await listRes.text();
+            errors.push(`Discovery Failed (${listRes.status}): ${errTxt.substring(0, 100)}`);
         }
     } catch (e) {
         errors.push(`Discovery Fetch Error: ${e.message}`);
     }
 
-    // Step 2: Candidates - ONLY use stable models for now to avoid experimental quota issues
-    const candidates = [
+    // Step 2: Candidates - Include stable and latest models
+    let candidates = [
         "models/gemini-1.5-flash-8b", 
         "models/gemini-1.5-flash", 
-        "models/gemini-1.5-pro"
+        "models/gemini-2.0-flash-exp",
+        "models/gemini-1.5-flash-latest",
+        "models/gemini-1.5-pro",
+        "models/gemini-pro"
     ];
     
-    // If discovery found one of these, put it first, otherwise ignore discovery to be safe
-    if (discoveredModel && candidates.includes(discoveredModel)) {
-        candidates.unshift(candidates.splice(candidates.indexOf(discoveredModel), 1)[0]);
+    // If discovery found a model, try it FIRST (even if not in hardcoded list)
+    if (discoveredModel) {
+        // Remove from candidates if already there to avoid duplicates
+        candidates = candidates.filter(c => c !== discoveredModel);
+        candidates.unshift(discoveredModel);
     }
 
     for (const ver of apiVersions) {
@@ -1089,10 +1101,12 @@ async function callGemini(prompt, apiKey, options = {}) {
                     const data = await res.json();
                     const text = data?.candidates?.[0]?.content?.parts?.[0]?.text;
                     if (text) return { success: true, text: text.trim(), model: `${ver}/${modelName}` };
+                    
+                    errors.push(`[${ver}/${modelName}] No text in response: ${JSON.stringify(data).substring(0, 100)}`);
+                } else {
+                    const errTxt = await res.text();
+                    errors.push(`[${ver}/${modelName}] ${res.status}: ${errTxt.substring(0, 100)}`);
                 }
-                
-                const errTxt = await res.text();
-                errors.push(`[${ver}/${modelName}] ${res.status}: ${errTxt.substring(0, 100)}`);
                 
                 // If Rate Limited, wait 1s before trying NEXT model to let quota recover
                 if (res.status === 429) {
@@ -1104,7 +1118,11 @@ async function callGemini(prompt, apiKey, options = {}) {
         }
     }
 
-    return { success: false, error: "Keine verfügbare KI-Kombination gefunden.", details: errors };
+    return { 
+        success: false, 
+        error: "Keine verfügbare KI-Kombination gefunden. Prüfe deinen API-Key und das Kontingent.", 
+        details: errors 
+    };
 }
 
 function buildFallbackMessage(events) {
