@@ -1,6 +1,6 @@
 const API_URL = "https://stempelkarte.sb-nmsstadt.workers.dev/api";
 const PIN_ADMIN = "8520"; 
-let students = [];
+window.students = [];
 let REWARDS = [];
 let lastStudentsSnapshot = "";
 let currentSettings = null; // Global settings cache
@@ -92,7 +92,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         btn.style.opacity = '0.5';
         btn.disabled = true;
 
-        const student = students.find(s => s.id === studentId);
+        const student = window.students.find(s => s.id === studentId);
         if (!student) { btn.style.opacity = '1'; btn.disabled = false; return; }
 
         const current = student.badges || [];
@@ -144,7 +144,7 @@ async function fetchStudents() {
         if (response.ok) {
             const raw = await response.text();
             lastStudentsSnapshot = raw;
-            students = JSON.parse(raw);
+            window.students = JSON.parse(raw);
             renderAdminList();
             renderBirthdayDashboard();
             renderRedemptionDashboard();
@@ -167,7 +167,7 @@ async function fetchStudentsSilent() {
             const raw = await response.text();
             if (raw !== lastStudentsSnapshot) {
                 lastStudentsSnapshot = raw;
-                students = JSON.parse(raw);
+                window.students = JSON.parse(raw);
                 renderAdminList(document.getElementById('search-students')?.value.toLowerCase());
                 renderBirthdayDashboard();
                 renderRedemptionDashboard();
@@ -179,8 +179,8 @@ async function fetchStudentsSilent() {
 }
 
 function updateStats() {
-    const totalStudents = students.length;
-    const totalStamps = students.reduce((sum, s) => sum + (s.stamps || 0), 0);
+    const totalStudents = window.students.length;
+    const totalStamps = window.students.reduce((sum, s) => sum + (s.stamps || 0), 0);
     const totalRewards = REWARDS.length;
     
     let pendingRedemptions = 0;
@@ -204,7 +204,7 @@ function renderRedemptionDashboard() {
     db.innerHTML = '';
     
     let requests = [];
-    students.forEach(s => {
+    window.students.forEach(s => {
         if (s.redemptions) {
             for (const [threshold, status] of Object.entries(s.redemptions)) {
                 if (status === 'pending') {
@@ -268,7 +268,7 @@ function renderBirthdayDashboard() {
     twoWeeksLater.setDate(today.getDate() + 14);
     
     let upcoming = [];
-    students.forEach(s => {
+    window.students.forEach(s => {
         if (!s.birthday) return;
         const [y, m, d] = s.birthday.split('-').map(Number);
         let bDate = new Date(today.getFullYear(), m - 1, d);
@@ -491,7 +491,7 @@ function renderAdminList(filter = "") {
     if (!container) return;
     container.innerHTML = '';
 
-    const filtered = filter ? students.filter(s => s.name.toLowerCase().includes(filter)) : students;
+    const filtered = filter ? window.students.filter(s => s.name.toLowerCase().includes(filter)) : window.students;
 
     filtered.forEach(student => {
         const item = document.createElement('div');
@@ -599,7 +599,7 @@ function renderAdminList(filter = "") {
 
 async function toggleStudentBadge(studentId, badgeId) {
     // Fallback (kept for compatibility)
-    const student = students.find(s => s.id === studentId);
+    const student = window.students.find(s => s.id === studentId);
     if (!student) return;
     const current = student.badges || [];
     const newBadges = current.includes(badgeId)
