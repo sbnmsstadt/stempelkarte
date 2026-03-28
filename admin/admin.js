@@ -39,6 +39,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     await fetchRewards();
     await fetchBadges(); // ← muss VOR fetchStudents fertig sein, sonst fehlen Badges beim Rendern
     await loadSettings();
+    Logbook.init();
     fetchStudents();
     
     // Poll every 5 seconds for new data

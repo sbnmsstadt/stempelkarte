@@ -15,8 +15,10 @@ const Logbook = {
 
     renderBaseLayout() {
         const container = document.getElementById('logbook-view');
+        const modalContainer = document.getElementById('global-modals-container');
         if (!container) return;
 
+        // Main View
         container.innerHTML = `
             <div class="logbook-container">
                 <div class="logbook-header">
@@ -41,53 +43,57 @@ const Logbook = {
                 <div id="logbook-student-grid" class="logbook-student-grid">
                     <div class="glass-card" style="text-align:center; grid-column: 1/-1;">Lade Schüler...</div>
                 </div>
-            </div>
+            </div>`;
 
-            <!-- Summary Overlay -->
-            <div id="summary-overlay" class="summary-overlay hidden">
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem; border-bottom:1px solid rgba(255,255,255,0.1); padding-bottom:1rem;">
-                    <h3 style="color:var(--accent); margin:0;">✨ KI Tages-Bericht</h3>
-                    <button onclick="Logbook.closeSummary()" style="background:transparent; border:none; color:white; cursor:pointer; font-size:1.5rem;">&times;</button>
-                </div>
-                <div id="summary-content" class="summary-content">
-                    <div style="text-align:center; padding:2rem;">
-                        <div class="spinner-small" style="margin:0 auto 10px;"></div>
-                        <p>KI analysiert den Tag...</p>
+        // Modals (outside the hidden view)
+        if (modalContainer) {
+            modalContainer.innerHTML = `
+                <!-- Summary Overlay -->
+                <div id="summary-overlay" class="summary-overlay hidden">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem; border-bottom:1px solid rgba(255,255,255,0.1); padding-bottom:1rem;">
+                        <h3 style="color:var(--accent); margin:0;">✨ KI Tages-Bericht</h3>
+                        <button onclick="Logbook.closeSummary()" style="background:transparent; border:none; color:white; cursor:pointer; font-size:1.5rem;">&times;</button>
+                    </div>
+                    <div id="summary-content" class="summary-content">
+                        <div style="text-align:center; padding:2rem;">
+                            <div class="spinner-small" style="margin:0 auto 10px;"></div>
+                            <p>KI analysiert den Tag...</p>
+                        </div>
+                    </div>
+                    <button onclick="Logbook.closeSummary()" class="log-save-btn" style="width:100%; margin-top:1.5rem; background:rgba(255,255,255,0.1);">Schließen</button>
+                    <button id="archive-summary-btn" onclick="Logbook.archiveSummary()" class="log-save-btn hidden" style="width:100%; margin-top:0.8rem; background:var(--success);">✅ Dieses Archiv speichern</button>
+                    <button id="regenerate-summary-btn" onclick="Logbook.generateAISummary(true)" class="log-save-btn hidden" style="width:100%; margin-top:0.8rem; background:rgba(139, 92, 246, 0.4);">🔄 Neu generieren</button>
+                    <div id="archived-notice" class="hidden" style="margin-top:1rem; text-align:center; font-size:0.8rem; color:var(--success); font-weight:700;">
+                        ✓ Dieser Bericht ist archiviert
                     </div>
                 </div>
-                <button onclick="Logbook.closeSummary()" class="log-save-btn" style="width:100%; margin-top:1.5rem; background:rgba(255,255,255,0.1);">Schließen</button>
-                <button id="archive-summary-btn" onclick="Logbook.archiveSummary()" class="log-save-btn hidden" style="width:100%; margin-top:0.8rem; background:var(--success);">✅ Dieses Archiv speichern</button>
-                <button id="regenerate-summary-btn" onclick="Logbook.generateAISummary(true)" class="log-save-btn hidden" style="width:100%; margin-top:0.8rem; background:rgba(139, 92, 246, 0.4);">🔄 Neu generieren</button>
-                <div id="archived-notice" class="hidden" style="margin-top:1rem; text-align:center; font-size:0.8rem; color:var(--success); font-weight:700;">
-                    ✓ Dieser Bericht ist archiviert
-                </div>
-            </div>
 
-            <!-- History Modal -->
-            <div id="history-modal" class="history-modal-overlay hidden">
-                <div class="history-card">
-                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
-                        <h2 id="history-student-name">Schüler-Archiv</h2>
-                        <button onclick="Logbook.closeHistory()" style="background:transparent; border:none; color:white; cursor:pointer; font-size:1.8rem;">&times;</button>
-                    </div>
-                    <div id="history-list" class="history-list">
-                        <!-- History items go here -->
-                    </div>
-                </div>
-            </div>
-            <!-- Archive List Modal (NEW) -->
-            <div id="archive-list-modal" class="history-modal-overlay hidden">
-                <div class="history-card" style="max-width: 400px;">
-                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem;">
-                        <h2 style="margin:0;">📂 Berichts-Archiv</h2>
-                        <button onclick="Logbook.closeArchiveList()" style="background:transparent; border:none; color:white; cursor:pointer; font-size:1.8rem;">&times;</button>
-                    </div>
-                    <div id="archive-list-content" class="history-list">
-                        <p class="subtitle" style="text-align:center;">Lade Archiv...</p>
+                <!-- History Modal -->
+                <div id="history-modal" class="history-modal-overlay hidden">
+                    <div class="history-card">
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
+                            <h2 id="history-student-name">Schüler-Archiv</h2>
+                            <button onclick="Logbook.closeHistory()" style="background:transparent; border:none; color:white; cursor:pointer; font-size:1.8rem;">&times;</button>
+                        </div>
+                        <div id="history-list" class="history-list">
+                            <!-- History items go here -->
+                        </div>
                     </div>
                 </div>
-            </div>
-        `;
+                <!-- Archive List Modal -->
+                <div id="archive-list-modal" class="history-modal-overlay hidden">
+                    <div class="history-card" style="max-width: 400px;">
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem;">
+                            <h2 style="margin:0;">📂 Berichts-Archiv</h2>
+                            <button onclick="Logbook.closeArchiveList()" style="background:transparent; border:none; color:white; cursor:pointer; font-size:1.8rem;">&times;</button>
+                        </div>
+                        <div id="archive-list-content" class="history-list">
+                            <p class="subtitle" style="text-align:center;">Lade Archiv...</p>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
     },
 
     async renderStudents() {
