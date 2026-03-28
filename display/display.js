@@ -57,7 +57,7 @@ async function fetchData() {
 
 // ── SMOOTH UPDATE HELPER ───────────────────────
 // Skips DOM update if content unchanged (keeps scroll running).
-// If changed: fade out → update → reset animation → fade in.
+// If changed: update content, only reset animation if duration changed.
 async function smoothUpdate(el, newHTML, { animDuration = null, scrolling = false } = {}) {
     if (!el) return;
     const key = newHTML.replace(/\s+/g, '');
@@ -74,16 +74,22 @@ async function smoothUpdate(el, newHTML, { animDuration = null, scrolling = fals
     // Update content natively
     el.innerHTML = newHTML;
 
-    // For scrolling, ONLY reset the CSS animation if the duration itself changed.
-    // Otherwise, let the browser continue the CSS animation uninterrupted from its current physical position!
     if (scrolling) {
+        // For scrolling elements: ONLY reset the CSS animation if the duration changed.
+        // If only content changed, leave the animation completely untouched so the
+        // scroll continues from its current position without any visual jump/reset.
         const oldDur = el.style.animationDuration;
-        if (oldDur !== animDuration) {
+        if (animDuration && oldDur !== animDuration) {
+            // Duration changed → need a clean restart
             el.style.animation = 'none';
             void el.offsetWidth; // force reflow
             el.style.animation = '';
-            if (animDuration) el.style.animationDuration = animDuration;
+            el.style.animationDuration = animDuration;
+        } else if (animDuration && !oldDur) {
+            // First time: just set the duration, CSS animation name already applies
+            el.style.animationDuration = animDuration;
         }
+        // If duration unchanged → do nothing, animation keeps running seamlessly
     } else {
         // Reset animation cleanly for static elements
         if (el.style.animationName || el.classList.contains('scrolling')) {
