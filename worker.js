@@ -549,6 +549,32 @@ export default {
                         
                         settings.groupReward.current = (settings.groupReward.current || 0) + 1;
                         
+                        // NEW: Auto-approve and trigger celebration if goal reached
+                        if (settings.groupReward.current >= settings.groupReward.target) {
+                            settings.groupReward.isApproved = true;
+                            settings.groupReward.active = false; // Hide donation button
+                            
+                            settings.celebration = {
+                                id: Date.now(),
+                                title: settings.groupReward.title || "Filmtag",
+                                active: true
+                            };
+
+                            // Update history for all contributors
+                            const today = new Date().toISOString().split('T')[0];
+                            students.forEach(s => {
+                                if (s.contributedToCurrent) {
+                                    if (!s.history) s.history = [];
+                                    s.history.push({ 
+                                        date: today, 
+                                        reason: `${settings.groupReward.title || 'Filmtag'} Ziel erreicht! 🎉`,
+                                        emoji: "🎬"
+                                    });
+                                    s.contributedToCurrent = false;
+                                }
+                            });
+                        }
+                        
                         await env.DATABASE.put("students", JSON.stringify(students));
                         await env.DATABASE.put("settings", JSON.stringify(settings));
                         

@@ -717,17 +717,11 @@ async function loadSettings() {
                     const isGoalReached = settings.groupReward.current >= settings.groupReward.target;
                     const isApproved = settings.groupReward.isApproved;
 
-                    const approveBtn = document.getElementById('group-reward-approve-btn');
                     const resetBtn = document.getElementById('group-reward-reset-btn');
-                    if (approveBtn && resetBtn) {
-                        if (isGoalReached && !isApproved) {
-                            approveBtn.classList.remove('hidden');
-                            resetBtn.classList.add('hidden');
-                        } else if (isApproved) {
-                            approveBtn.classList.add('hidden');
+                    if (resetBtn) {
+                        if (isGoalReached) {
                             resetBtn.classList.remove('hidden');
                         } else {
-                            approveBtn.classList.add('hidden');
                             resetBtn.classList.add('hidden');
                         }
                     }
@@ -814,21 +808,6 @@ async function saveSettings() {
     }
 }
 
-async function approveGroupReward() {
-    if (!confirm("Gruppen-Belohnung (z.B. Filmtag) jetzt genehmigen? Ein Konfetti-Regen wird auf der Infotafel ausgelöst.")) return;
-    try {
-        const response = await fetch(`${API_URL}/settings/group-approve`, { method: 'POST' });
-        if (response.ok) {
-            alert("Belohnung genehmigt! 🎉");
-            await loadSettings();
-        } else {
-            const errBody = await response.text();
-            alert(`Fehler: ${response.status} - ${errBody}`);
-        }
-    } catch (err) {
-        alert("Verbindungsfehler bei der Genehmigung: " + err.message);
-    }
-}
 
 async function resetGroupReward() {
     if (!confirm("Bist du sicher? Dies setzt den Fortschritt auf 0 zurück. Tu dies erst, wenn der Filmtag vorbei ist.")) return;
