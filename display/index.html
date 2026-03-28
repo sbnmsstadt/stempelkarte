@@ -194,7 +194,8 @@
 
         /* ── 3D FLIP CARD ─────────────────────── */
         .flip-container {
-            perspective: 1000px;
+            perspective: 2000px; /* Erhöhter Wert für sanfteren Effekt */
+            overflow: visible !important;
         }
 
         .flip-card-inner {
@@ -994,7 +995,7 @@
                         <div class="card-icon">📅</div>
                         <div class="card-title" id="tagesplan-card-title">TAGESPLAN</div>
                     </div>
-                    <div class="card-content" style="perspective: 1000px; padding:0; overflow:visible;">
+                    <div class="card-content" style="padding:0; overflow:visible;">
                         <div class="flip-card-inner" id="tagesplan-flipper">
                             <div class="flip-card-front" style="padding:12px; height:100%; overflow:hidden;">
                                 <div id="today-plan-list" class="today-plan-content" style="padding:0;">

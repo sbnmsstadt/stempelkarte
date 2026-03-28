@@ -574,9 +574,10 @@ function initPlanFlip() {
         const container = document.querySelector('.tagesplan-card.flip-container');
         const titleEl = document.getElementById('tagesplan-card-title');
 
-        // Only flip if we actually have a plan entered
-        if (!container || !settings.todayPlan) return;
-
+        // Flip as long as the container exists (data can load in later)
+        if (!container) return;
+        
+        console.log("Plan Flip toggle! Flipped:", !container.classList.contains('flipped'));
         container.classList.toggle('flipped');
 
         if (titleEl) {
