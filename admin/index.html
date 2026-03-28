@@ -209,15 +209,19 @@
                             <label style="font-size:0.75rem; color:var(--accent); font-weight:700;">Kommende Projekte (Infotafel)</label>
                             <textarea id="setting-upcoming-projects" placeholder="z.B. Sommerfest planen 🎈" style="width:100%; height:60px; font-size:0.85rem; padding:8px; border-radius:10px; border:1px solid var(--glass-border); background:rgba(255,255,255,0.05); color:white; resize:vertical;"></textarea>
                         </div>
-                        <div style="display:flex; gap:10px;">
+                        <div style="display:flex; gap:10px; align-items:center;">
                             <div class="edit-field" style="flex:2">
                                 <label style="font-size:0.75rem; color:var(--text-muted); font-weight:700;">Gruppen-Belohnung Titel (Spenden)</label>
                                 <input type="text" id="setting-group-title" placeholder="Filmtag" style="width:100%;">
                             </div>
                             <div class="edit-field" style="flex:1">
-                                <label style="font-size:0.75rem; color:var(--text-muted); font-weight:700;">Spenden-Ziel</label>
+                                <label style="font-size:0.75rem; color:var(--text-muted); font-weight:700;">Ziel</label>
                                 <input type="number" id="setting-group-target" placeholder="8" style="width:100%; text-align:center;">
                             </div>
+                        </div>
+                        <div style="display:flex; align-items:center; gap:10px; padding:10px; background:rgba(245,158,11,0.05); border:1px solid rgba(245,158,11,0.2); border-radius:10px;">
+                            <input type="checkbox" id="setting-group-active" style="width:18px; height:18px;">
+                            <label for="setting-group-active" style="font-size:0.85rem; font-weight:700; color:var(--accent);">Spenden-Funktion für Schüler aktivieren</label>
                         </div>
                         <div style="display:flex; gap:10px; align-items:center; background:rgba(255,215,0,0.05); border:1px solid rgba(255,215,0,0.2); border-radius:12px; padding:12px;">
                             <div style="font-size:1.5rem;">⭐</div>

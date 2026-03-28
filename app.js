@@ -41,7 +41,7 @@ let syncInterval = null;
 
 document.addEventListener('DOMContentLoaded', async () => {
     await fetchRewards();
-    updateCommunityGoal();
+    await updateCommunityGoal();
 
     const urlParams = new URLSearchParams(window.location.search);
     const idParam = urlParams.get('id');
@@ -307,6 +307,10 @@ function renderRewards(student) {
 
     // --- NEW: Group Reward Donation Button (Conditional) ---
     const donateBtn = document.getElementById('group-contribute-btn');
+    // Hide by default if settings not loaded
+    if (!SETTINGS || !SETTINGS.groupReward) {
+        if (donateBtn) donateBtn.classList.add('hidden');
+    }
     if (donateBtn) {
         const isGroupActive = SETTINGS.groupReward && SETTINGS.groupReward.active;
         const isFull = isGroupActive && SETTINGS.groupReward.current >= SETTINGS.groupReward.target;

@@ -705,25 +705,33 @@ async function loadSettings() {
             if (settings.groupReward) {
                 updateField('setting-group-title', settings.groupReward.title || "Filmtag");
                 updateField('setting-group-target', settings.groupReward.target || 8);
+                updateField('setting-group-active', !!settings.groupReward.active, true);
                 
                 // Static displays
-                document.getElementById('group-reward-title-display').innerText = `${settings.groupReward.icon || '🎬'} ${settings.groupReward.title}`;
-                document.getElementById('group-reward-status').innerText = `${settings.groupReward.current} / ${settings.groupReward.target} Stempel`;
-                const progress = Math.min(100, (settings.groupReward.current / settings.groupReward.target) * 100);
-                document.getElementById('group-reward-bar').style.width = `${progress}%`;
-                
-                const isGoalReached = settings.groupReward.current >= settings.groupReward.target;
-                const isApproved = settings.groupReward.isApproved;
+                const titleDisp = document.getElementById('group-reward-title-display');
+                if (titleDisp) {
+                    titleDisp.innerText = `${settings.groupReward.icon || '🎬'} ${settings.groupReward.title}`;
+                    document.getElementById('group-reward-status').innerText = `${settings.groupReward.current} / ${settings.groupReward.target} Stempel`;
+                    const progress = Math.min(100, (settings.groupReward.current / settings.groupReward.target) * 100);
+                    document.getElementById('group-reward-bar').style.width = `${progress}%`;
+                    
+                    const isGoalReached = settings.groupReward.current >= settings.groupReward.target;
+                    const isApproved = settings.groupReward.isApproved;
 
-                if (isGoalReached && !isApproved) {
-                    document.getElementById('group-reward-approve-btn').classList.remove('hidden');
-                    document.getElementById('group-reward-reset-btn').classList.add('hidden');
-                } else if (isApproved) {
-                    document.getElementById('group-reward-approve-btn').classList.add('hidden');
-                    document.getElementById('group-reward-reset-btn').classList.remove('hidden');
-                } else {
-                    document.getElementById('group-reward-approve-btn').classList.add('hidden');
-                    document.getElementById('group-reward-reset-btn').classList.add('hidden');
+                    const approveBtn = document.getElementById('group-reward-approve-btn');
+                    const resetBtn = document.getElementById('group-reward-reset-btn');
+                    if (approveBtn && resetBtn) {
+                        if (isGoalReached && !isApproved) {
+                            approveBtn.classList.remove('hidden');
+                            resetBtn.classList.add('hidden');
+                        } else if (isApproved) {
+                            approveBtn.classList.add('hidden');
+                            resetBtn.classList.remove('hidden');
+                        } else {
+                            approveBtn.classList.add('hidden');
+                            resetBtn.classList.add('hidden');
+                        }
+                    }
                 }
             }
 
@@ -735,7 +743,6 @@ async function loadSettings() {
             updateField('setting-upcoming-projects', settings.upcomingProjects || "");
             updateField('setting-today-plan', settings.todayPlan || "");
 
-            // Restore Student of the Week
             renderSotwCurrent();
         }
     } catch (err) {}
@@ -753,6 +760,7 @@ async function saveSettings() {
     const todayPlan = document.getElementById('setting-today-plan')?.value || "";
     const groupTitle = document.getElementById('setting-group-title').value;
     const groupTarget = parseInt(document.getElementById('setting-group-target').value);
+    const groupActive = document.getElementById('setting-group-active').checked;
     const vipDuration = parseInt(document.getElementById('setting-vip-duration')?.value) || 3;
     
     if (isNaN(target) || target <= 0) {
@@ -787,9 +795,10 @@ async function saveSettings() {
             upcomingProjects: upcomingProjects,
             todayPlan: todayPlan,
             groupReward: {
-                ...(currentSettings?.groupReward || { current: 0, active: false, icon: "🎬" }),
+                ...(currentSettings?.groupReward || { current: 0, icon: "🎬" }),
                 title: groupTitle,
-                target: groupTarget
+                target: groupTarget,
+                active: groupActive
             }
         };
 
