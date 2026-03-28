@@ -37,9 +37,9 @@ checkAuth();
 
 document.addEventListener('DOMContentLoaded', async () => {
     await fetchRewards();
-    loadSettings();
+    await fetchBadges(); // ← muss VOR fetchStudents fertig sein, sonst fehlen Badges beim Rendern
+    await loadSettings();
     fetchStudents();
-    fetchBadges();
     
     // Poll every 5 seconds for new data
     setInterval(fetchStudentsSilent, 5000);
