@@ -266,6 +266,24 @@ export default {
                 let students = JSON.parse(studentsRaw || "[]");
                 const idx = students.findIndex(s => String(s.id) === String(studentId));
                 if (idx === -1) return new Response("Not Found", { status: 404, headers: corsHeaders });
+
+                const prevBadges = students[idx].badges || [];
+                const newlyAdded = (badges || []).filter(id => !prevBadges.includes(id));
+
+                // Load badge definitions to get names for history entries
+                if (newlyAdded.length > 0) {
+                    const badgesRaw = await env.DATABASE.get("badges");
+                    const allBadges = JSON.parse(badgesRaw || "[]");
+                    const today = new Date().toISOString().split("T")[0];
+
+                    if (!students[idx].history) students[idx].history = [];
+                    newlyAdded.forEach(badgeId => {
+                        const badgeDef = allBadges.find(b => String(b.id) === String(badgeId));
+                        const label = badgeDef ? `${badgeDef.emoji} Abzeichen "${badgeDef.name}" erhalten!` : "🏅 Abzeichen erhalten!";
+                        students[idx].history.push({ date: today, reason: label, emoji: badgeDef?.emoji || "🏅" });
+                    });
+                }
+
                 students[idx].badges = badges || [];
                 await env.DATABASE.put("students", JSON.stringify(students));
                 return new Response(JSON.stringify(students[idx]), {

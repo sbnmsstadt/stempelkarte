@@ -398,11 +398,15 @@ function renderTicker() {
             if (!h.date || !h.reason) return;
             const ts = new Date(h.date).getTime();
             if (ts >= cutoff - 86400000) { // last 2 days loosely
-                items.push({ name: s.name.split(' ')[0], reason: h.reason, date: h.date });
+                items.push({ 
+                    name: s.name.split(' ')[0], 
+                    reason: h.reason, 
+                    date: h.date,
+                    emoji: h.emoji || '▸' 
+                });
             }
         });
     });
-
     // Sort newest first, filter out "Admin-Korrektur", take last 20
     items.sort((a,b) => new Date(b.date) - new Date(a.date));
     const display = items
@@ -411,22 +415,42 @@ function renderTicker() {
 
     // Add VIP info
     students.filter(s => s.vip && s.vip.active).forEach(s => {
-        display.unshift({ name: s.name.split(' ')[0], reason: '⭐ VIP-Status aktiv', date: s.vip.grantedAt||'' });
+        display.unshift({ 
+            name: s.name.split(' ')[0], 
+            reason: '⭐ VIP-Status aktiv', 
+            emoji: '👑'
+        });
+    });
+
+    // Add current badge holders (permanent items)
+    students.forEach(s => {
+        if (s.badges && s.badges.length > 0) {
+            s.badges.forEach(bid => {
+                const bDef = badges.find(b => String(b.id) === String(bid));
+                if (bDef) {
+                    display.push({
+                        name: s.name.split(' ')[0],
+                        reason: `Abzeichen "${bDef.name}"`,
+                        emoji: bDef.emoji
+                    });
+                }
+            });
+        }
     });
 
     if (display.length === 0) {
-        display.push({ name: 'NACHMI', reason: '🌟 Noch keine Aktivitäten', date: '' });
+        display.push({ name: 'NACHMI', reason: '🌟 Noch keine Aktivitäten', emoji: '📢' });
     }
 
     // Duplicate for seamless loop
     const html = [...display, ...display].map(it => `
-        <div class="ticker-item">
-            <span class="t-icon">▸</span>
+        <div class="ticker-item" style="font-size: 1.15em;">
+            <span class="t-icon">${it.emoji}</span>
             <span class="t-name">${it.name}</span>
             <span>${it.reason}</span>
         </div>`).join('');
 
-    const duration = `${Math.max(20, display.length * 4)}s`;
+    const duration = `${Math.max(20, display.length * 5)}s`;
     smoothUpdate(scroll, html, { animDuration: duration, scrolling: true });
 }
 
