@@ -822,27 +822,27 @@
 
         <!-- Center -->
         <div class="center-col">
-            <!-- Filmtag -->
-            <div class="card filmtag-card">
-                <div class="card-header">
-                    <div class="card-icon">🎬</div>
+            <!-- Filmtag (Kompakter) -->
+            <div class="card filmtag-card" style="padding: 12px 22px; gap: 8px;">
+                <div class="card-header" style="gap: 8px;">
+                    <div class="card-icon" style="font-size: 1.6rem;">🎬</div>
                     <div class="card-title" id="filmtag-title">Filmtag Stand</div>
                 </div>
-                <div class="card-content">
-                    <div class="filmtag-progress-container">
+                <div class="card-content" style="gap: 4px;">
+                    <div class="filmtag-progress-container" style="height: 12px; margin: 4px 0;">
                         <div class="filmtag-progress-bar" id="filmtag-bar" style="width:0%"></div>
                     </div>
-                    <div class="filmtag-numbers">
-                        <div class="filmtag-current" id="filmtag-current">0</div>
+                    <div class="filmtag-numbers" style="margin-bottom: -4px;">
+                        <div class="filmtag-current" id="filmtag-current" style="font-size: 2rem;">0</div>
                         <div class="filmtag-of">von</div>
-                        <div class="filmtag-target" id="filmtag-target">?</div>
+                        <div class="filmtag-target" id="filmtag-target" style="font-size: 1.4rem;">?</div>
                     </div>
-                    <div id="filmtag-status" style="font-size:0.82rem; color:var(--text-muted); font-weight:700;"></div>
+                    <div id="filmtag-status" style="font-size:0.75rem; color:var(--text-muted); font-weight:700;"></div>
                 </div>
             </div>
 
-            <!-- Side-by-Side row -->
-            <div style="display: flex; gap: 18px; flex: 1;">
+            <!-- Side-by-Side row (Hauptfokus) -->
+            <div style="display: flex; gap: 18px; flex: 1.8;">
                 <!-- Tagesplan -->
                 <div class="card tagesplan-card" style="flex:1;">
                     <div class="card-header">
@@ -870,8 +870,8 @@
                 </div>
             </div>
 
-            <!-- Kommende Projekte -->
-            <div class="card upcoming-projects-card" style="flex:1;">
+            <!-- Kommende Projekte (Sekundär) -->
+            <div class="card upcoming-projects-card" style="flex:0.6;">
                 <div class="card-header">
                     <div class="card-icon">🔜</div>
                     <div class="card-title" style="color: var(--success);">KOMMENDE PROJEKTE</div>
