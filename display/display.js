@@ -364,10 +364,23 @@ function showGoalCelebration(title = "Filmtag") {
     const overlay = document.getElementById('celebration-overlay');
     if (!overlay) return;
 
-    // Update text if title provided
-    if (title) {
-        const textEl = overlay.querySelector('.celebration-text');
-        if (textEl) textEl.textContent = `GÖNNUNG PUR! Der "${title}" ist gesichert! 🎉🍿✨🎬`;
+    const phrases = [
+        "ABSOLUTE EHRE! 🏆🎬🍿",
+        "MACHER-MODUS AKTIVIERT! 🔥📽️",
+        "WIR SIND DIE GOATS! 🐐👑🎞️",
+        "LÄUFT BEI UNS! 👟🎞️🍿",
+        "KOMPLETT WILD! 🌪️🎬✨",
+        "BODENLOS GUT! 📉🎬🍿",
+        "SIUUU! DAS ZIEL IST DA! ⚽🎥",
+        "WIRKLICH GEHOBEN! 🛰️🎞️🍿",
+        "KEINE CAP! LEGENDÄR! 🧢🏆"
+    ];
+    const randomPhrase = phrases[Math.floor(Math.random() * phrases.length)];
+
+    // Update text
+    const textEl = overlay.querySelector('.celebration-text');
+    if (textEl) {
+        textEl.textContent = `${title.toUpperCase()}: ${randomPhrase}`;
     }
 
     // Show overlay
