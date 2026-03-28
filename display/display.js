@@ -3,9 +3,6 @@ const API_URL = "https://stempelkarte.sb-nmsstadt.workers.dev/api";
 let students = [];
 let settings = {};
 let rewards = [];
-let badges = []; // Global badge definitions
-let lastBirthdayCelebrated = null; // Track to avoid re-triggering same day
-
 
 // ── PARTICLES ──────────────────────────────────
 function createParticles() {
@@ -35,16 +32,14 @@ function updateClock() {
 // ── FETCH ──────────────────────────────────────
 async function fetchData() {
     try {
-        const [sRes, stRes, rRes, bRes] = await Promise.all([
+        const [sRes, stRes, rRes] = await Promise.all([
             fetch(`${API_URL}/students`),
             fetch(`${API_URL}/settings`),
-            fetch(`${API_URL}/rewards`),
-            fetch(`${API_URL}/badges`)
+            fetch(`${API_URL}/rewards`)
         ]);
         students = sRes.ok ? await sRes.json() : [];
         settings = stRes.ok ? await stRes.json() : {};
         rewards  = rRes.ok ? await rRes.json() : [];
-        badges   = bRes.ok ? await bRes.json() : [];
 
         renderAll();
 
@@ -95,17 +90,6 @@ function renderAll() {
     renderDailyNotes();
     renderVIPs();
     renderTicker();
-    renderSOW();
-    checkBirthdayCelebration();
-}
-
-function renderBadgeList(student) {
-    if (!student.badges || student.badges.length === 0) return '';
-    return student.badges.map(bid => {
-        const b = badges.find(x => x.id === bid);
-        if (!b) return '';
-        return `<span class="badge-mini" style="background:${b.color||'#8b5cf6'}" title="${b.name}">${b.icon||'🏆'}</span>`;
-    }).join('');
 }
 
 // ── KIDS: SCROLL BAND ─────────────────────────
@@ -155,12 +139,9 @@ function renderKids() {
                 : '';
         return `
             <div class="kid-card ${cls}">
-                <div class="kid-card-avatar" style="${s.vip?.active ? 'border-color:gold; box-shadow:0 0 10px gold;' : ''}">${s.avatar || s.name.charAt(0)}</div>
+                <div class="kid-card-avatar">${s.avatar || s.name.charAt(0)}</div>
                 <div class="kid-card-info">
-                    <div class="kid-card-name" style="display:flex; align-items:center; gap:5px;">
-                        ${s.name}
-                        <div class="badges-row">${renderBadgeList(s)}</div>
-                    </div>
+                    <div class="kid-card-name">${s.name}</div>
                     <div class="kid-card-date">${dateStr}${dateStr && daysLabel ? ' · ' + daysLabel : daysLabel}</div>
                 </div>
                 ${badge}
@@ -337,10 +318,7 @@ function renderTicker() {
     const html = [...display, ...display].map(it => `
         <div class="ticker-item">
             <span class="t-icon">▸</span>
-            <span class="t-name" style="display:flex; align-items:center; gap:5px;">
-                ${it.name}
-                ${(students.find(s => s.name.startsWith(it.name))?.badges || []).length > 0 ? `<div class="badges-row-mini">${renderBadgeList(students.find(s => s.name.startsWith(it.name)))}</div>` : ''}
-            </span>
+            <span class="t-name">${it.name}</span>
             <span>${it.reason}</span>
         </div>`).join('');
 
@@ -376,71 +354,6 @@ async function fetchFilmtagLive() {
 }
 
 setInterval(fetchFilmtagLive, 5000);
-
-// ── SPECIALS ──────────────────────────────────
-function renderSOW() {
-    const el = document.getElementById('sow-container');
-    if (!el || !settings.studentOfWeekId) {
-        if (el) el.style.display = 'none';
-        return;
-    }
-    const s = students.find(x => x.id === settings.studentOfWeekId);
-    if (!s) {
-        el.style.display = 'none';
-        return;
-    }
-    document.getElementById('sow-avatar').textContent = s.avatar || s.name.charAt(0);
-    document.getElementById('sow-name').textContent = s.name;
-    el.style.display = 'block';
-}
-
-function checkBirthdayCelebration() {
-    const today = new Date();
-    const dateStr = `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`;
-    
-    // Find students with birthday today
-    const birthdayStudents = students.filter(s => {
-        if (!s.birthday) return false;
-        const [,m,d] = s.birthday.split('-').map(Number);
-        return m === (today.getMonth()+1) && d === today.getDate();
-    });
-
-    if (birthdayStudents.length > 0) {
-        const student = birthdayStudents[0]; // Just celebrate the first one found today
-        const key = `${dateStr}_${student.id}`;
-        
-        if (lastBirthdayCelebrated !== key) {
-            triggerBirthdayOverlay(student);
-            lastBirthdayCelebrated = key;
-        }
-    }
-}
-
-function triggerBirthdayOverlay(student) {
-    const overlay = document.getElementById('birthday-overlay');
-    const nameEl = document.getElementById('celeb-student-name');
-    if (!overlay || !nameEl) return;
-
-    nameEl.textContent = student.name;
-    overlay.style.display = 'flex';
-    
-    // Fireworks effect could go here
-    confettiRain();
-
-    // Auto-hide after 15 seconds
-    setTimeout(() => {
-        overlay.style.opacity = '0';
-        setTimeout(() => {
-            overlay.style.display = 'none';
-            overlay.style.opacity = '1';
-        }, 1000);
-    }, 15000);
-}
-
-function confettiRain() {
-    // Simple implementation using existing particles or just a one-off burst
-    // For now we rely on the CSS animation in the overlay
-}
 
 // Re-layout kids on resize
 window.addEventListener('resize', () => {

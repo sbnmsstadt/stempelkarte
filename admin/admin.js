@@ -5,8 +5,6 @@ let REWARDS = [];
 let lastStudentsSnapshot = "";
 let currentSettings = null; // Global settings cache
 let lastLoadedValues = {};  // Cache to track what was last put into DOM
-let BADGES = [];
-let editingBadge = null;
 
 const adminApp = document.getElementById('admin-app');
 const loginOverlay = document.getElementById('login-overlay');
@@ -39,7 +37,6 @@ checkAuth();
 
 document.addEventListener('DOMContentLoaded', async () => {
     await fetchRewards();
-    await fetchBadges();
     loadSettings();
     fetchStudents();
     
@@ -100,117 +97,11 @@ async function fetchStudentsSilent() {
                 renderAdminList(document.getElementById('search-students')?.value.toLowerCase());
                 renderBirthdayDashboard();
                 renderRedemptionDashboard();
-                updateStudentOfWeekSelect(); // Sync select with students
+                updateStats();
             }
         }
     } catch (err) { }
     loadSettings();
-}
-
-// --- Badge Manager Logic ---
-async function fetchBadges() {
-    try {
-        const res = await fetch(`${API_URL}/badges`);
-        if (res.ok) {
-            BADGES = await res.json();
-            renderBadgeList();
-        }
-    } catch (err) { console.error("Error fetching badges:", err); }
-}
-
-function renderBadgeList() {
-    const list = document.getElementById('admin-badge-list');
-    if (!list) return;
-    list.innerHTML = '';
-    BADGES.forEach(b => {
-        const bg = b.color || '#8b5cf6';
-        const item = document.createElement('div');
-        item.style.cssText = `background:${bg}; color:white; padding:4px 10px; border-radius:8px; font-size:0.75rem; font-weight:800; cursor:pointer; display:flex; align-items:center; gap:5px;`;
-        item.innerHTML = `<span>${b.icon || '🏆'}</span> ${b.name} <span onclick="event.stopPropagation(); deleteBadge('${b.id}')" style="margin-left:5px; font-size:0.65rem; opacity:0.6;">✕</span>`;
-        item.onclick = () => openBadgeModal(b);
-        list.appendChild(item);
-    });
-}
-
-function openBadgeModal(badge = null) {
-    editingBadge = badge;
-    const modal = document.getElementById('badge-modal');
-    document.getElementById('badge-modal-title').innerText = badge ? 'Abzeichen bearbeiten' : 'Abzeichen erstellen';
-    document.getElementById('badge-icon').value = badge ? badge.icon : '🏆';
-    document.getElementById('badge-name').value = badge ? badge.name : '';
-    document.getElementById('badge-color').value = badge ? (badge.color || '#8b5cf6') : '#8b5cf6';
-    modal.style.display = 'flex';
-}
-
-function closeBadgeModal() {
-    document.getElementById('badge-modal').style.display = 'none';
-    editingBadge = null;
-}
-
-async function saveBadge() {
-    const icon = document.getElementById('badge-icon').value || '🏆';
-    const name = document.getElementById('badge-name').value || 'Abzeichen';
-    const color = document.getElementById('badge-color').value || '#8b5cf6';
-    
-    const badgeData = { icon, name, color };
-    const method = editingBadge ? 'PUT' : 'POST';
-    const url = editingBadge ? `${API_URL}/badges/${editingBadge.id}` : `${API_URL}/badges`;
-    
-    try {
-        const res = await fetch(url, {
-            method,
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify(badgeData)
-        });
-        if (res.ok) {
-            closeBadgeModal();
-            await fetchBadges();
-            renderAdminList();
-        }
-    } catch (err) { alert("Fehler beim Speichern."); }
-}
-
-async function deleteBadge(id) {
-    if (!confirm("Abzeichen wirklich löschen?")) return;
-    try {
-        const res = await fetch(`${API_URL}/badges/${id}`, { method: 'DELETE' });
-        if (res.ok) fetchBadges();
-    } catch (err) {}
-}
-
-function updateStudentOfWeekSelect() {
-    const sel = document.getElementById('setting-student-of-week');
-    if (!sel) return;
-    const currentVal = currentSettings?.studentOfWeekId || "";
-    const valBefore = sel.value || currentVal;
-    
-    sel.innerHTML = '<option value="">- Kein Schüler ausgewählt -</option>';
-    [...students].sort((a,b) => a.name.localeCompare(b.name)).forEach(s => {
-        const opt = document.createElement('option');
-        opt.value = s.id;
-        opt.innerText = s.name;
-        sel.appendChild(opt);
-    });
-    sel.value = valBefore;
-}
-
-async function saveSpecialSettings() {
-    const sowId = document.getElementById('setting-student-of-week').value;
-    try {
-        const payload = { 
-            ...(currentSettings || {}),
-            studentOfWeekId: sowId
-        };
-        const response = await fetch(`${API_URL}/settings`, {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload)
-        });
-        if (response.ok) {
-            currentSettings = payload;
-            alert("Ehrungen gespeichert! 🌟");
-        }
-    } catch (err) { alert("Fehler beim Speichern."); }
 }
 
 function updateStats() {
@@ -565,7 +456,6 @@ function renderAdminList(filter = "") {
                     <span class="subtitle" style="margin-left:8px">Stempel</span>
                 </div>
                 <div class="admin-button-group" style="flex-wrap:wrap; justify-content:flex-end;">
-                    <button class="icon-btn-small" onclick="openStudentEditModal('${student.id}')" title="Bearbeiten"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg></button>
                     ${vipEligible ? `<button onclick="toggleVip('${student.id}', ${!isVip})" class="icon-btn-small" style="padding:4px 8px; font-size:0.7rem; font-weight:800; ${isVip ? 'color:gold; border-color:gold;' : 'color:var(--text-muted);'}" title="${isVip ? 'VIP entziehen' : 'VIP vergeben'}">
                         ⭐ ${isVip ? 'VIP' : 'VIP?'}
                     </button>` : ''}
@@ -704,11 +594,6 @@ async function loadSettings() {
             updateField('setting-current-projects', settings.currentProjects || "");
             updateField('setting-upcoming-projects', settings.upcomingProjects || "");
             updateField('setting-today-plan', settings.todayPlan || "");
-            
-            // Populate and set Student of the Week
-            updateStudentOfWeekSelect();
-            const sowSelect = document.getElementById('setting-student-of-week');
-            if (sowSelect) sowSelect.value = settings.studentOfWeekId || "";
         }
     } catch (err) {}
 }
@@ -726,7 +611,6 @@ async function saveSettings() {
     const groupTitle = document.getElementById('setting-group-title').value;
     const groupTarget = parseInt(document.getElementById('setting-group-target').value);
     const vipDuration = parseInt(document.getElementById('setting-vip-duration')?.value) || 3;
-    const studentOfWeekId = document.getElementById('setting-student-of-week')?.value || "";
     
     if (isNaN(target) || target <= 0) {
         alert("Bitte ein gültiges Ziel eingeben.");
@@ -763,8 +647,7 @@ async function saveSettings() {
                 ...(currentSettings?.groupReward || { current: 0, active: false, icon: "🎬" }),
                 title: groupTitle,
                 target: groupTarget
-            },
-            studentOfWeekId: studentOfWeekId
+            }
         };
 
         const response = await fetch(`${API_URL}/settings`, {
@@ -814,66 +697,4 @@ async function resetGroupReward() {
     } catch (err) {
         alert("Verbindungsfehler beim Zurücksetzen: " + err.message);
     }
-}
-// Student Edit Modal Logic
-function openStudentEditModal(id) {
-    const s = students.find(x => String(x.id) === String(id));
-    if (!s) return;
-
-    document.getElementById('edit-student-id').value = s.id;
-    document.getElementById('edit-student-name').value = s.name;
-    document.getElementById('edit-student-birthday').value = s.birthday || '';
-    
-    // Render Badge Checklist
-    const list = document.getElementById('edit-student-badges-list');
-    if (list) {
-        list.innerHTML = '';
-        BADGES.forEach(badge => {
-            const isChecked = (s.badges || []).includes(badge.id);
-            const div = document.createElement('div');
-            div.style.cssText = `background:rgba(255,255,255,0.05); padding:8px; border-radius:10px; display:flex; align-items:center; gap:10px; border:1px solid ${isChecked ? badge.color : 'transparent'};`;
-            div.innerHTML = `
-                <input type="checkbox" id="badge-check-${badge.id}" value="${badge.id}" ${isChecked ? 'checked' : ''} style="width:18px;height:18px;">
-                <label for="badge-check-${badge.id}" style="font-size:0.85rem; cursor:pointer;">${badge.icon} ${badge.name}</label>
-            `;
-            list.appendChild(div);
-        });
-    }
-
-    const modal = document.getElementById('student-edit-modal');
-    if (modal) modal.style.display = 'flex';
-}
-
-function closeStudentEditModal() {
-    const modal = document.getElementById('student-edit-modal');
-    if (modal) modal.style.display = 'none';
-}
-
-async function saveStudentEdit() {
-    const id = document.getElementById('edit-student-id').value;
-    const name = document.getElementById('edit-student-name').value;
-    const birthday = document.getElementById('edit-student-birthday').value;
-    
-    // Get checked badges
-    const badgeIds = [];
-    BADGES.forEach(b => {
-        const cb = document.getElementById(`badge-check-${b.id}`);
-        if (cb && cb.checked) {
-            badgeIds.push(b.id);
-        }
-    });
-
-    try {
-        const res = await fetch(`${API_URL}/students/${id}/patch`, {
-            method: 'PATCH',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({ name, birthday, badges: badgeIds })
-        });
-        if (res.ok) {
-            closeStudentEditModal();
-            fetchStudents();
-        } else {
-            alert("Fehler beim Speichern.");
-        }
-    } catch (err) { alert("Verbindungsfehler."); }
 }

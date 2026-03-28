@@ -790,91 +790,6 @@
             from { opacity: 0; transform: translateY(6px); }
             to { opacity: 1; transform: translateY(0); }
         }
-
-        /* Birthday Celebration */
-        .birthday-celebration {
-            position: fixed;
-            inset: 0;
-            z-index: 9999;
-            background: rgba(0,0,0,0.85);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            flex-direction: column;
-            backdrop-filter: blur(20px);
-            display: none; /* Hidden by default */
-        }
-
-        .b-celeb-content {
-            text-align: center;
-            animation: bounceIn 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-        }
-
-        @keyframes bounceIn {
-            0% { transform: scale(0.3); opacity: 0; }
-            50% { transform: scale(1.05); }
-            70% { transform: scale(0.9); }
-            100% { transform: scale(1); opacity: 1; }
-        }
-
-        .b-celeb-text {
-            font-size: 3.5rem;
-            font-weight: 900;
-            background: linear-gradient(to right, #f472b6, #fbbf24, #10b981, #3b82f6);
-            -webkit-background-clip: text;
-            background-clip: text;
-            -webkit-text-fill-color: transparent;
-            margin: 20px 0;
-        }
-
-        .card.sow-card { border-color: gold; }
-        .card.sow-card .card-title { color: gold; }
-        .sow-avatar {
-            width: 100px;
-            height: 100px;
-            border-radius: 20px;
-            background: linear-gradient(135deg, #f59e0b, #d97706);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 3.5rem;
-            margin: 0 auto 15px;
-            box-shadow: 0 0 30px rgba(245,158,11,0.4);
-            border: 3px solid rgba(255,255,255,0.2);
-        }
-        .sow-name { font-size: 1.8rem; font-weight: 900; color: white; margin-bottom: 5px; }
-        .sow-subtitle { font-size: 0.9rem; font-weight: 700; color: gold; letter-spacing: 0.1em; text-transform: uppercase; }
-
-        /* Badge Styles */
-        .badges-row {
-            display: flex;
-            gap: 4px;
-            margin-left: 5px;
-            flex-wrap: wrap;
-        }
-        .badge-mini {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            width: 22px;
-            height: 22px;
-            border-radius: 6px;
-            font-size: 0.8rem;
-            color: white;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-            border: 1px solid rgba(255,255,255,0.2);
-        }
-        .badges-row-mini {
-            display: flex;
-            gap: 2px;
-            margin-right: 5px;
-        }
-        .badges-row-mini .badge-mini {
-            width: 16px;
-            height: 16px;
-            font-size: 0.6rem;
-            border-radius: 4px;
-        }
     </style>
 </head>
 <body>
@@ -893,29 +808,14 @@
         </header>
 
         <!-- Left: All Kids -->
-        <div style="display:flex; flex-direction:column; gap:18px; flex:1;">
-            <div class="card birthday-card" style="flex:1;">
-                <div class="card-header">
-                    <div class="card-icon">🎈</div>
-                    <div class="card-title">GEBURTSTAGE</div>
-                </div>
-                <div class="card-content">
-                    <div class="scroll-band" id="scroll-band">
-                        <div class="scroll-band-inner" id="scroll-band-inner"></div>
-                    </div>
-                </div>
+        <div class="card birthday-card">
+            <div class="card-header">
+                <div class="card-icon">🎈</div>
+                <div class="card-title">GEBURTSTAGE</div>
             </div>
-
-            <!-- Schüler der Woche -->
-            <div class="card sow-card" id="sow-container" style="display:none; text-align:center; padding: 30px 20px;">
-                <div class="card-header" style="justify-content:center; margin-bottom: 20px;">
-                    <div class="card-icon" style="font-size: 3rem;">⭐</div>
-                    <div class="card-title">SCHÜLER DER WOCHE</div>
-                </div>
-                <div class="card-content">
-                    <div class="sow-avatar" id="sow-avatar">?</div>
-                    <div class="sow-name" id="sow-name">Lade...</div>
-                    <div class="sow-subtitle">Herzlichen Glückwunsch! 🎉</div>
+            <div class="card-content">
+                <div class="scroll-band" id="scroll-band">
+                    <div class="scroll-band-inner" id="scroll-band-inner"></div>
                 </div>
             </div>
         </div>
@@ -1024,16 +924,6 @@
         <div>🔄 alle 30 Sek.</div>
     </div>
 
-    <!-- Birthday Celebration Overlay -->
-    <div id="birthday-overlay" class="birthday-celebration">
-        <div class="b-celeb-content">
-            <div style="font-size: 8rem;">🎂</div>
-            <h1 class="b-celeb-text">ALLES GUTE ZUM GEBURTSTAG!</h1>
-            <div id="celeb-student-name" style="font-size: 3rem; font-weight: 900; color: white;">...</div>
-            <div style="font-size: 2rem; margin-top: 40px;">🎊 🎈 🍰 🎈 🎊</div>
-        </div>
-    </div>
-
-    <script src="display.js?v=4"></script>
+    <script src="display.js"></script>
 </body>
 </html>
