@@ -704,8 +704,7 @@ async function loadSettings() {
 
             if (settings.groupReward) {
                 updateField('setting-group-title', settings.groupReward.title || "Filmtag");
-                updateField('setting-group-target', settings.groupReward.target || 8);
-                updateField('setting-group-active', !!settings.groupReward.active, true);
+                document.getElementById('setting-group-target').value = settings.groupReward?.target || 8;
                 
                 // Static displays
                 const titleDisp = document.getElementById('group-reward-title-display');
@@ -760,7 +759,6 @@ async function saveSettings() {
     const todayPlan = document.getElementById('setting-today-plan')?.value || "";
     const groupTitle = document.getElementById('setting-group-title').value;
     const groupTarget = parseInt(document.getElementById('setting-group-target').value);
-    const groupActive = document.getElementById('setting-group-active').checked;
     const vipDuration = parseInt(document.getElementById('setting-vip-duration')?.value) || 3;
     
     if (isNaN(target) || target <= 0) {
@@ -797,8 +795,7 @@ async function saveSettings() {
             groupReward: {
                 ...(currentSettings?.groupReward || { current: 0, icon: "🎬" }),
                 title: groupTitle,
-                target: groupTarget,
-                active: groupActive
+                target: groupTarget
             }
         };
 

@@ -82,6 +82,7 @@ export default {
                 
                 if (settings.groupReward) {
                     settings.groupReward.isApproved = true;
+                    settings.groupReward.active = false; // Hide donation button after final approval
                     
                     // Trigger Celebration
                     settings.celebration = {
@@ -492,8 +493,9 @@ export default {
                         const settingsRaw = await env.DATABASE.get("settings");
                         let settings = JSON.parse(settingsRaw || "{}");
                         if (settings.groupReward) {
-                            settings.groupReward.current = (settings.groupReward.current || 0) + parseInt(threshold);
-                            settings.groupReward.active = true;
+                            settings.groupReward.current = 0; // Start collective goal at 0
+                            settings.groupReward.active = true; // Show donation button for everyone
+                            settings.groupReward.isApproved = false; // Reset approval state
                             await env.DATABASE.put("settings", JSON.stringify(settings));
                         }
                     }
