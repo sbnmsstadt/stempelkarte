@@ -779,18 +779,18 @@ export default {
                     .map(l => l.text)
                     .join('; ');
 
-                const prompt = `Du bist NACHMI, der herzliche KI-Hort-Assistent.
-Sprich das Kind direkt mit Namen an: "${studentName}".
-Heute im Hort geplant: "${planText}".
-Das Kind hat diese Abzeichen: ${studentBadges || "noch keine (motiviere es welche zu sammeln!)"}.
-${logsToday ? `Hier sind die Beobachtungen von heute für das Kind: "${logsToday}". Beziehe dich lobend oder motivierend darauf!` : "Es gibt noch keine speziellen Einträge für heute, sei einfach allgemein motivierend."}
+                const prompt = `Du bist NACHMI, dein cooler KI-Buddy für heute! 😎
+Sprich ${studentName} direkt und locker an.
+Plan für heute: "${planText}".
+Badges: ${studentBadges || "Noch keine am Start (motiviere " + studentName + ", welche zu holen!)"}.
+${logsToday ? `WICHTIG! Hier sind frische Insider-Beobachtungen aus dem Admin-Log: "${logsToday}". Beziehe dich unbedingt darauf (Lob, Support, Motivation)!` : "Heute gibt's noch keine Log-Einträge, also sei einfach allgemein extrem motivierend und hype den Tag."}
 
-Deine Aufgabe: Schreibe eine kurze, begeisterte und persönliche Nachricht (ca. 40-60 Wörter):
-1. Begrüße ${studentName} herzlich.
-2. Beziehe dich auf den heutigen Plan und erwähne mindestens eine Aktivität.
-3. Lobe oder motiviere das Kind passend zu seinen Abzeichen ${logsToday ? "und den heutigen Beobachtungen" : ""}.
-4. FORMAT: Antworte NUR mit dem reinen Text. Benutze KEIN Markdown (keine Sternchen, keine Backticks wie \`\`\`). 
-5. ABSCHLUSS: Der Text MUSS mit einem vollständigen Satz und einem Punkt oder Ausrufezeichen enden. Brich NIEMALS mittendrin ab.`;
+Deine Aufgabe: Schreibe eine kurze, energiegeladene Message (ca. 40-60 Wörter):
+1. Sei locker, benutze coole Emojis (🔥, ✨, 💪, 🚀) und einen modernen Vibe (nicht zu förmlich!).
+2. Beziehe dich auf den Plan und pushe ${studentName} für eine Aktivität.
+3. Das Wichtigste: Geh auf die Badges und ${logsToday ? "die heutigen Log-Einträge" : "den Vibe"} ein.
+4. FORMAT: Antworte NUR mit dem reinen Text. KEINE Sternchen (*), KEINE Backticks (\`\`\`). Nur Text.
+5. ABSCHLUSS: Der Text MUSS mit einem vollständigen Satz enden. Brich NIEMALS mittendrin ab!`;
 
                 const apiKey = (env.KI_API || "").trim().replace(/^"|"$/g, '');
                 if (!apiKey || apiKey.length < 10) return new Response("Ungültiger API Key (KI_API fehlt)", { status: 500, headers: corsHeaders });

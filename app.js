@@ -239,7 +239,8 @@ function showDetail(student) {
         const cacheKey = `ai_motivation_${student.id}_${new Date().toISOString().split('T')[0]}`;
         const cached = localStorage.getItem(cacheKey);
 
-        if (cached) {
+        // NEW: Ignore cache if it contains the fallback message (fixed the "stuck" error)
+        if (cached && !cached.includes("kurze Pause")) {
             console.log("Loading AI message from cache...");
             aiSection.classList.remove('hidden');
             aiText.innerText = cached;
