@@ -642,14 +642,8 @@ Deine Aufgabe: Schreibe eine begeisterte, motivierende Nachricht für die Infota
                             contents: [{ parts: [{ text: prompt }] }],
                             generationConfig: {
                                 temperature: 0.8,
-                                maxOutputTokens: 500
-                            },
-                            safetySettings: [
-                                { category: "HARM_CATEGORY_HARASSMENT", threshold: "BLOCK_NONE" },
-                                { category: "HARM_CATEGORY_HATE_SPEECH", threshold: "BLOCK_NONE" },
-                                { category: "HARM_CATEGORY_SEXUALLY_EXPLICIT", threshold: "BLOCK_NONE" },
-                                { category: "HARM_CATEGORY_DANGEROUS_CONTENT", threshold: "BLOCK_NONE" }
-                            ]
+                                maxOutputTokens: 300
+                            }
                         })
                     });
                     
@@ -659,7 +653,7 @@ Deine Aufgabe: Schreibe eine begeisterte, motivierende Nachricht für die Infota
                     }
 
                     const data = await res.json();
-                    const generatedText = data?.candidates?.[0]?.content?.parts?.[0]?.text || `KI-FEHLER (Plan war: ${planText.substring(0, 30)}...)`;
+                    const generatedText = data?.candidates?.[0]?.content?.parts?.[0]?.text || "Keine KI-Daten verfügbar (Bitte Admin-Save prüfen)";
                     
                     return new Response(JSON.stringify({ text: generatedText.trim() }), {
                         headers: { ...corsHeaders, "Content-Type": "application/json" }

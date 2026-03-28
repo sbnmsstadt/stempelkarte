@@ -796,9 +796,7 @@ async function saveSettings() {
                         if (aiRes.ok) {
                             const aiData = await aiRes.json();
                             if (aiData.text) {
-                                // DIAGNOSTIK: Zeige die Antwort der KI an
-                                alert("KI-ANALYSE ERGEBNIS:\n\n" + aiData.text);
-
+                                // Fetch latest settings again just to be safe
                                 const sRes = await fetch(`${API_URL}/settings`);
                                 if (sRes.ok) {
                                     const latestSettings = await sRes.json();
