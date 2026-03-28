@@ -190,7 +190,8 @@ export default {
             }
 
             if (path.startsWith("/api/projects/") && method === "PUT") {
-                const id = path.split("/").pop();
+                const parts = path.split("/").filter(Boolean);
+                const id = parts[parts.length - 1];
                 const updateData = await request.json();
                 const projectsRaw = await env.DATABASE.get("projects");
                 let projects = JSON.parse(projectsRaw || "[]");
@@ -207,7 +208,8 @@ export default {
             }
 
             if (path.startsWith("/api/projects/") && method === "DELETE") {
-                const id = path.split("/").pop();
+                const parts = path.split("/").filter(Boolean);
+                const id = parts[parts.length - 1];
                 const projectsRaw = await env.DATABASE.get("projects");
                 let projects = JSON.parse(projectsRaw || "[]");
 
@@ -225,7 +227,8 @@ export default {
             }
 
             if (path.startsWith("/api/students/") && method === "GET") {
-                const id = path.split("/").pop();
+                const parts = path.split("/").filter(Boolean);
+                const id = parts[parts.length - 1];
                 const studentsRaw = await env.DATABASE.get("students");
                 const students = JSON.parse(studentsRaw || "[]");
                 const student = students.find(s => String(s.id) === String(id));

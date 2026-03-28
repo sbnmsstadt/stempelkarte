@@ -156,22 +156,31 @@ function renderProjects(projects) {
 // --- Status Management & Auto-Sync ---
 
 async function updateProjectStatus(id, newStatus) {
+    if (!id) {
+        showToast("Fehler: Keine Projekt-ID gefunden.", true);
+        return;
+    }
+    
     try {
         const res = await fetch(`${API_URL}/projects/${id}`, {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ status: newStatus })
         });
-        if (!res.ok) throw new Error("Status-Update fehlgeschlagen");
         
-        showToast(`Projekt verschoben nach: ${newStatus === 'archived' ? 'Archiv' : newStatus}`);
+        if (!res.ok) {
+            const errBody = await res.text();
+            throw new Error(`Server-Fehler (${res.status}): ${errBody}`);
+        }
+        
+        showToast(`Verschoben nach: ${newStatus === 'current' ? 'Aktiv' : (newStatus === 'upcoming' ? 'Geplant' : 'Archiv')}... sync läuft...`);
         
         // After status change, sync the board!
         await syncBoardFromProjects();
         await loadProjects(); 
     } catch (err) {
-        console.error(err);
-        showToast("Update fehlgeschlagen.", true);
+        console.error("Status Update Error:", err);
+        alert("Status-Update fehlgeschlagen: " + err.message);
     }
 }
 
