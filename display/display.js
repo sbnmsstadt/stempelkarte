@@ -450,7 +450,7 @@ function renderTicker() {
             <span>${it.reason}</span>
         </div>`).join('');
 
-    const duration = `${Math.max(6, display.length * 0.85)}s`;
+    const duration = `${Math.max(4, display.length * 0.34)}s`;
     smoothUpdate(scroll, html, { animDuration: duration, scrolling: true });
 }
 
