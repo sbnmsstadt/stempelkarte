@@ -621,6 +621,18 @@ export default {
 
             if (path === "/api/ai/day-summary" && method === "GET") {
                 const date = url.searchParams.get("date") || new Date().toISOString().split('T')[0];
+                const force = url.searchParams.get("force") === "true";
+                
+                // Check for archived summary unless force is true
+                if (!force) {
+                    const archived = await env.DATABASE.get(`archived_summary_${date}`);
+                    if (archived) {
+                        return new Response(JSON.stringify({ text: archived, isArchived: true }), {
+                            headers: { ...corsHeaders, "Content-Type": "application/json" }
+                        });
+                    }
+                }
+
                 const studentsRaw = await env.DATABASE.get("students");
                 const students = JSON.parse(studentsRaw || "[]");
 
@@ -666,6 +678,15 @@ export default {
                     });
                 }
             }
+            
+            if (path === "/api/ai/day-summary/archive" && method === "POST") {
+                const body = await request.json();
+                if (!body.date || !body.text) return new Response("Missing date or text", { status: 400, headers: corsHeaders });
+                await env.DATABASE.put(`archived_summary_${body.date}`, body.text);
+                return new Response(JSON.stringify({ success: true }), {
+                    headers: { ...corsHeaders, "Content-Type": "application/json" }
+                });
+            }
 
             // --- PERSONAL AI Motivation Endpoint (NEW) ---
             if (path === "/api/ai/student-motivation" && method === "GET") {
@@ -694,15 +715,22 @@ export default {
                     return b ? b.name : '';
                 }).filter(Boolean).join(', ');
 
+                const todayStr = new Date().toISOString().split('T')[0];
+                const logsToday = (student.pedagogical_logs || [])
+                    .filter(l => l.date === todayStr)
+                    .map(l => l.text)
+                    .join('; ');
+
                 const prompt = `Du bist NACHMI, der herzliche KI-Hort-Assistent.
 Sprich das Kind direkt mit Namen an: "${studentName}".
 Heute im Hort geplant: "${planText}".
 Das Kind hat diese Abzeichen: ${studentBadges || "noch keine (motiviere es welche zu sammeln!)"}.
+${logsToday ? `Hier sind die Beobachtungen von heute für das Kind: "${logsToday}". Beziehe dich lobend oder motivierend darauf!` : "Es gibt noch keine speziellen Einträge für heute, sei einfach allgemein motivierend."}
 
 Deine Aufgabe: Schreibe eine kurze, begeisterte und persönliche Nachricht (ca. 40-60 Wörter):
 1. Begrüße ${studentName} herzlich.
 2. Beziehe dich auf den heutigen Plan und erwähne mindestens eine Aktivität.
-3. Lobe oder motiviere das Kind passend zu seinen Abzeichen.
+3. Lobe oder motiviere das Kind passend zu seinen Abzeichen ${logsToday ? "und den heutigen Beobachtungen" : ""}.
 4. Sei extrem positiv, benutze Emojis und beende UNBEDINGT jeden Satz vollständig! Brich niemals mittendrin ab.`;
 
                 const apiKey = (env.KREATIV_API || "").trim().replace(/^"|"$/g, '');

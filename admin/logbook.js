@@ -53,6 +53,11 @@ const Logbook = {
                     </div>
                 </div>
                 <button onclick="Logbook.closeSummary()" class="log-save-btn" style="width:100%; margin-top:1.5rem; background:rgba(255,255,255,0.1);">Schließen</button>
+                <button id="archive-summary-btn" onclick="Logbook.archiveSummary()" class="log-save-btn hidden" style="width:100%; margin-top:0.8rem; background:var(--success);">✅ Dieses Archiv speichern</button>
+                <button id="regenerate-summary-btn" onclick="Logbook.generateAISummary(true)" class="log-save-btn hidden" style="width:100%; margin-top:0.8rem; background:rgba(139, 92, 246, 0.4);">🔄 Neu generieren</button>
+                <div id="archived-notice" class="hidden" style="margin-top:1rem; text-align:center; font-size:0.8rem; color:var(--success); font-weight:700;">
+                    ✓ Dieser Bericht ist archiviert
+                </div>
             </div>
 
             <!-- History Modal -->
@@ -183,9 +188,15 @@ const Logbook = {
         }
     },
 
-    async generateAISummary() {
+    async generateAISummary(force = false) {
         const modal = document.getElementById('summary-overlay');
         const content = document.getElementById('summary-content');
+        
+        // Reset buttons
+        document.getElementById('archive-summary-btn')?.classList.add('hidden');
+        document.getElementById('regenerate-summary-btn')?.classList.add('hidden');
+        document.getElementById('archived-notice')?.classList.add('hidden');
+
         modal.classList.remove('hidden');
         content.innerHTML = `
             <div style="text-align:center; padding:2rem;">
@@ -196,7 +207,7 @@ const Logbook = {
         `;
 
         try {
-            const response = await fetch(`${API_URL}/ai/day-summary?date=${this.currentDate}`);
+            const response = await fetch(`${API_URL}/ai/day-summary?date=${this.currentDate}${force ? '&force=true' : ''}`);
             let data;
             
             const contentType = response.headers.get("content-type");
@@ -208,11 +219,58 @@ const Logbook = {
             
             if (response.ok) {
                 content.innerHTML = data.text;
+                
+                const archiveBtn = document.getElementById('archive-summary-btn');
+                const regenBtn = document.getElementById('regenerate-summary-btn');
+                const notice = document.getElementById('archived-notice');
+                
+                if (data.isArchived) {
+                    archiveBtn?.classList.add('hidden');
+                    regenBtn?.classList.remove('hidden');
+                    notice?.classList.remove('hidden');
+                } else {
+                    archiveBtn?.classList.remove('hidden');
+                    regenBtn?.classList.add('hidden');
+                    notice?.classList.add('hidden');
+                }
             } else {
                 content.innerHTML = `<p style='color:#ff6b6b'><b>Fehler bei der KI-Generierung:</b><br>${data.text || response.statusText}</p>`;
             }
         } catch (err) {
             content.innerHTML = `<p style='color:#ff6b6b'>Verbindungsfehler zur KI: ${err.message}</p>`;
+        }
+    },
+
+    async archiveSummary() {
+        const content = document.getElementById('summary-content').innerHTML;
+        const btn = document.getElementById('archive-summary-btn');
+        const notice = document.getElementById('archived-notice');
+
+        btn.disabled = true;
+        btn.innerText = "Speichere...";
+
+        try {
+            const res = await fetch(`${API_URL}/ai/day-summary/archive`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    date: this.currentDate,
+                    text: content
+                })
+            });
+
+            if (res.ok) {
+                btn.classList.add('hidden');
+                notice.classList.remove('hidden');
+            } else {
+                alert("Fehler beim Archivieren.");
+                btn.disabled = false;
+                btn.innerText = "✅ Dieses Archiv speichern";
+            }
+        } catch (err) {
+            alert("Verbindungsfehler.");
+            btn.disabled = false;
+            btn.innerText = "✅ Dieses Archiv speichern";
         }
     },
 
