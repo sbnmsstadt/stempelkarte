@@ -634,7 +634,7 @@ export default {
                 }
 
                 try {
-                    const apiKey = (env.KREATIV_API || env.KI_API || "").trim().replace(/^"|"$/g, '');
+                    const apiKey = (env.KI_API || "").trim().replace(/^"|"$/g, '');
                     const result = await callGemini(promptText, apiKey, { temperature: 0.7 });
                     
                     if (result.success) {
@@ -691,8 +691,8 @@ export default {
 
                 const prompt = `Du bist NACHMI, ein erfahrener pädagogischer Assistent. \nHier sind die Beobachtungen für den Tag (${date}):\n${logsText}\n\nErstelle daraus eine strukturierte Zusammenfassung (ca. 100-150 Wörter).\n1. Was war heute besonders positiv?\n2. Welche Herausforderungen gab es?\n3. Ein kurzes Fazit für das Team.\n\nSchreibe professionell, aber herzlich auf Deutsch. Benutze Emojis.`;
 
-                const apiKey = (env.KREATIV_API || env.KI_API || "").trim().replace(/^"|"$/g, '');
-                if (!apiKey || apiKey.length < 10) return new Response("Ungültiger API Key (KREATIV_API oder KI_API fehlt)", { status: 500, headers: corsHeaders });
+                const apiKey = (env.KI_API || "").trim().replace(/^"|"$/g, '');
+                if (!apiKey || apiKey.length < 10) return new Response("Ungültiger API Key (KI_API fehlt)", { status: 500, headers: corsHeaders });
 
                 const result = await callGemini(prompt, apiKey, { temperature: 0.7, maxTokens: 2000 });
                 
@@ -792,8 +792,8 @@ Deine Aufgabe: Schreibe eine kurze, begeisterte und persönliche Nachricht (ca. 
 4. FORMAT: Antworte NUR mit dem reinen Text. Benutze KEIN Markdown (keine Sternchen, keine Backticks wie \`\`\`). 
 5. ABSCHLUSS: Der Text MUSS mit einem vollständigen Satz und einem Punkt oder Ausrufezeichen enden. Brich NIEMALS mittendrin ab.`;
 
-                const apiKey = (env.KREATIV_API || env.KI_API || "").trim().replace(/^"|"$/g, '');
-                if (!apiKey || apiKey.length < 10) return new Response("Ungültiger API Key (KREATIV_API oder KI_API fehlt)", { status: 500, headers: corsHeaders });
+                const apiKey = (env.KI_API || "").trim().replace(/^"|"$/g, '');
+                if (!apiKey || apiKey.length < 10) return new Response("Ungültiger API Key (KI_API fehlt)", { status: 500, headers: corsHeaders });
 
                 const result = await callGemini(prompt, apiKey, { temperature: 0.8, maxTokens: 1500 });
 
@@ -842,9 +842,9 @@ Deine Aufgabe: Schreibe eine ausführliche, begeisterte Nachricht für die Infot
 3. Schreibe MINDESTENS 4-5 Sätze. 
 4. Sei extrem herzlich, benutze viele Emojis und stelle sicher, dass jeder Satz grammatikalisch vollständig beendet wird. Brich niemals mitten im Satz ab!`;
 
-                const apiKey = (env.KREATIV_API || env.KI_API || "").trim().replace(/^"|"$/g, '');
+                const apiKey = (env.KI_API || "").trim().replace(/^"|"$/g, '');
                 if (!apiKey || apiKey === "undefined" || apiKey.length < 10) {
-                    return new Response("FEHLER: Cloudflare Secret 'KREATIV_API' oder 'KI_API' fehlt! Bitte in der Cloudflare-Konsole unter 'Settings -> Variables -> Secrets' eintragen.", { 
+                    return new Response("FEHLER: Cloudflare Secret 'KI_API' fehlt! Bitte in der Cloudflare-Konsole unter 'Settings -> Variables -> Secrets' eintragen.", { 
                         status: 401, 
                         headers: corsHeaders 
                     });
@@ -866,8 +866,8 @@ Deine Aufgabe: Schreibe eine ausführliche, begeisterte Nachricht für die Infot
 
             // --- AI Model Discovery Endpoint ---
             if (path === "/api/ai/models" && method === "GET") {
-                const apiKey = (env.KREATIV_API || env.KI_API || "").trim().replace(/^"|"$/g, '');
-                if (!apiKey) return new Response("Secret KREATIV_API or KI_API not found", { status: 401, headers: corsHeaders });
+                const apiKey = (env.KI_API || "").trim().replace(/^"|"$/g, '');
+                if (!apiKey) return new Response("Secret KI_API not found", { status: 401, headers: corsHeaders });
                 try {
                     const url = `https://generativelanguage.googleapis.com/v1beta/models?key=${apiKey}`;
                     const res = await fetch(url);
@@ -986,7 +986,7 @@ Deine Aufgabe: Schreibe eine ausführliche, begeisterte Nachricht für die Infot
             // --- 4. Generate AI summary or send static message ---
             if (events.length > 0) {
                 let message;
-                const apiKey = (env.KI_API || env.KREATIV_API || "").trim().replace(/^"|"$/g, '');
+                const apiKey = (env.KI_API || "").trim().replace(/^"|"$/g, '');
                 if (apiKey) {
                     message = await getAISummary(events, apiKey);
                 } else {
@@ -1030,7 +1030,7 @@ Schreibe die Zusammenfassung jetzt:`;
  */
 async function callGemini(prompt, apiKey, options = {}) {
     if (!apiKey || apiKey.length < 5) {
-        return { success: false, error: "API Key fehlt oder ist ungültig. Bitte prüfe deine Cloudflare Secrets (KREATIV_API oder KI_API)." };
+        return { success: false, error: "API Key fehlt oder ist ungültig. Bitte prüfe dein Cloudflare Secret (KI_API)." };
     }
 
     const apiVersions = ['v1beta', 'v1'];
