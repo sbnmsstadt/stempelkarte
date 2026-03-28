@@ -34,23 +34,33 @@
             </button>
         </header>
 
-        <!-- Stats Overview -->
-        <div class="stats-row">
-            <div class="stat-card">
-                <span class="stat-label">Schüler Gesamt</span>
-                <span id="stat-total-students" class="stat-value">--</span>
+        <!-- Top Navigation Row -->
+        <div class="top-nav-row">
+            <!-- AI Content Lab -->
+            <div class="nav-card lab" onclick="window.location.href='../kreativ.html'">
+                <div class="nav-icon">✨</div>
+                <div class="nav-info">
+                    <h3>AI Content Lab</h3>
+                    <p>Ideen generieren</p>
+                </div>
             </div>
-            <div class="stat-card" style="border-color: var(--accent);">
-                <span class="stat-label">Offene Anfragen</span>
-                <span id="stat-pending-redemptions" class="stat-value">--</span>
+
+            <!-- Content Kalender -->
+            <div class="nav-card planer" onclick="window.location.href='../planer.html'">
+                <div class="nav-icon">📅</div>
+                <div class="nav-info">
+                    <h3>Content-Kalender</h3>
+                    <p>Projekte planen</p>
+                </div>
             </div>
-            <div class="stat-card" style="border-color: var(--success);">
-                <span class="stat-label">Stempel vergeben</span>
-                <span id="stat-total-stamps" class="stat-value">--</span>
-            </div>
-            <div class="stat-card">
-                <span class="stat-label">Belohnungen</span>
-                <span id="stat-total-rewards" class="stat-value">--</span>
+
+            <!-- Logbuch Link -->
+            <div class="nav-card logbook" id="nav-logbook-btn">
+                <div class="nav-icon">📖</div>
+                <div class="nav-info">
+                    <h3>Pädagogisches Logbuch</h3>
+                    <p>Berichte & Dokumentation</p>
+                </div>
             </div>
         </div>
 
@@ -58,22 +68,24 @@
             <!-- Sidebar: Management Actions -->
             <aside class="management-sidebar">
                 
-                <!-- AI Content Lab -->
-                <div class="glass-card" style="border-color: #f59e0b; background: linear-gradient(145deg, rgba(245,158,11,0.1) 0%, rgba(20,20,20,0.8) 100%); cursor: pointer; transition: transform 0.2s;" onclick="window.location.href='../kreativ.html'" onmouseover="this.style.transform='scale(1.02)'" onmouseout="this.style.transform='scale(1)'">
-                    <h3 style="color: #f59e0b;">✨ AI Content Lab</h3>
-                    <p style="font-size: 0.8rem; color: var(--text-muted); margin-top: 5px;">Ideen für die Nachmittagsbetreuung generieren.</p>
-                </div>
-
-                <!-- Content Kalender -->
-                <div class="glass-card" style="border-color: #38bdf8; background: linear-gradient(145deg, rgba(56,189,248,0.1) 0%, rgba(20,20,20,0.8) 100%); cursor: pointer; transition: transform 0.2s; margin-top: 15px;" onclick="window.location.href='../planer.html'" onmouseover="this.style.transform='scale(1.02)'" onmouseout="this.style.transform='scale(1)'">
-                    <h3 style="color: #38bdf8;">📅 Content-Kalender</h3>
-                    <p style="font-size: 0.8rem; color: var(--text-muted); margin-top: 5px;">Gespeicherte Projekte verwalten und planen.</p>
-                </div>
-
-                <!-- Logbuch Link -->
-                <div class="glass-card" style="border-color: #22c55e; background: linear-gradient(145deg, rgba(34,197,94,0.1) 0%, rgba(20,20,20,0.8) 100%); cursor: pointer; transition: transform 0.2s; margin-top: 15px;" id="nav-logbook-btn" onmouseover="this.style.transform='scale(1.02)'" onmouseout="this.style.transform='scale(1)'">
-                    <h3 style="color: #22c55e;">📖 Pädagogisches Logbuch</h3>
-                    <p style="font-size: 0.8rem; color: var(--text-muted); margin-top: 5px;">Beobachtungen dokumentieren und KI-Berichte erstellen.</p>
+                <!-- Compact Stats Card -->
+                <div class="glass-card compact-stats-card">
+                    <div class="compact-stat-item">
+                        <span class="c-stat-label">Schüler</span>
+                        <span id="stat-total-students" class="c-stat-value">--</span>
+                    </div>
+                    <div class="compact-stat-item highlight">
+                        <span class="c-stat-label">Offen</span>
+                        <span id="stat-pending-redemptions" class="c-stat-value">--</span>
+                    </div>
+                    <div class="compact-stat-item">
+                        <span class="c-stat-label">Stempel</span>
+                        <span id="stat-total-stamps" class="c-stat-value">--</span>
+                    </div>
+                    <div class="compact-stat-item">
+                        <span class="c-stat-label">Rewards</span>
+                        <span id="stat-total-rewards" class="c-stat-value">--</span>
+                    </div>
                 </div>
 
                 <!-- Quick Add -->

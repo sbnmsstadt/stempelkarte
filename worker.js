@@ -650,7 +650,7 @@ export default {
                 const apiKey = (env.KREATIV_API || "").trim().replace(/^"|"$/g, '');
                 if (!apiKey || apiKey.length < 10) return new Response("Ungültiger API Key", { status: 500, headers: corsHeaders });
 
-                const result = await callGemini(prompt, apiKey, { temperature: 0.7, maxTokens: 1000 });
+                const result = await callGemini(prompt, apiKey, { temperature: 0.7, maxTokens: 2000 });
                 
                 if (result.success) {
                     return new Response(JSON.stringify({ text: result.text, model: result.model }), {
@@ -983,7 +983,7 @@ async function callGemini(prompt, apiKey, options = {}) {
                         contents: [{ parts: [{ text: prompt }] }],
                         generationConfig: {
                             temperature: options.temperature || 0.7,
-                            maxOutputTokens: options.maxTokens || 1000
+                            maxOutputTokens: options.maxTokens || 2000
                         }
                     })
                 });
