@@ -667,9 +667,11 @@ export default {
                 const combos = [
                     { ver: 'v1beta', m: 'gemini-1.5-flash' },
                     { ver: 'v1', m: 'gemini-1.5-flash' },
-                    { ver: 'v1beta', m: 'gemini-pro' }
+                    { ver: 'v1beta', m: 'gemini-1.5-pro' },
+                    { ver: 'v1', m: 'gemini-1.5-pro' },
+                    { ver: 'v1beta', m: 'gemini-1.5-flash-8b' }
                 ];
-                let lastError = "";
+                let errors = [];
 
                 for (const c of combos) {
                     try {
@@ -687,18 +689,27 @@ export default {
                             const data = await res.json();
                             const text = data?.candidates?.[0]?.content?.parts?.[0]?.text;
                             if (text) {
-                                return new Response(JSON.stringify({ text: text.trim() }), {
+                                return new Response(JSON.stringify({ text: text.trim(), model: `${c.ver}/${c.m}` }), {
                                     headers: { ...corsHeaders, "Content-Type": "application/json" }
                                 });
                             }
                         }
-                        lastError = `[${c.ver}/${c.m}] ${await res.text()}`;
+                        const errTxt = await res.text();
+                        errors.push(`[${c.ver}/${c.m}] ${res.status}: ${errTxt.substring(0, 100)}`);
                     } catch (e) {
-                        lastError = `[${c.ver}/${c.m}] Fetch Error: ${e.message}`;
+                        errors.push(`[${c.ver}/${c.m}] Fetch Error: ${e.message}`);
                     }
                 }
 
-                return new Response(`KI-Fehler (Alle Kombinationen fehlgeschlagen): ${lastError.substring(0, 300)}`, { status: 500, headers: corsHeaders });
+                const errorSummary = `KI-Fehler (Alle Kombinationen fehlgeschlagen):\n${errors.join('\n')}`;
+                return new Response(JSON.stringify({ 
+                    text: errorSummary,
+                    error: "Alle KI-Kombinationen fehlgeschlagen", 
+                    details: errors 
+                }), { 
+                    status: 500, 
+                    headers: { ...corsHeaders, "Content-Type": "application/json" } 
+                });
             }
 
             // --- PERSONAL AI Motivation Endpoint (NEW) ---
@@ -745,8 +756,11 @@ Deine Aufgabe: Schreibe eine kurze, begeisterte und persönliche Nachricht (ca. 
                 const combos = [
                     { ver: 'v1beta', m: 'gemini-1.5-flash' },
                     { ver: 'v1', m: 'gemini-1.5-flash' },
-                    { ver: 'v1beta', m: 'gemini-pro' }
+                    { ver: 'v1beta', m: 'gemini-1.5-pro' },
+                    { ver: 'v1', m: 'gemini-1.5-pro' },
+                    { ver: 'v1beta', m: 'gemini-1.5-flash-8b' }
                 ];
+                let errors = [];
 
                 for (const c of combos) {
                     try {
@@ -763,14 +777,26 @@ Deine Aufgabe: Schreibe eine kurze, begeisterte und persönliche Nachricht (ca. 
                             const data = await modelRes.json();
                             const text = data?.candidates?.[0]?.content?.parts?.[0]?.text;
                             if (text) {
-                                return new Response(JSON.stringify({ text: text.trim() }), {
+                                return new Response(JSON.stringify({ text: text.trim(), model: `${c.ver}/${c.m}` }), {
                                     headers: { ...corsHeaders, "Content-Type": "application/json" }
                                 });
                             }
                         }
-                    } catch (e) {}
+                        const errTxt = await modelRes.text();
+                        errors.push(`[${c.ver}/${c.m}] ${modelRes.status}: ${errTxt.substring(0, 100)}`);
+                    } catch (e) {
+                        errors.push(`[${c.ver}/${c.m}] Fetch Error: ${e.message}`);
+                    }
                 }
-                return new Response("AI Motivation fehlgeschlagen (Alle Modelle).", { status: 500, headers: corsHeaders });
+                const errorSummary = `Motivation fehlgeschlagen (Alle Modelle):\n${errors.join('\n')}`;
+                return new Response(JSON.stringify({ 
+                    text: errorSummary,
+                    error: "Motivation fehlgeschlagen (Alle Modelle)", 
+                    details: errors 
+                }), { 
+                    status: 500, 
+                    headers: { ...corsHeaders, "Content-Type": "application/json" }
+                });
             }
 
             // --- AI Generation Endpoint (Tagesplan Motivation - Legacy/Global) ---
@@ -1028,7 +1054,7 @@ ${eventsText}
 Schreibe die Zusammenfassung jetzt:`;
 
     try {
-        const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${apiKey}`, {
+        const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
