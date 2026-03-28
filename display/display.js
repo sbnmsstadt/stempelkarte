@@ -207,7 +207,7 @@ function renderBadgeGalerie() {
     ];
 
     // Combine with a static tip item
-    const galleryItems = [...sourceBadges, { emoji: "🏅", name: "Abzeichen-Tipp", desc: "Zeig dich positiv und hol dir coole Badges!" }];
+    const galleryItems = [...sourceBadges, { emoji: "💡", name: "Pro-Tipp", desc: "Hilf anderen und sammle EHRE!" }];
 
     // Pick next item
     const item = galleryItems[badgeIndex % galleryItems.length];
@@ -221,7 +221,7 @@ function renderBadgeGalerie() {
         setTimeout(() => {
             iconEl.textContent = item.emoji || item.icon;
             nameEl.textContent = item.name;
-            descEl.textContent = item.desc || "Hol dir dein Abzeichen!";
+            descEl.textContent = item.desc || "-";
             parent.style.opacity = '1';
         }, 600);
     }

@@ -1006,6 +1006,11 @@
             50% { transform: translateY(-10px) scale(1.1) rotate(5deg); filter: drop-shadow(0 0 25px rgba(139, 92, 246, 0.8)); }
         }
 
+        @keyframes badgeGlow {
+            0% { box-shadow: 0 0 5px rgba(139, 92, 246, 0.2); transform: scale(1); }
+            100% { box-shadow: 0 0 20px rgba(139, 92, 246, 0.6); transform: scale(1.05); }
+        }
+
         .celebration-title { font-size: 5rem; font-weight: 900; background: linear-gradient(to right, #fff, #60a5fa); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; margin: 0; line-height: 1.1; }
         .celebration-text { font-size: 2.5rem; color: rgba(255,255,255,0.9); margin-top: 20px; font-weight: 700; }
     </style>
@@ -1055,15 +1060,21 @@
 
             <!-- NEU: Abzeichen-Galerie (Motivation) -->
             <div class="card badge-galerie-card" id="badge-galerie-card" style="border-color: rgba(139, 92, 246, 0.3); background: rgba(139, 92, 246, 0.03); flex: 0 0 auto; padding: 12px 18px;">
-                <div class="card-header" style="padding-bottom: 8px; border-bottom: 1px solid rgba(139, 92, 246, 0.1);">
-                    <div class="card-icon" style="font-size: 1.2rem;">🏅</div>
-                    <div class="card-title" style="color: #a78bfa; font-size: 0.9rem;">ABZEICHEN-POWER</div>
+                <div class="card-header" style="padding-bottom: 8px; border-bottom: 1px solid rgba(139, 92, 246, 0.1); margin-bottom: 5px;">
+                    <div class="card-icon" style="font-size: 1.1rem;">🏅</div>
+                    <div class="card-title" style="color: #a78bfa; font-size: 0.85rem;">ABZEICHEN-POWER</div>
                 </div>
-                <div class="card-content" id="badge-galerie-content" style="display: flex; flex-direction: row; align-items: center; justify-content: flex-start; text-align: left; gap: 15px; padding: 10px 0;">
-                    <div id="badge-display-icon" style="font-size: 2.2rem; filter: drop-shadow(0 0 10px rgba(139, 92, 246, 0.4)); animation: badgeFloat 3s ease-in-out infinite; flex-shrink: 0; width: 50px; text-align: center;">✨</div>
-                    <div style="display: flex; flex-direction: column; gap: 5px; flex: 1; min-width: 0;">
-                        <div id="badge-display-name" style="font-size: 1.15rem; font-weight: 900; color: white; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Lade...</div>
-                        <div id="badge-display-desc" style="font-size: 0.8rem; font-weight: 600; color: #a78bfa; font-style: italic; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Hol dir dein Abzeichen!</div>
+                <div class="card-content" id="badge-galerie-content" style="display: flex; flex-direction: row; align-items: center; justify-content: space-between; text-align: left; gap: 15px; padding: 5px 0;">
+                    <div style="display: flex; align-items: center; gap: 15px; flex: 1; min-width: 0;">
+                        <div id="badge-display-icon" style="font-size: 2.2rem; filter: drop-shadow(0 0 10px rgba(139, 92, 246, 0.4)); animation: badgeFloat 3s ease-in-out infinite; flex-shrink: 0; width: 50px; text-align: center;">✨</div>
+                        <div style="display: flex; flex-direction: column; gap: 2px; min-width: 0;">
+                            <div id="badge-display-name" style="font-size: 1.1rem; font-weight: 900; color: white; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Lade...</div>
+                            <div id="badge-display-desc" style="font-size: 0.78rem; font-weight: 600; color: #a78bfa; font-style: italic; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">-</div>
+                        </div>
+                    </div>
+                    <!-- NEU: Glühender Call-to-Action -->
+                    <div style="flex-shrink: 0; background: rgba(139, 92, 246, 0.15); border: 1px solid rgba(139, 92, 246, 0.4); padding: 5px 10px; border-radius: 20px; box-shadow: 0 0 15px rgba(139, 92, 246, 0.3); animation: badgeGlow 2s ease-in-out infinite alternate;">
+                        <div style="font-size: 0.65rem; font-weight: 900; color: white; text-transform: uppercase; letter-spacing: 0.05em; line-height: 1.1; text-align: center;">Hol dir dein<br>Abzeichen!</div>
                     </div>
                 </div>
             </div>
