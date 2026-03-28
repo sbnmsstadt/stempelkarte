@@ -237,7 +237,7 @@ function showDetail(student) {
     const aiText = document.getElementById('ai-motivation-student');
     if (aiSection && aiText) {
         const cacheKey = `ai_motivation_${student.id}_${new Date().toISOString().split('T')[0]}`;
-        const cached = sessionStorage.getItem(cacheKey);
+        const cached = localStorage.getItem(cacheKey);
 
         if (cached) {
             console.log("Loading AI message from cache...");
@@ -258,7 +258,7 @@ function showDetail(student) {
                     if (data.text) {
                         console.log("AI message received!");
                         aiText.innerText = data.text;
-                        sessionStorage.setItem(cacheKey, data.text);
+                        localStorage.setItem(cacheKey, data.text);
                     } else {
                         throw new Error("No text in AI response");
                     }

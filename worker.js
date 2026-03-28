@@ -782,10 +782,8 @@ Deine Aufgabe: Schreibe eine kurze, begeisterte und persönliche Nachricht (ca. 
                     });
                 } else {
                     return new Response(JSON.stringify({ 
-                        text: `Motivation fehlgeschlagen: ${result.error}`, 
-                        details: result.details 
+                        text: "NACHMI macht gerade eine kurze Pause. ✨ Sammle weiter Stempel!" 
                     }), { 
-                        status: 500, 
                         headers: { ...corsHeaders, "Content-Type": "application/json" }
                     });
                 }
@@ -1019,8 +1017,9 @@ async function callGemini(prompt, apiKey, options = {}) {
             const data = await listRes.json();
             const models = data.models || [];
             
-            // Preference: flash 1.5 -> flash newest -> pro 1.5 -> pro newest -> anything else
-            const best = models.find(m => m.name.includes("gemini-1.5-flash") && m.supportedGenerationMethods.includes("generateContent")) ||
+            // Preference: flash 1.5 (8B) -> flash 1.5 -> flash newest -> pro 1.5 -> pro newest -> anything else
+            const best = models.find(m => m.name.includes("gemini-1.5-flash-8b") && m.supportedGenerationMethods.includes("generateContent")) ||
+                         models.find(m => m.name.includes("gemini-1.5-flash") && m.supportedGenerationMethods.includes("generateContent")) ||
                          models.find(m => m.name.includes("flash") && m.supportedGenerationMethods.includes("generateContent")) ||
                          models.find(m => m.name.includes("pro") && m.supportedGenerationMethods.includes("generateContent")) ||
                          models.find(m => m.supportedGenerationMethods.includes("generateContent"));
@@ -1035,9 +1034,18 @@ async function callGemini(prompt, apiKey, options = {}) {
         errors.push(`Discovery Fetch Error: ${e.message}`);
     }
 
-    // Step 2: Try discovered model or hardcoded fallback list
-    const candidates = discoveredModel ? [discoveredModel] : ["models/gemini-1.5-flash", "models/gemini-1.5-pro", "models/gemini-pro"];
+    // Step 2: Candidates - ONLY use stable models for now to avoid experimental quota issues
+    const candidates = [
+        "models/gemini-1.5-flash-8b", 
+        "models/gemini-1.5-flash", 
+        "models/gemini-1.5-pro"
+    ];
     
+    // If discovery found one of these, put it first, otherwise ignore discovery to be safe
+    if (discoveredModel && candidates.includes(discoveredModel)) {
+        candidates.unshift(candidates.splice(candidates.indexOf(discoveredModel), 1)[0]);
+    }
+
     for (const ver of apiVersions) {
         for (const modelName of candidates) {
             try {
@@ -1050,13 +1058,7 @@ async function callGemini(prompt, apiKey, options = {}) {
                         generationConfig: {
                             temperature: options.temperature || 0.7,
                             maxOutputTokens: options.maxTokens || 2000
-                        },
-                        safetySettings: [
-                            { category: "HARM_CATEGORY_HARASSMENT", threshold: "BLOCK_NONE" },
-                            { category: "HARM_CATEGORY_HATE_SPEECH", threshold: "BLOCK_NONE" },
-                            { category: "HARM_CATEGORY_SEXUALLY_EXPLICIT", threshold: "BLOCK_NONE" },
-                            { category: "HARM_CATEGORY_DANGEROUS_CONTENT", threshold: "BLOCK_NONE" }
-                        ]
+                        }
                     })
                 });
 
@@ -1065,8 +1067,14 @@ async function callGemini(prompt, apiKey, options = {}) {
                     const text = data?.candidates?.[0]?.content?.parts?.[0]?.text;
                     if (text) return { success: true, text: text.trim(), model: `${ver}/${modelName}` };
                 }
+                
                 const errTxt = await res.text();
-                errors.push(`[${ver}/${modelName}] ${res.status}: ${errTxt.substring(0, 150)}`);
+                errors.push(`[${ver}/${modelName}] ${res.status}: ${errTxt.substring(0, 100)}`);
+                
+                // If Rate Limited, wait 1s before trying NEXT model to let quota recover
+                if (res.status === 429) {
+                    await new Promise(r => setTimeout(r, 1000));
+                }
             } catch (e) {
                 errors.push(`[${ver}/${modelName}] Error: ${e.message}`);
             }
