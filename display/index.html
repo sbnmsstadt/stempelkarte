@@ -966,14 +966,43 @@
             0% { transform: scale(0.6); opacity: 0; }
             100% { transform: scale(1.0); opacity: 1; }
         }
-        .celebration-icon { font-size: 10rem; margin-bottom: 30px; animation: celebrationBounce 2s ease-in-out infinite; }
+        .celebration-icon { 
+            position: relative;
+            height: 12rem; 
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 30px; 
+        }
+        .icon-clapper, .icon-popcorn {
+            font-size: 10rem;
+            position: absolute;
+            filter: drop-shadow(0 10px 30px rgba(0,0,0,0.5));
+        }
+        .icon-clapper {
+            left: calc(50% - 100px);
+            z-index: 2;
+            animation: clapperBounce 2.5s ease-in-out infinite;
+        }
+        .icon-popcorn {
+            left: calc(50% + 10px);
+            top: 20px;
+            z-index: 1;
+            animation: popcornBounce 2.5s ease-in-out infinite;
+            animation-delay: 0.3s;
+        }
+
+        @keyframes clapperBounce {
+            0%, 100% { transform: rotate(-15deg) translateY(0); }
+            50% { transform: rotate(-10deg) translateY(-40px); }
+        }
+        @keyframes popcornBounce {
+            0%, 100% { transform: rotate(15deg) translateY(0); }
+            50% { transform: rotate(20deg) translateY(-35px); }
+        }
+
         .celebration-title { font-size: 5rem; font-weight: 900; background: linear-gradient(to right, #fff, #60a5fa); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; margin: 0; line-height: 1.1; }
         .celebration-text { font-size: 2.5rem; color: rgba(255,255,255,0.9); margin-top: 20px; font-weight: 700; }
-        
-        @keyframes celebrationBounce {
-            0%, 100% { transform: translateY(0) scale(1); }
-            50% { transform: translateY(-40px) scale(1.1); }
-        }
     </style>
 </head>
 <body>
@@ -1127,7 +1156,10 @@
     <!-- Celebration Overlay (Filmtag) -->
     <div id="celebration-overlay" class="celebration-overlay">
         <div class="celebration-card">
-            <div class="celebration-icon">🎬</div>
+            <div class="celebration-icon">
+                <span class="icon-clapper">🎬</span>
+                <span class="icon-popcorn">🍿</span>
+            </div>
             <h2 class="celebration-title">ZIEL ERREICHT!</h2>
             <p class="celebration-text">GÖNNUNG PUR! Der Filmtag ist gesichert! 🎉🍿✨🎬</p>
         </div>
