@@ -981,7 +981,7 @@ function confirmActivity() {
     const custom = document.getElementById('custom-activity').value.trim();
     if (custom) {
         selectedActivity = custom;
-        selectedActivityEmoji = "🌟";
+        selectedActivityEmoji = "📝"; // Neutral icon instead of star
     }
     // Don't close overlay here, let openStampPin with skipOverlay handle the flow
     openStampPin(true);

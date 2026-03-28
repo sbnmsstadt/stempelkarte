@@ -225,7 +225,7 @@ h1 {
 
 /* New Stylish Activity Buttons */
 #activity-list.emoji-grid {
-    grid-template-columns: repeat(2, 1fr); /* 2 columns for wider buttons */
+    grid-template-columns: repeat(3, 1fr); /* 3 columns for narrower buttons (~15-20% difference) */
     gap: 12px;
 }
 
@@ -235,7 +235,7 @@ h1 {
     align-items: center;
     justify-content: center;
     gap: 8px;
-    padding: 16px 12px;
+    padding: 20px 8px; /* Slightly more vertical padding to compensate for width */
     border-radius: 16px;
     background: rgba(255,255,255,0.05);
     border: 1px solid var(--glass-border);
@@ -258,12 +258,12 @@ h1 {
 }
 
 .activity-emoji {
-    font-size: 1.8rem;
+    font-size: 2.5rem; /* Increased (+40% of 1.8rem is ~2.5rem) */
     line-height: 1;
 }
 
 .activity-label {
-    font-size: 0.75rem;
+    font-size: 1.05rem; /* Increased (+40% of 0.75rem is ~1.05rem) */
     font-weight: 800;
     text-transform: uppercase;
     letter-spacing: 0.05em;

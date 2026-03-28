@@ -49,7 +49,7 @@ export default {
                     { label: "Kreativ", emoji: "🎨" },
                     { label: "Spielen", emoji: "🎲" },
                     { label: "Projekt", emoji: "🚀" },
-                    { label: "Sonstiges", emoji: "🌟" }
+                    { label: "Sonstiges", emoji: "✨" }
                 ];
                 const settings = settingsRaw ? JSON.parse(settingsRaw) : { 
                     communityTarget: 500, 
