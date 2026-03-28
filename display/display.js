@@ -428,13 +428,22 @@ function renderTicker() {
         });
     });
     // Sort newest first, filter out "Admin-Korrektur", take last 20
-    items.sort((a,b) => new Date(b.date) - new Date(a.date));
+    // Sort by date (desc), and use name/reason as tie-breaker for stable ordering
+    items.sort((a,b) => {
+        const dateDiff = new Date(b.date) - new Date(a.date);
+        if (dateDiff !== 0) return dateDiff;
+        return (a.name + a.reason).localeCompare(b.name + b.reason);
+    });
+
     const display = items
         .filter(it => it.reason !== "Admin-Korrektur" && !it.reason.toLowerCase().includes("entfernt"))
         .slice(0, 20);
 
+    // Sort students by name for stable VIP/Badge listing
+    const stableStudents = [...students].sort((a,b) => a.name.localeCompare(b.name));
+
     // Add VIP info
-    students.filter(s => s.vip && s.vip.active).forEach(s => {
+    stableStudents.filter(s => s.vip && s.vip.active).forEach(s => {
         display.unshift({ 
             name: s.name.split(' ')[0], 
             reason: '⭐ VIP-Status aktiv', 
@@ -443,9 +452,10 @@ function renderTicker() {
     });
 
     // Add current badge holders (permanent items)
-    students.forEach(s => {
+    stableStudents.forEach(s => {
         if (s.badges && s.badges.length > 0) {
-            s.badges.forEach(bid => {
+            // Sort badges too
+            [...s.badges].sort().forEach(bid => {
                 const bDef = badges.find(b => String(b.id) === String(bid));
                 if (bDef) {
                     display.push({
@@ -480,7 +490,7 @@ updateClock();
 setInterval(updateClock, 1000);
 
 fetchData();
-setInterval(fetchData, 60000); // alle 60 Sek. (statt 30, für längere Loops)
+setInterval(fetchData, 15000); // alle 15 Sek. (auf User-Wunsch)
 
 // ── FILMTAG LIVE POLL (every 5s) ───────────────
 // Only fetches /settings — lightweight, for near-realtime Filmtag updates.
