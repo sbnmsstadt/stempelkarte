@@ -799,14 +799,16 @@ Deine Aufgabe: Schreibe eine kurze, begeisterte und persönliche Nachricht (ca. 
 
                 if (result.success) {
                     // --- Store in KV for 24 hours ---
-                    await env.DATABASE.put(cacheKey, result.text);
+                    await env.DATABASE.put(cacheKey, result.text, { expirationTtl: 86400 });
                     
                     return new Response(JSON.stringify({ text: result.text, model: result.model }), {
                         headers: { ...corsHeaders, "Content-Type": "application/json" }
                     });
                 } else {
                     return new Response(JSON.stringify({ 
-                        text: "NACHMI macht gerade eine kurze Pause. ✨ Sammle weiter Stempel!" 
+                        text: "NACHMI macht gerade eine kurze Pause. ✨ Sammle weiter Stempel!",
+                        debugError: result.error,
+                        debugDetails: result.details
                     }), { 
                         headers: { ...corsHeaders, "Content-Type": "application/json" }
                     });
@@ -1094,7 +1096,13 @@ async function callGemini(prompt, apiKey, options = {}) {
                         generationConfig: {
                             temperature: options.temperature || 0.7,
                             maxOutputTokens: options.maxTokens || 2000
-                        }
+                        },
+                        safetySettings: [
+                            { category: "HARM_CATEGORY_HARASSMENT", threshold: "BLOCK_NONE" },
+                            { category: "HARM_CATEGORY_HATE_SPEECH", threshold: "BLOCK_NONE" },
+                            { category: "HARM_CATEGORY_SEXUALLY_EXPLICIT", threshold: "BLOCK_NONE" },
+                            { category: "HARM_CATEGORY_DANGEROUS_CONTENT", threshold: "BLOCK_NONE" }
+                        ]
                     })
                 });
 

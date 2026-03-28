@@ -249,18 +249,19 @@ function showDetail(student) {
             aiText.innerText = "NACHMI überlegt sich gerade was ganz Besonderes für dich... ✨";
             
             // Fetch personal motivation on demand
-            fetch(`${API_URL}/ai/student-motivation?id=${student.id}`)
-                .then(r => {
-                    if (!r.ok) throw new Error("Worker responded with error " + r.status);
-                    return r.json();
-                })
+            fetch(`${API_URL}/ai/student-motivation?id=${encodeURIComponent(student.id)}`)
+                .then(r => r.json())
                 .then(data => {
-                    if (data.text) {
+                    if (data.text && !data.debugError) {
                         console.log("AI message received!");
                         aiText.innerText = data.text;
                         localStorage.setItem(cacheKey, data.text);
+                    } else if (data.debugError) {
+                        // NEW: Show debug info if backend failed but returned JSON
+                        aiText.innerText = `NACHMI macht gerade eine kurze Pause. ✨ (Fehler: ${data.debugError})`;
+                        console.error("AI Debug Error:", data.debugError, data.debugDetails);
                     } else {
-                        throw new Error("No text in AI response");
+                        throw new Error("No text or error in AI response");
                     }
                 })
                 .catch(err => {
