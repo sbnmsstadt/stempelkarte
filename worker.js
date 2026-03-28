@@ -69,70 +69,9 @@ export default {
             }
 
             if (path === "/api/settings" && method === "PUT") {
-                const newSettings = await request.json();
-                
-                // Get old settings to compare
-                const oldSettingsRaw = await env.DATABASE.get("settings");
-                const oldSettings = oldSettingsRaw ? JSON.parse(oldSettingsRaw) : {};
-                
-                // Trigger AI Motivation if todayPlan changed
-                if (newSettings.todayPlan && newSettings.todayPlan !== oldSettings.todayPlan) {
-                    try {
-                        const studentsRaw = await env.DATABASE.get("students");
-                        const studentList = JSON.parse(studentsRaw || "[]");
-                        
-                        const badgesRaw = await env.DATABASE.get("badges");
-                        const allBadges = JSON.parse(badgesRaw || "[]");
-                        
-                        // Format students for prompt
-                        const studentsWithBadges = studentList
-                            .filter(s => (s.badges || []).length > 0)
-                            .map(s => {
-                                const bNames = (s.badges || []).map(id => {
-                                    const b = allBadges.find(x => String(x.id) === String(id));
-                                    return b ? b.name : '';
-                                }).filter(Boolean);
-                                return bNames.length > 0 ? `${s.name} (${bNames.join(', ')})` : null;
-                            })
-                            .filter(Boolean)
-                            .join('; ');
-
-                        const prompt = `[ID: ${Date.now()}] Du bist NACHMI, der herzliche KI-Hort-Assistent für Kinder (6-10 Jahre).
-Heute haben wir diesen spannenden Tagesplan: "${newSettings.todayPlan}".
-
-Hier sind einige Kinder mit ihren Abzeichen: ${studentsWithBadges || "Aktuell noch keine"}.
-
-Deine Aufgabe: Schreibe eine begeisterte, motivierende Nachricht für die Infotafel (ca. 40 Wörter):
-1. Beziehe dich direkt auf die Aktivitäten des Tagesplans.
-2. Lobe namentlich jene Kinder, die schon passende Abzeichen haben.
-3. Motiviere alle anderen, heute ebenfalls fleißig zu sammeln.
-4. Sei EXTREM herzlich, nutze viele Emojis und beende deine Sätze immer vollständig.
-5. WICHTIG: Beginne deine Nachricht immer mit den Worten "HEUTE BEI UNS: ".`;
-
-                        const aiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${env.KREATIV_API}`;
-                        const aiRes = await fetch(aiUrl, {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({
-                                contents: [{ parts: [{ text: prompt }] }],
-                                generationConfig: { temperature: 0.8, maxOutputTokens: 350 }
-                            })
-                        });
-
-                        if (aiRes.ok) {
-                            const aiData = await aiRes.json();
-                            const generated = aiData?.candidates?.[0]?.content?.parts?.[0]?.text;
-                            if (generated) {
-                                newSettings.todayPlanMotivation = generated.trim();
-                            }
-                        }
-                    } catch (aiErr) {
-                        console.error("Auto-AI-Motivation failed:", aiErr);
-                    }
-                }
-
-                await env.DATABASE.put("settings", JSON.stringify(newSettings));
-                return new Response(JSON.stringify(newSettings), {
+                const settings = await request.json();
+                await env.DATABASE.put("settings", JSON.stringify(settings));
+                return new Response(JSON.stringify(settings), {
                     headers: { ...corsHeaders, "Content-Type": "application/json" }
                 });
             }
