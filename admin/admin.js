@@ -514,13 +514,15 @@ function renderAdminList(filter = "") {
         item.innerHTML = `
             <div class="student-info">
                 <div class="avatar" style="${isVip ? 'box-shadow: 0 0 12px gold; border: 2px solid gold;' : ''}">${student.avatar || student.name.charAt(0)}</div>
-                <div>
+                <div style="flex:1">
                     <div style="font-weight:700; font-size:1.1rem">${student.name} ${isVip ? `<span style="font-size:0.7rem; font-weight:900; letter-spacing:0.05em;">${vipDayText}</span>` : ''}</div>
                     <div class="subtitle" style="font-size:0.75rem">ID: ${student.id} · ${fullCards} volle Karte(n)</div>
                     ${student.birthday ? `<div style="font-size:0.75rem">🎂 ${formatDate(student.birthday)}</div>` : ''}
-                    ${badgeSection}
                 </div>
             </div>
+
+            ${badgeSection}
+
             <div class="admin-row-actions">
                 <div class="admin-stamp-control">
                     <input type="number" class="admin-stamp-input" value="${student.stamps}" onchange="updateStamps('${student.id}', this.value)">
