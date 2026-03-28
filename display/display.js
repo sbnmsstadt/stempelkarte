@@ -116,6 +116,7 @@ function renderAll() {
     renderVIPs();
     renderTicker();
     renderStudentOfWeek();
+    renderBadgeGalerie();
     checkBirthdayMode();
     checkCelebrationMode(); // NEW: Check for group milestone celebrations
 }
@@ -169,6 +170,45 @@ function renderStudentOfWeek() {
         </div>
         <div style="font-size:2.5rem; animation: vipPulse 2s ease-in-out infinite;">⭐</div>
     `;
+}
+
+// ── BADGE GALLERY (Motivation) ─────────────────
+const MOTIVATIONAL_BADGES = [
+    { icon: "🤝", name: "Ehren-Buddy", desc: "Ich helfe anderen ohne Aufforderung!" },
+    { icon: "💎", name: "Vibe-Master", desc: "Ich sorge für gute Stimmung!" },
+    { icon: "🛡️", name: "Fairness-Wächter", desc: "Ich bin fair und ehrlich!" },
+    { icon: "🎨", name: "Pixel-Picasso", desc: "Ich erschaffe kreative Meisterwerke!" },
+    { icon: "🚀", name: "Master-Engineer", desc: "Ich baue die krassesten Konstruktionen!" },
+    { icon: "🧠", name: "Brainiac", desc: "Ich löse jedes Rätsel blitzschnell!" },
+    { icon: "⚡", name: "High-Speed", desc: "Ich erledige Aufgaben besonders effizient!" },
+    { icon: "🧘", name: "Zen-Meister", desc: "Ich bleibe auch bei Trubel entspannt!" },
+    { icon: "🔥", name: "Goat", desc: "Ich gebe heute alles für die Gruppe!" },
+    { icon: "🏅", name: "Abzeichen-Tipp", desc: "Zeig dich positiv und hol dir coole Badges!" }
+];
+let badgeIndex = 0;
+
+function renderBadgeGalerie() {
+    const iconEl = document.getElementById('badge-display-icon');
+    const nameEl = document.getElementById('badge-display-name');
+    const descEl = document.getElementById('badge-display-desc');
+    if (!iconEl || !nameEl || !descEl) return;
+
+    // Pick next badge
+    const badge = MOTIVATIONAL_BADGES[badgeIndex];
+    badgeIndex = (badgeIndex + 1) % MOTIVATIONAL_BADGES.length;
+
+    // Smooth update with fade
+    const parent = document.getElementById('badge-galerie-content');
+    if (parent) {
+        parent.style.transition = 'opacity 0.6s ease';
+        parent.style.opacity = '0';
+        setTimeout(() => {
+            iconEl.textContent = badge.icon;
+            nameEl.textContent = badge.name;
+            descEl.textContent = badge.desc;
+            parent.style.opacity = '1';
+        }, 600);
+    }
 }
 
 // ── BIRTHDAY MODE ──────────────────────────────
