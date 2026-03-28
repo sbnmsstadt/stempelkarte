@@ -193,9 +193,25 @@ function renderBadgeGalerie() {
     const descEl = document.getElementById('badge-display-desc');
     if (!iconEl || !nameEl || !descEl) return;
 
-    // Pick next badge
-    const badge = MOTIVATIONAL_BADGES[badgeIndex];
-    badgeIndex = (badgeIndex + 1) % MOTIVATIONAL_BADGES.length;
+    // Use actual badges from DB if available, otherwise fallback to defaults
+    const sourceBadges = (badges && badges.length > 0) ? badges : [
+        { emoji: "🤝", name: "Ehren-Buddy", desc: "Ich helfe anderen ohne Aufforderung!" },
+        { emoji: "💎", name: "Vibe-Master", desc: "Ich sorge für gute Stimmung!" },
+        { emoji: "🛡️", name: "Fairness-Wächter", desc: "Ich bin fair und ehrlich!" },
+        { emoji: "🎨", name: "Pixel-Picasso", desc: "Ich erschaffe kreative Meisterwerke!" },
+        { emoji: "🚀", name: "Master-Engineer", desc: "Ich baue die krassesten Konstruktionen!" },
+        { emoji: "🧠", name: "Brainiac", desc: "Ich löse jedes Rätsel blitzschnell!" },
+        { icon: "⚡", name: "High-Speed", desc: "Ich erledige Aufgaben besonders effizient!" },
+        { icon: "🧘", name: "Zen-Meister", desc: "Ich bleibe auch bei Trubel entspannt!" },
+        { icon: "🔥", name: "Goat", desc: "Ich gebe heute alles für die Gruppe!" }
+    ];
+
+    // Combine with a static tip item
+    const galleryItems = [...sourceBadges, { emoji: "🏅", name: "Abzeichen-Tipp", desc: "Zeig dich positiv und hol dir coole Badges!" }];
+
+    // Pick next item
+    const item = galleryItems[badgeIndex % galleryItems.length];
+    badgeIndex++;
 
     // Smooth update with fade
     const parent = document.getElementById('badge-galerie-content');
@@ -203,9 +219,9 @@ function renderBadgeGalerie() {
         parent.style.transition = 'opacity 0.6s ease';
         parent.style.opacity = '0';
         setTimeout(() => {
-            iconEl.textContent = badge.icon;
-            nameEl.textContent = badge.name;
-            descEl.textContent = badge.desc;
+            iconEl.textContent = item.emoji || item.icon;
+            nameEl.textContent = item.name;
+            descEl.textContent = item.desc || "Hol dir dein Abzeichen!";
             parent.style.opacity = '1';
         }, 600);
     }
