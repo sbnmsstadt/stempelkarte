@@ -290,7 +290,7 @@ function renderBirthdayDashboard() {
         const diff = Math.ceil((u.date - today) / (1000 * 60 * 60 * 24));
         const relative = diff === 0 ? 'Heute!' : (diff === 1 ? 'Morgen' : `In ${diff} Tagen`);
         const el = document.createElement('div');
-        el.style.fontSize = '0.85rem';
+        el.style.fontSize = '0.7rem';
         el.style.marginBottom = '5px';
         el.innerHTML = `<strong>${u.name}</strong> (${u.age} J.) - <span style="color:var(--primary-light)">${relative}</span>`;
         db.appendChild(el);

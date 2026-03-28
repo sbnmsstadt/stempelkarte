@@ -65,7 +65,7 @@ header {
 /* Top Navigation Row - NEW */
 .top-nav-row {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(4, 1fr);
     gap: 1.5rem;
     margin-bottom: 2rem;
 }
@@ -104,6 +104,14 @@ header {
 .nav-card.lab { border-left: 4px solid #f59e0b; }
 .nav-card.planer { border-left: 4px solid #38bdf8; }
 .nav-card.logbook { border-left: 4px solid #22c55e; }
+.nav-card.birthdays { border-left: 4px solid var(--primary-light); cursor: default; }
+
+.nav-card.birthdays #birthday-dashboard {
+    max-height: 40px;
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255,255,255,0.1) transparent;
+}
 
 .nav-icon {
     font-size: 2rem;
