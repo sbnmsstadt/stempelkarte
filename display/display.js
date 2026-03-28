@@ -413,117 +413,107 @@ function renderVIPs() {
     }).join('');
 }
 
-// ── TICKER ─────────────────────────────────────
-// Hash of ticker-relevant data — only re-render on real admin changes.
+// ── TICKER (RAF-based, never resets) ───────────────────────────────
+// Pixel position for the ticker scroll — persists across content updates.
+let _tickerPos = 0;
+let _tickerRAF = null;
+let _tickerHash = null;
+
+// Build ticker display items from current data
+function buildTickerItems() {
+    const items = [];
+    const cutoff = Date.now() - 72 * 3600 * 1000; // last 3 days
+    students.forEach(s => {
+        (s.history || []).forEach(h => {
+            if (!h.date || !h.reason) return;
+            if (new Date(h.date).getTime() < cutoff) return;
+            items.push({
+                name: s.name.split(' ')[0],
+                reason: h.reason,
+                date: h.date,
+                emoji: h.emoji || '▸'
+            });
+        });
+    });
+    items.sort((a, b) => {
+        const d = new Date(b.date) - new Date(a.date);
+        return d !== 0 ? d : (a.name + a.reason).localeCompare(b.name + b.reason);
+    });
+
+    const display = items
+        .filter(it => it.reason !== 'Admin-Korrektur' && !it.reason.toLowerCase().includes('entfernt'))
+        .slice(0, 20);
+
+    const stable = [...students].sort((a, b) => a.name.localeCompare(b.name));
+    stable.filter(s => s.vip && s.vip.active).forEach(s => {
+        display.unshift({ name: s.name.split(' ')[0], reason: '⭐ VIP-Status aktiv', emoji: '👑' });
+    });
+    stable.forEach(s => {
+        if (s.badges && s.badges.length > 0) {
+            [...s.badges].sort().forEach(bid => {
+                const bDef = badges.find(b => String(b.id) === String(bid));
+                if (bDef) display.push({ name: s.name.split(' ')[0], reason: `Abzeichen "${bDef.name}"`, emoji: bDef.emoji });
+            });
+        }
+    });
+    if (display.length === 0) display.push({ name: 'NACHMI', reason: '🌟 Noch keine Aktivitäten', emoji: '📢' });
+    return display;
+}
+
+// Stable hash — only re-render DOM when data actually changed
 function getTickerHash() {
     return students.map(s => {
-        const hist = (s.history || [])
-            .filter(h => h.date && h.reason
-                && h.reason !== 'Admin-Korrektur'
-                && !h.reason.toLowerCase().includes('entfernt'))
-            .map(h => `${h.date}|${h.reason}`)
-            .join(',');
-        const vipActive = (s.vip && s.vip.active) ? '1' : '0';
-        const bdg = [...(s.badges || [])].sort().join(',');
-        return `${s.id}:${hist}:${vipActive}:${bdg}`;
+        const hist = (s.history || []).filter(h => h.date && h.reason && h.reason !== 'Admin-Korrektur' && !h.reason.toLowerCase().includes('entfernt')).map(h => `${h.date}|${h.reason}`).join(',');
+        return `${s.id}:${hist}:${(s.vip && s.vip.active) ? 1 : 0}:${[...(s.badges || [])].sort().join(',')}`;
     }).join(';');
 }
 
-let _tickerHash = null;
+// RAF loop — runs forever, pixel-perfect, no CSS animation involved
+function tickerLoop() {
+    const scroll = document.getElementById('ticker-scroll');
+    if (!scroll) { _tickerRAF = requestAnimationFrame(tickerLoop); return; }
+
+    const halfW = scroll.scrollWidth / 2;
+    if (halfW > 0) {
+        _tickerPos += 0.7; // px per frame (~42px/s at 60fps)
+        if (_tickerPos >= halfW) _tickerPos -= halfW; // seamless modulo wrap
+        scroll.style.transform = `translateX(-${_tickerPos}px)`;
+    }
+    _tickerRAF = requestAnimationFrame(tickerLoop);
+}
 
 function renderTicker() {
     const scroll = document.getElementById('ticker-scroll');
     if (!scroll) return;
 
-    // Bail out if nothing ticker-relevant changed (prevents animation reset on every 15s fetch)
-    const currentHash = getTickerHash();
-    if (currentHash === _tickerHash) return;
-    _tickerHash = currentHash;
+    // Only rebuild DOM if data actually changed
+    const hash = getTickerHash();
+    if (hash === _tickerHash) return;
+    _tickerHash = hash;
 
-    const items = [];
+    const display = buildTickerItems();
 
-    // All recent history across students (last 48h)
-    const cutoff = Date.now() - 48 * 3600 * 1000;
-    students.forEach(s => {
-        (s.history || []).forEach(h => {
-            if (!h.date || !h.reason) return;
-            const ts = new Date(h.date).getTime();
-            if (ts >= cutoff - 86400000) { // last 2 days loosely
-                items.push({ 
-                    name: s.name.split(' ')[0], 
-                    reason: h.reason, 
-                    date: h.date,
-                    emoji: h.emoji || '▸' 
-                });
-            }
-        });
-    });
-    // Sort newest first, filter out "Admin-Korrektur", take last 20
-    // Sort by date (desc), and use name/reason as tie-breaker for stable ordering
-    items.sort((a,b) => {
-        const dateDiff = new Date(b.date) - new Date(a.date);
-        if (dateDiff !== 0) return dateDiff;
-        return (a.name + a.reason).localeCompare(b.name + b.reason);
-    });
+    // Enough copies so the total width >> viewport width for seamless wrap
+    const copies = Math.ceil(20 / Math.max(1, display.length)) + 1;
+    const half = [];
+    for (let i = 0; i < copies; i++) half.push(...display);
 
-    const display = items
-        .filter(it => it.reason !== "Admin-Korrektur" && !it.reason.toLowerCase().includes("entfernt"))
-        .slice(0, 20);
-
-    // Sort students by name for stable VIP/Badge listing
-    const stableStudents = [...students].sort((a,b) => a.name.localeCompare(b.name));
-
-    // Add VIP info
-    stableStudents.filter(s => s.vip && s.vip.active).forEach(s => {
-        display.unshift({ 
-            name: s.name.split(' ')[0], 
-            reason: '⭐ VIP-Status aktiv', 
-            emoji: '👑'
-        });
-    });
-
-    // Add current badge holders (permanent items)
-    stableStudents.forEach(s => {
-        if (s.badges && s.badges.length > 0) {
-            // Sort badges too
-            [...s.badges].sort().forEach(bid => {
-                const bDef = badges.find(b => String(b.id) === String(bid));
-                if (bDef) {
-                    display.push({
-                        name: s.name.split(' ')[0],
-                        reason: `Abzeichen "${bDef.name}"`,
-                        emoji: bDef.emoji
-                    });
-                }
-            });
-        }
-    });
-
-    if (display.length === 0) {
-        display.push({ name: 'NACHMI', reason: '🌟 Noch keine Aktivitäten', emoji: '📢' });
-    }
-
-    // Ensure sufficient copies for seamless scrolling on large screens
-    const copiesNeeded = Math.ceil(25 / Math.max(1, display.length));
-    const halfItems = [];
-    for (let i = 0; i < copiesNeeded; i++) {
-        halfItems.push(...display);
-    }
-    
-    // Build HTML for one half
-    const halfHtml = halfItems.map(it => `
-        <div class="ticker-item" style="font-size: 1.15em;">
+    const halfHtml = half.map(it => `
+        <div class="ticker-item" style="font-size:1.15em;">
             <span class="t-icon">${it.emoji}</span>
             <span class="t-name">${it.name}</span>
             <span>${it.reason}</span>
         </div>`).join('');
 
-    // Full HTML is exactly two halves for perfectly invisible looping
-    const html = halfHtml + halfHtml;
+    // Two identical halves — _tickerPos modulo halfW keeps the loop invisible
+    scroll.innerHTML = halfHtml + halfHtml;
+    // NOTE: we do NOT touch scroll.style.transform here — the RAF loop handles it
+}
 
-    // Time to scroll one half (-50%). Speed per item: ~0.4 seconds (2.5x faster than 1s)
-    const duration = `${Math.max(4, halfItems.length * 0.4)}s`;
-    smoothUpdate(scroll, html, { animDuration: duration, scrolling: true });
+// Start the RAF loop once (never stops)
+function startTickerLoop() {
+    if (_tickerRAF) return;
+    _tickerRAF = requestAnimationFrame(tickerLoop);
 }
 
 // ── INIT ───────────────────────────────────────
@@ -532,7 +522,10 @@ updateClock();
 setInterval(updateClock, 1000);
 
 fetchData();
-setInterval(fetchData, 15000); // alle 15 Sek. (auf User-Wunsch)
+setInterval(fetchData, 15000); // alle 15 Sek.
+
+// Start the ticker RAF loop immediately (it runs forever)
+startTickerLoop();
 
 // ── FILMTAG LIVE POLL (every 5s) ───────────────
 // Only fetches /settings — lightweight, for near-realtime Filmtag updates.
