@@ -950,9 +950,14 @@ function renderActivityPicker() {
     
     ACTIVITIES.forEach(act => {
         const item = document.createElement('div');
-        item.className = 'avatar-item';
+        item.className = 'activity-btn';
+        if (selectedActivity === act.label) item.classList.add('active');
+        
         item.onclick = (e) => selectActivity(act.label, act.emoji, e);
-        item.innerHTML = `${act.emoji}<br><span style="font-size:0.6rem">${act.label}</span>`;
+        item.innerHTML = `
+            <span class="activity-emoji">${act.emoji}</span>
+            <span class="activity-label">${act.label}</span>
+        `;
         list.appendChild(item);
     });
 }
@@ -966,9 +971,9 @@ function selectActivity(reason, emoji, event) {
     selectedActivityEmoji = emoji;
     
     // Visual feedback
-    document.querySelectorAll('#activity-list .avatar-item').forEach(el => el.style.borderColor = 'transparent');
+    document.querySelectorAll('#activity-list .activity-btn').forEach(el => el.classList.remove('active'));
     if (event && event.currentTarget) {
-        event.currentTarget.style.borderColor = 'var(--primary-light)';
+        event.currentTarget.classList.add('active');
     }
 }
 

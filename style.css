@@ -223,15 +223,51 @@ h1 {
     border-color: var(--primary-light);
 }
 
-/* Compact Activity Picker */
+/* New Stylish Activity Buttons */
 #activity-list.emoji-grid {
-    grid-template-columns: repeat(4, 1fr);
-    gap: 8px;
+    grid-template-columns: repeat(2, 1fr); /* 2 columns for wider buttons */
+    gap: 12px;
 }
-#activity-list .avatar-item {
-    font-size: 1.25rem;
-    padding: 10px;
-    border-radius: 10px;
+
+.activity-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 16px 12px;
+    border-radius: 16px;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid var(--glass-border);
+    color: white;
+    cursor: pointer;
+    transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.activity-btn:hover {
+    background: rgba(255,255,255,0.08);
+    transform: translateY(-3px);
+    border-color: rgba(255,255,255,0.2);
+}
+
+.activity-btn.active {
+    background: var(--primary);
+    border-color: var(--primary-light);
+    box-shadow: 0 0 20px rgba(59, 130, 246, 0.4);
+    transform: scale(1.05);
+}
+
+.activity-emoji {
+    font-size: 1.8rem;
+    line-height: 1;
+}
+
+.activity-label {
+    font-size: 0.75rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    opacity: 0.9;
 }
 
 /* Count selection buttons */
