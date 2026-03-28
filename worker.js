@@ -176,6 +176,7 @@ export default {
                     description: body.description || "",
                     materials: body.materials || "",
                     planText: body.planText || "",
+                    status: "library",
                     createdAt: new Date().toISOString()
                 };
                 
@@ -186,6 +187,23 @@ export default {
                     status: 201,
                     headers: { ...corsHeaders, "Content-Type": "application/json" }
                 });
+            }
+
+            if (path.startsWith("/api/projects/") && method === "PUT") {
+                const id = path.split("/").pop();
+                const updateData = await request.json();
+                const projectsRaw = await env.DATABASE.get("projects");
+                let projects = JSON.parse(projectsRaw || "[]");
+
+                const idx = projects.findIndex(p => String(p.id) === String(id));
+                if (idx !== -1) {
+                    projects[idx] = { ...projects[idx], ...updateData };
+                    await env.DATABASE.put("projects", JSON.stringify(projects));
+                    return new Response(JSON.stringify(projects[idx]), {
+                        headers: { ...corsHeaders, "Content-Type": "application/json" }
+                    });
+                }
+                return new Response("Not Found", { status: 404, headers: corsHeaders });
             }
 
             if (path.startsWith("/api/projects/") && method === "DELETE") {

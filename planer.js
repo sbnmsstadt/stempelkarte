@@ -67,12 +67,19 @@ async function loadProjects() {
 }
 
 function renderProjects(projects) {
-    const container = document.getElementById('projects-container');
-    container.innerHTML = '';
+    const sections = {
+        current: document.getElementById('projects-current'),
+        upcoming: document.getElementById('projects-upcoming'),
+        library: document.getElementById('projects-library'),
+        archived: document.getElementById('projects-archived')
+    };
+
+    // Reset all containers
+    Object.values(sections).forEach(s => s.innerHTML = '');
 
     if (projects.length === 0) {
-        container.innerHTML = `
-            <div class="empty-state" style="grid-column: 1 / -1;">
+        sections.library.innerHTML = `
+            <div class="empty-state">
                 <h3 style="margin-bottom: 10px; color: white;">Noch keine Projekte gespeichert</h3>
                 <p>Gehe ins "AI Content Lab" und generiere neue, magische Ideen!</p>
                 <button class="add-stamp-btn" style="margin-top: 20px;" onclick="window.location.href='kreativ.html'">Jetzt Ideen finden ✨</button>
@@ -81,13 +88,42 @@ function renderProjects(projects) {
         return;
     }
 
-    // Zeige die neuesten zuerst
-    projects.reverse().forEach((project, index) => {
+    // Process projects
+    projects.forEach((project, index) => {
+        const status = project.status || 'library';
+        const container = sections[status] || sections.library;
+
         const card = document.createElement('div');
-        card.className = 'ai-result-card glass-card';
-        card.style.background = 'rgba(255, 255, 255, 0.05)';
+        card.className = `ai-result-card glass-card card-${status}`;
         
         const dateStr = new Date(project.createdAt).toLocaleDateString();
+
+        let buttons = '';
+        if (status === 'library') {
+            buttons = `
+                <button class="btn-outline btn-outline-accent" onclick="addToPlan('${escapeHtml(project.planText)}', 'setting-today-plan')" style="width: 100%;">
+                    📅 Heute umsetzen (Tagesplan)
+                </button>
+                <div style="display: flex; gap: 8px;">
+                    <button class="btn-outline" onclick="updateProjectStatus('${project.id}', 'current')" style="flex: 1; border-color: #10b981; color: #10b981;">🚀 Aktivieren</button>
+                    <button class="btn-outline" onclick="updateProjectStatus('${project.id}', 'upcoming')" style="flex: 1; border-color: #f59e0b; color: #f59e0b;">🔜 Einplanen</button>
+                </div>
+            `;
+        } else if (status === 'upcoming') {
+            buttons = `
+                <button class="btn-outline" onclick="updateProjectStatus('${project.id}', 'current')" style="width: 100%; border-color: #10b981; color: #10b981;">🚀 Jetzt Starten</button>
+                <button class="btn-outline" onclick="updateProjectStatus('${project.id}', 'library')" style="width: 100%;">💡 Zurück in Ideen-Kiste</button>
+            `;
+        } else if (status === 'current') {
+            buttons = `
+                <button class="btn-outline" onclick="updateProjectStatus('${project.id}', 'archived')" style="width: 100%; border-color: #64748b; color: #64748b;">📦 Projekt abschließen & Archivieren</button>
+                <button class="btn-outline" onclick="updateProjectStatus('${project.id}', 'upcoming')" style="width: 100%;">🔜 Zurück zu Geplant</button>
+            `;
+        } else if (status === 'archived') {
+            buttons = `
+                <button class="btn-outline" onclick="updateProjectStatus('${project.id}', 'library')" style="width: 100%;">💡 Reaktivieren (Ideen-Kiste)</button>
+            `;
+        }
 
         card.innerHTML = `
             <h4 class="ai-result-title">
@@ -98,28 +134,84 @@ function renderProjects(projects) {
             </h4>
             <div class="ai-result-date">Gespeichert am ${dateStr}</div>
             <p class="ai-result-desc">${escapeHtml(project.description)}</p>
-            <div class="ai-material-list" style="background: rgba(56, 189, 248, 0.1); border-color: var(--highlight);">
+            <div class="ai-material-list">
                 <strong>Benötigt:</strong> ${escapeHtml(project.materials)}
             </div>
-            <div style="background: rgba(0,0,0,0.3); padding: 10px; border-radius: 8px; font-family: monospace; color: var(--accent); margin-bottom: 15px; font-size: 0.85rem;">
-                <strong>Infoboard Text:</strong><br>${escapeHtml(project.planText)}
-            </div>
             <div class="ai-action-buttons" style="flex-direction: column;">
-                <button class="btn-outline btn-outline-accent" onclick="addToPlan('${escapeHtml(project.planText)}', 'setting-today-plan')" style="width: 100%;">
-                    📅 Heute umsetzen (Tagesplan)
-                </button>
-                <button class="btn-outline" onclick="addToPlan('${escapeHtml(project.title)}', 'setting-current-projects')" style="width: 100%;">
-                    📌 Als aktuelles Projekt markieren
-                </button>
-                <button class="btn-outline" onclick="addToPlan('${escapeHtml(project.title)}', 'setting-upcoming-projects')" style="width: 100%; border-color: var(--accent); color: var(--accent);">
-                    🔜 Für demnächst planen
-                </button>
+                ${buttons}
             </div>
         `;
         
-        card.style.animation = `bounceIn 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55) ${index * 0.05}s backwards`;
         container.appendChild(card);
     });
+
+    // Handle empty sections
+    Object.entries(sections).forEach(([key, el]) => {
+        if (el.innerHTML === '') {
+            el.innerHTML = `<div class="empty-state" style="padding: 1rem; border-style: solid; font-size: 0.8rem;">Keine Projekte in dieser Kategorie.</div>`;
+        }
+    });
+}
+
+// --- Status Management & Auto-Sync ---
+
+async function updateProjectStatus(id, newStatus) {
+    try {
+        const res = await fetch(`${API_URL}/projects/${id}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ status: newStatus })
+        });
+        if (!res.ok) throw new Error("Status-Update fehlgeschlagen");
+        
+        showToast(`Projekt verschoben nach: ${newStatus === 'archived' ? 'Archiv' : newStatus}`);
+        
+        // After status change, sync the board!
+        await syncBoardFromProjects();
+        await loadProjects(); 
+    } catch (err) {
+        console.error(err);
+        showToast("Update fehlgeschlagen.", true);
+    }
+}
+
+async function syncBoardFromProjects() {
+    try {
+        // 1. Get all projects
+        const pRes = await fetch(`${API_URL}/projects`);
+        const projects = await pRes.json();
+        
+        // 2. Get current settings
+        const sRes = await fetch(`${API_URL}/settings`);
+        const settings = await sRes.json();
+        
+        // 3. Filter and build strings
+        const currentProjectsStr = projects
+            .filter(p => p.status === 'current')
+            .map(p => `• ${p.title}`)
+            .join('\n');
+            
+        const upcomingProjectsStr = projects
+            .filter(p => p.status === 'upcoming')
+            .map(p => `• ${p.title}`)
+            .join('\n');
+            
+        // 4. Update settings
+        const payload = { 
+            ...settings,
+            currentProjects: currentProjectsStr,
+            upcomingProjects: upcomingProjectsStr
+        };
+        
+        await fetch(`${API_URL}/settings`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
+        
+    } catch (err) {
+        console.error("Board sync failed:", err);
+    }
 }
 
 // --- Delete Project ---
