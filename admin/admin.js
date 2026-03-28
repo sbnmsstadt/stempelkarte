@@ -46,6 +46,34 @@ document.addEventListener('DOMContentLoaded', async () => {
     
     document.getElementById('add-btn')?.addEventListener('click', createNewStudent);
     document.getElementById('add-reward-btn')?.addEventListener('click', createNewReward);
+
+    // Logbook Navigation
+    document.getElementById('nav-logbook-btn')?.addEventListener('click', () => {
+        const overview = document.getElementById('admin-student-list');
+        const overviewTitle = document.querySelector('.main-content h2');
+        const logbook = document.getElementById('logbook-view');
+        const navBtn = document.getElementById('nav-logbook-btn');
+        
+        if (logbook.classList.contains('hidden')) {
+            // Show Logbook
+            overview.classList.add('hidden');
+            if (overviewTitle) overviewTitle.innerText = "Pädagogisches Logbuch";
+            logbook.classList.remove('hidden');
+            document.getElementById('search-students').parentElement.style.display = 'none';
+            navBtn.querySelector('h3').innerText = "⬅ Zur Schüler-Übersicht";
+            
+            // Initialize/Render Logbook
+            Logbook.init();
+            Logbook.renderStudents();
+        } else {
+            // Back to Overview
+            overview.classList.remove('hidden');
+            if (overviewTitle) overviewTitle.innerText = "Schüler-Übersicht";
+            logbook.classList.add('hidden');
+            document.getElementById('search-students').parentElement.style.display = 'flex';
+            navBtn.querySelector('h3').innerText = "📖 Pädagogisches Logbuch";
+        }
+    });
     
     // Search functionality
     document.getElementById('search-students')?.addEventListener('input', (e) => {
@@ -556,6 +584,9 @@ function renderAdminList(filter = "") {
                     ${vipEligible ? `<button onclick="toggleVip('${student.id}', ${!isVip})" class="icon-btn-small" style="padding:4px 8px; font-size:0.7rem; font-weight:800; ${isVip ? 'color:gold; border-color:gold;' : 'color:var(--text-muted);'}" title="${isVip ? 'VIP entziehen' : 'VIP vergeben'}">
                         ⭐ ${isVip ? 'VIP' : 'VIP?'}
                     </button>` : ''}
+                    <button class="icon-btn-small" onclick="Logbook.showHistory('${student.id}')" title="Pädagogisches Archiv / Logbuch" style="color: #22c55e;">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                    </button>
                     <button class="icon-btn-small" onclick="copyLink('${student.id}')" title="Link"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></button>
                     <button class="icon-btn-small" onclick="deleteStudent('${student.id}')" style="color:#ff6b6b"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg></button>
                 </div>

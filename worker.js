@@ -387,6 +387,32 @@ export default {
                         headers: { ...corsHeaders, "Content-Type": "application/json" }
                     });
                 }
+
+                // POST /api/students/:id/logs — add a pedagogical log entry
+                if (pathParts.length === 5 && pathParts[4] === "logs") {
+                    const id = pathParts[3];
+                    const { type, text, date } = await request.json();
+                    const studentsRaw = await env.DATABASE.get("students");
+                    let students = JSON.parse(studentsRaw || "[]");
+
+                    const index = students.findIndex(s => String(s.id) === String(id));
+                    if (index === -1) return new Response("Not Found", { status: 404, headers: corsHeaders });
+
+                    if (!students[index].pedagogical_logs) students[index].pedagogical_logs = [];
+                    
+                    students[index].pedagogical_logs.push({
+                        id: Date.now().toString(),
+                        type: type || "neutral",
+                        text: text || "",
+                        date: date || new Date().toISOString().split('T')[0],
+                        timestamp: new Date().toISOString()
+                    });
+
+                    await env.DATABASE.put("students", JSON.stringify(students));
+                    return new Response(JSON.stringify(students[index]), {
+                        headers: { ...corsHeaders, "Content-Type": "application/json" }
+                    });
+                }
             }
 
             // Handle Redeem Endpoints
@@ -603,6 +629,72 @@ export default {
 
                 } catch (err) {
                     return new Response(`Backend Error: ${err.message}`, { status: 500, headers: corsHeaders });
+                }
+            }
+
+            // --- AI Day Summary Endpoint ---
+            if (path === "/api/ai/day-summary" && method === "GET") {
+                const date = url.searchParams.get("date") || new Date().toISOString().split('T')[0];
+                const studentsRaw = await env.DATABASE.get("students");
+                const students = JSON.parse(studentsRaw || "[]");
+
+                let dayLogs = [];
+                students.forEach(s => {
+                    if (s.pedagogical_logs) {
+                        const logs = s.pedagogical_logs.filter(l => l.date === date);
+                        logs.forEach(l => {
+                            dayLogs.push({ studentName: s.name, type: l.type, text: l.text });
+                        });
+                    }
+                });
+
+                if (dayLogs.length === 0) {
+                    return new Response(JSON.stringify({ text: "Keine Einträge für diesen Tag gefunden." }), {
+                        headers: { ...corsHeaders, "Content-Type": "application/json" }
+                    });
+                }
+
+                const logsText = dayLogs.map(l => {
+                    const typeLabel = l.type === 'pos' ? 'Positiv' : (l.type === 'neg' ? 'Negativ' : 'Neutral');
+                    return `[${typeLabel}] ${l.studentName}: ${l.text}`;
+                }).join('\n');
+
+                const prompt = `Du bist NACHMI, ein erfahrener pädagogischer Assistent. 
+Hier sind die Beobachtungen für den Tag (${date}):
+${logsText}
+
+Erstelle daraus eine strukturierte Zusammenfassung (ca. 100-150 Wörter).
+1. Was war heute besonders positiv?
+2. Welche Herausforderungen gab es?
+3. Ein kurzes Fazit für das Team.
+
+Schreibe professionell, aber herzlich auf Deutsch. Benutze Emojis.`;
+
+                const apiKey = env.KREATIV_API?.trim();
+                if (!apiKey) return new Response("Missing API Key", { status: 500, headers: corsHeaders });
+
+                try {
+                    const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            contents: [{ parts: [{ text: prompt }] }],
+                            generationConfig: { temperature: 0.7, maxOutputTokens: 500 }
+                        })
+                    });
+                    
+                    if (!res.ok) {
+                        const err = await res.text();
+                        return new Response(`API Error: ${err}`, { status: 500, headers: corsHeaders });
+                    }
+
+                    const data = await res.json();
+                    const summary = data?.candidates?.[0]?.content?.parts?.[0]?.text || "Zusammenfassung fehlgeschlagen.";
+                    return new Response(JSON.stringify({ text: summary.trim() }), {
+                        headers: { ...corsHeaders, "Content-Type": "application/json" }
+                    });
+                } catch (err) {
+                    return new Response(`Error: ${err.message}`, { status: 500, headers: corsHeaders });
                 }
             }
 
