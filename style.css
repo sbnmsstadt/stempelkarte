@@ -624,13 +624,35 @@ input[type="number"] {
     padding: 1.5rem !important;
 }
 
+.ai-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 12px;
+}
+
+.ai-icon {
+    font-size: 2rem;
+    filter: drop-shadow(0 0 8px rgba(255,255,255,0.3));
+}
+
+.ai-title {
+    font-size: 1.1rem;
+    font-weight: 800;
+    color: white;
+    margin: 0;
+    letter-spacing: 0.02em;
+}
 
 .ai-content {
-    font-size: 1.1rem;
+    font-size: 1.05rem;
     line-height: 1.6;
-    font-weight: 600;
+    font-weight: 500;
     color: rgba(255,255,255,0.95);
     font-style: italic;
+    background: rgba(0,0,0,0.2);
+    padding: 12px;
+    border-radius: 10px;
+    border-left: 3px solid var(--accent);
     white-space: pre-wrap;
-    text-shadow: 0 2px 4px rgba(0,0,0,0.3);
 }
