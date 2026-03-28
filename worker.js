@@ -387,32 +387,33 @@ export default {
                         headers: { ...corsHeaders, "Content-Type": "application/json" }
                     });
                 }
+            }
 
-                // POST /api/students/:id/logs — add a pedagogical log entry
-                if (pathParts.length === 5 && pathParts[4] === "logs") {
-                    const id = pathParts[3];
-                    const { type, text, date } = await request.json();
-                    const studentsRaw = await env.DATABASE.get("students");
-                    let students = JSON.parse(studentsRaw || "[]");
+            // POST /api/students/:id/logs — add a pedagogical log entry
+            if (path.match(/^\/api\/students\/[^/]+\/logs$/) && method === "POST") {
+                const parts = path.split("/").filter(Boolean);
+                const id = parts[2];
+                const { type, text, date } = await request.json();
+                const studentsRaw = await env.DATABASE.get("students");
+                let students = JSON.parse(studentsRaw || "[]");
 
-                    const index = students.findIndex(s => String(s.id) === String(id));
-                    if (index === -1) return new Response("Not Found", { status: 404, headers: corsHeaders });
+                const index = students.findIndex(s => String(s.id) === String(id));
+                if (index === -1) return new Response("Not Found", { status: 404, headers: corsHeaders });
 
-                    if (!students[index].pedagogical_logs) students[index].pedagogical_logs = [];
-                    
-                    students[index].pedagogical_logs.push({
-                        id: Date.now().toString(),
-                        type: type || "neutral",
-                        text: text || "",
-                        date: date || new Date().toISOString().split('T')[0],
-                        timestamp: new Date().toISOString()
-                    });
+                if (!students[index].pedagogical_logs) students[index].pedagogical_logs = [];
+                
+                students[index].pedagogical_logs.push({
+                    id: Date.now().toString(),
+                    type: type || "neutral",
+                    text: text || "",
+                    date: date || new Date().toISOString().split('T')[0],
+                    timestamp: new Date().toISOString()
+                });
 
-                    await env.DATABASE.put("students", JSON.stringify(students));
-                    return new Response(JSON.stringify(students[index]), {
-                        headers: { ...corsHeaders, "Content-Type": "application/json" }
-                    });
-                }
+                await env.DATABASE.put("students", JSON.stringify(students));
+                return new Response(JSON.stringify(students[index]), {
+                    headers: { ...corsHeaders, "Content-Type": "application/json" }
+                });
             }
 
             // Handle Redeem Endpoints
@@ -674,7 +675,7 @@ Schreibe professionell, aber herzlich auf Deutsch. Benutze Emojis.`;
                 if (!apiKey) return new Response("Missing API Key", { status: 500, headers: corsHeaders });
 
                 try {
-                    const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`, {
+                    const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${apiKey}`, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({

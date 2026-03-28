@@ -197,11 +197,12 @@ const Logbook = {
 
         try {
             const response = await fetch(`${API_URL}/ai/day-summary?date=${this.currentDate}`);
+            const data = await response.json();
+            
             if (response.ok) {
-                const data = await response.json();
                 content.innerHTML = data.text;
             } else {
-                content.innerHTML = "<p style='color:#ff6b6b'>Fehler bei der KI-Generierung. Bitte prüfe, ob heute bereits Einträge gemacht wurden.</p>";
+                content.innerHTML = `<p style='color:#ff6b6b'><b>Fehler bei der KI-Generierung:</b><br>${data.text || response.statusText}</p>`;
             }
         } catch (err) {
             content.innerHTML = "<p style='color:#ff6b6b'>Verbindungsfehler zur KI.</p>";
