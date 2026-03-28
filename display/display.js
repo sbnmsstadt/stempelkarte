@@ -175,7 +175,7 @@ function checkBirthdayMode() {
     if (hasToday && !birthdayModeActive) {
         birthdayModeActive = true;
         document.body.classList.add('birthday-mode');
-        if (titleEl) titleEl.textContent = '🎂 HEUTE GEBURTSTAG!';
+        if (titleEl) titleEl.textContent = 'HEUTE GEBURTSTAG!';
         if (iconEl) iconEl.textContent = '🎂';
         startConfetti();
     } else if (!hasToday && birthdayModeActive) {
