@@ -6,7 +6,7 @@ let rewards = [];
 
 // ── PARTICLES ──────────────────────────────────
 function createParticles() {
-    const colors = ['#3b82f6','#8b5cf6','#10b981','#f59e0b','#ec4899'];
+    const colors = ['#3b82f6', '#8b5cf6', '#10b981', '#f59e0b', '#ec4899'];
     for (let i = 0; i < 16; i++) {
         const p = document.createElement('div');
         p.className = 'particle';
@@ -24,8 +24,8 @@ function createParticles() {
 // ── CLOCK ──────────────────────────────────────
 function updateClock() {
     const now = new Date();
-    const h = String(now.getHours()).padStart(2,'0');
-    const m = String(now.getMinutes()).padStart(2,'0');
+    const h = String(now.getHours()).padStart(2, '0');
+    const m = String(now.getMinutes()).padStart(2, '0');
     document.getElementById('clock').textContent = `${h}:${m}`;
 }
 
@@ -42,14 +42,14 @@ async function fetchData() {
         ]);
         students = sRes.ok ? await sRes.json() : [];
         settings = stRes.ok ? await stRes.json() : {};
-        rewards  = rRes.ok ? await rRes.json() : [];
-        badges   = bRes.ok ? await bRes.json() : [];
+        rewards = rRes.ok ? await rRes.json() : [];
+        badges = bRes.ok ? await bRes.json() : [];
 
         renderAll();
 
         const now = new Date();
         document.getElementById('last-updated').textContent =
-            `Zuletzt: ${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}:${String(now.getSeconds()).padStart(2,'0')}`;
+            `Zuletzt: ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}:${String(now.getSeconds()).padStart(2, '0')}`;
     } catch (err) {
         console.error('Fetch error:', err);
     }
@@ -161,7 +161,7 @@ let confettiInterval = null;
 
 function checkBirthdayMode() {
     const today = new Date();
-    const todayMD = `${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`;
+    const todayMD = `${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
 
     const hasToday = students.some(s => {
         if (!s.birthday) return false;
@@ -175,7 +175,7 @@ function checkBirthdayMode() {
     if (hasToday && !birthdayModeActive) {
         birthdayModeActive = true;
         document.body.classList.add('birthday-mode');
-        if (titleEl) titleEl.textContent = '🎂 HEUTE GEBURTSTAG!';
+        if (titleEl) titleEl.textContent = 'HEUTE GEBURTSTAG!';
         if (iconEl) iconEl.textContent = '🎂';
         startConfetti();
     } else if (!hasToday && birthdayModeActive) {
@@ -188,7 +188,7 @@ function checkBirthdayMode() {
 }
 
 function startConfetti() {
-    const colors = ['#ec4899','#f59e0b','#10b981','#8b5cf6','#3b82f6','#ef4444'];
+    const colors = ['#ec4899', '#f59e0b', '#10b981', '#8b5cf6', '#3b82f6', '#ef4444'];
     stopConfetti();
     confettiInterval = setInterval(() => {
         const el = document.createElement('div');
@@ -214,21 +214,21 @@ function renderKids() {
     if (!inner || students.length === 0) return;
 
     const today = new Date();
-    today.setHours(0,0,0,0);
+    today.setHours(0, 0, 0, 0);
     const wDay = today.getDay() || 7;
     const monday = new Date(today);
     monday.setDate(today.getDate() - wDay + 1);
     const sunday = new Date(monday);
     sunday.setDate(monday.getDate() + 6);
-    sunday.setHours(23,59,59,999);
+    sunday.setHours(23, 59, 59, 999);
 
     // Sort by: today first → this week → upcoming birthday order
     const sorted = [...students].sort((a, b) => {
         const getScore = (s) => {
             if (!s.birthday) return Infinity;
-            const [,m,d] = s.birthday.split('-').map(Number);
-            let bday = new Date(today.getFullYear(), m-1, d);
-            if (bday < today) bday = new Date(today.getFullYear()+1, m-1, d);
+            const [, m, d] = s.birthday.split('-').map(Number);
+            let bday = new Date(today.getFullYear(), m - 1, d);
+            if (bday < today) bday = new Date(today.getFullYear() + 1, m - 1, d);
             return Math.round((bday - today) / 86400000);
         };
         const sA = getScore(a);
@@ -240,14 +240,14 @@ function renderKids() {
     const makeCard = (s) => {
         let isToday = false, isThisWeek = false, dateStr = '', daysLabel = '';
         if (s.birthday) {
-            const [,m,d] = s.birthday.split('-').map(Number);
-            let bday = new Date(today.getFullYear(), m-1, d);
-            isToday    = bday.toDateString() === today.toDateString();
+            const [, m, d] = s.birthday.split('-').map(Number);
+            let bday = new Date(today.getFullYear(), m - 1, d);
+            isToday = bday.toDateString() === today.toDateString();
             isThisWeek = bday >= monday && bday <= sunday;
-            dateStr    = `${String(d).padStart(2,'0')}.${String(m).padStart(2,'0')}.`;
-            if (bday < today) bday = new Date(today.getFullYear()+1, m-1, d);
+            dateStr = `${String(d).padStart(2, '0')}.${String(m).padStart(2, '0')}.`;
+            if (bday < today) bday = new Date(today.getFullYear() + 1, m - 1, d);
             const days = Math.round((bday - today) / 86400000);
-            daysLabel  = isToday ? '🎂 HEUTE!' : `in ${days} Tagen`;
+            daysLabel = isToday ? '🎂 HEUTE!' : `in ${days} Tagen`;
         }
         const cls = isToday ? 'today' : isThisWeek ? 'upcoming' : '';
         const badgePill = isToday
@@ -275,11 +275,11 @@ function renderKids() {
     const copiesNeeded = Math.ceil(15 / Math.max(1, sorted.length));
     let halfItems = [];
     for (let i = 0; i < copiesNeeded; i++) halfItems.push(...sorted);
-    
+
     const halfHtml = halfItems.map(makeCard).join('');
     // html contains EXACTLY two identical DOM halves
-    const html = halfHtml + halfHtml; 
-    
+    const html = halfHtml + halfHtml;
+
     // Total duration for one half to scroll
     const duration = `${halfItems.length * 3.5}s`;
     smoothUpdate(inner, html, { animDuration: duration, scrolling: true });
@@ -292,18 +292,18 @@ function renderCountdown() {
     if (!pill) return;
 
     const today = new Date();
-    today.setHours(0,0,0,0);
+    today.setHours(0, 0, 0, 0);
 
     const upcoming = students
         .filter(s => s.birthday)
         .map(s => {
-            const [,m,d] = s.birthday.split('-').map(Number);
-            let bday = new Date(today.getFullYear(), m-1, d);
-            if (bday < today) bday = new Date(today.getFullYear()+1, m-1, d);
+            const [, m, d] = s.birthday.split('-').map(Number);
+            let bday = new Date(today.getFullYear(), m - 1, d);
+            if (bday < today) bday = new Date(today.getFullYear() + 1, m - 1, d);
             const days = Math.round((bday - today) / 86400000);
             return { name: s.name.split(' ')[0], days, isToday: days === 0 };
         })
-        .sort((a,b) => a.days - b.days);
+        .sort((a, b) => a.days - b.days);
 
     if (upcoming.length === 0) {
         pill.textContent = 'Keine Geburtstage';
@@ -325,13 +325,13 @@ function renderFilmtag() {
         document.getElementById('filmtag-status').textContent = 'Kein Gruppen-Ziel aktiv.';
         return;
     }
-    document.getElementById('filmtag-title').textContent  = `${gr.icon||'🎬'} ${gr.title||'Filmtag'}`;
-    document.getElementById('filmtag-current').textContent = gr.current||0;
-    document.getElementById('filmtag-target').textContent  = gr.target||'?';
-    const pct = Math.min(100,((gr.current||0)/(gr.target||1))*100);
+    document.getElementById('filmtag-title').textContent = `${gr.icon || '🎬'} ${gr.title || 'Filmtag'}`;
+    document.getElementById('filmtag-current').textContent = gr.current || 0;
+    document.getElementById('filmtag-target').textContent = gr.target || '?';
+    const pct = Math.min(100, ((gr.current || 0) / (gr.target || 1)) * 100);
     document.getElementById('filmtag-bar').style.width = `${pct}%`;
-    const left = (gr.target||0)-(gr.current||0);
-    
+    const left = (gr.target || 0) - (gr.current || 0);
+
     let statusHtml = '';
     if (gr.isApproved) {
         statusHtml = `<span style="color:#10b981; font-size:1.1rem; font-weight:900;">🎉 Juhuuu! Filmtag genehmigt! 🍿</span>`;
@@ -340,7 +340,7 @@ function renderFilmtag() {
     } else {
         statusHtml = `Noch <strong>${left}</strong> Stempel bis zum Ziel 🎯`;
     }
-    
+
     document.getElementById('filmtag-status').innerHTML = statusHtml;
 }
 
@@ -375,7 +375,7 @@ function renderTodayPlan() {
     const el = document.getElementById('today-plan-list');
     const aiEl = document.getElementById('today-plan-ai');
     if (!el) return;
-    
+
     const txt = settings.todayPlan || "Noch kein Plan für heute eingetragen.";
     el.innerHTML = txt;
 
@@ -390,7 +390,7 @@ function renderVIPs() {
     const el = document.getElementById('vip-list');
     const vipDuration = settings.vipDurationDays || 3;
     const today = new Date();
-    today.setHours(0,0,0,0);
+    today.setHours(0, 0, 0, 0);
 
     const vips = students.filter(s => s.vip && s.vip.active);
 
@@ -403,7 +403,7 @@ function renderVIPs() {
         let dayText = '';
         if (s.vip.grantedAt) {
             const g = new Date(s.vip.grantedAt);
-            g.setHours(0,0,0,0);
+            g.setHours(0, 0, 0, 0);
             const diff = Math.floor((today - g) / 86400000) + 1;
             const left = vipDuration - diff + 1;
             dayText = left <= 1 ? '🔴 Letzter Tag!' : `Tag ${diff} / ${vipDuration}`;
@@ -411,7 +411,7 @@ function renderVIPs() {
         return `
             <div class="vip-big fade-in">
                 <div class="vip-star">⭐</div>
-                <div class="vip-avatar-big">${s.avatar||s.name.charAt(0)}</div>
+                <div class="vip-avatar-big">${s.avatar || s.name.charAt(0)}</div>
                 <div class="vip-info-horizontal">
                     <div class="vip-name-big">${s.name}</div>
                     ${dayText ? `<div class="vip-days-big" style="width:fit-content;">${dayText}</div>` : ''}
@@ -568,21 +568,21 @@ window.addEventListener('resize', () => {
 let planFlipInterval = null;
 function initPlanFlip() {
     if (planFlipInterval) clearInterval(planFlipInterval);
-    
+
     // Toggle every 25 seconds
     planFlipInterval = setInterval(() => {
         const container = document.querySelector('.tagesplan-card.flip-container');
         const titleEl = document.getElementById('tagesplan-card-title');
-        
+
         // Only flip if we actually have AI motivation data
         if (!container || !settings.todayPlanMotivation) return;
-        
+
         container.classList.toggle('flipped');
-        
+
         if (titleEl) {
             const isFlipped = container.classList.contains('flipped');
             titleEl.textContent = isFlipped ? "HORT-ASSISTENT" : "TAGESPLAN";
-            
+
             const iconEl = container.querySelector('.card-icon');
             if (iconEl) {
                 iconEl.textContent = isFlipped ? "🤖" : "📅";
