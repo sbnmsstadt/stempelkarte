@@ -787,7 +787,7 @@ async function saveSettings() {
                             return { name: s.name.split(' ')[0], badges: badgeNames };
                         });
 
-                        const aiRes = await fetch(`${API_URL}/api/ai/day-plan`, {
+                        const aiRes = await fetch(`${API_URL}/ai/day-plan`, {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
                             body: JSON.stringify({ planText: todayPlan, students: studentData })
@@ -798,15 +798,20 @@ async function saveSettings() {
                             if (aiData.text) {
                                 // Fetch latest settings again just to be safe
                                 const sRes = await fetch(`${API_URL}/settings`);
-                                const latestSettings = await sRes.json();
-                                latestSettings.todayPlanMotivation = aiData.text;
-                                
-                                await fetch(`${API_URL}/settings`, {
-                                    method: 'PUT',
-                                    headers: { 'Content-Type': 'application/json' },
-                                    body: JSON.stringify(latestSettings)
-                                });
+                                if (sRes.ok) {
+                                    const latestSettings = await sRes.json();
+                                    latestSettings.todayPlanMotivation = aiData.text;
+                                    
+                                    await fetch(`${API_URL}/settings`, {
+                                        method: 'PUT',
+                                        headers: { 'Content-Type': 'application/json' },
+                                        body: JSON.stringify(latestSettings)
+                                    });
+                                    console.log("AI Motivation saved successfully.");
+                                }
                             }
+                        } else {
+                            console.error("AI Day Plan API error:", aiRes.status);
                         }
                     } catch (err) {
                         console.error("AI Background generation failed:", err);

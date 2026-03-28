@@ -569,13 +569,13 @@ let planFlipInterval = null;
 function initPlanFlip() {
     if (planFlipInterval) clearInterval(planFlipInterval);
 
-    // Toggle every 25 seconds
+    // Toggle every 15 seconds for a more dynamic feel
     planFlipInterval = setInterval(() => {
         const container = document.querySelector('.tagesplan-card.flip-container');
         const titleEl = document.getElementById('tagesplan-card-title');
 
-        // Only flip if we actually have AI motivation data
-        if (!container || !settings.todayPlanMotivation) return;
+        // Only flip if we actually have a plan entered
+        if (!container || !settings.todayPlan) return;
 
         container.classList.toggle('flipped');
 
@@ -588,6 +588,7 @@ function initPlanFlip() {
                 iconEl.textContent = isFlipped ? "🤖" : "📅";
             }
         }
-    }, 25000);
+    }, 15000);
 }
+
 
