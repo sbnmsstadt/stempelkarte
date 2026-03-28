@@ -623,16 +623,15 @@ export default {
                     .join('; ');
 
                 const prompt = `Du bist NACHMI, der herzliche KI-Hort-Assistent für Kinder (6-10 Jahre).
-Heute stehen folgende Aktivitäten auf dem Plan:
-${planText}
+Heute haben wir diesen spannenden Tagesplan: "${planText}".
 
-Einige Kinder haben schon tolle Abzeichen (Badges): ${studentsWithBadges || "noch keine"}.
+Hier sind einige Kinder mit ihren Abzeichen (Badges): ${studentsWithBadges || "Aktuell noch keine"}.
 
-Schreibe eine kurze, begeisterte und motivierende Nachricht für die Infotafel (max 45 Wörter!):
-- Beziehe dich direkt auf den Plan.
-- Lobe namentlich Kinder, die schon passende Abzeichen für diese Aktivitäten besitzen.
-- Motiviere den Rest, heute fleißig neue Abzeichen zu sammeln.
-- Verwende viele passende Emojis. Sei extrem herzlich und direkt!`;
+Deine Aufgabe: Schreibe eine begeisterte, motivierende Nachricht für die Infotafel (ca. 40 Wörter):
+1. Beziehe dich direkt auf die Aktivitäten des Tagesplans.
+2. Wenn Kinder (aus der Liste oben) Abzeichen haben, die prima zu den heutigen Aktivitäten passen, lobe sie namentlich!
+3. Motiviere alle anderen Kinder, heute ebenfalls fleißig zu sein, um neue Abzeichen zu sammeln.
+4. Sei extrem herzlich, benutze viele Emojis und beende deine Sätze immer vollständig.`;
 
                 try {
                     const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${env.KREATIV_API}`;
@@ -699,7 +698,7 @@ Schreibe eine kurze, begeisterte und motivierende Nachricht für die Infotafel (
                 if (s.vip && s.vip.active && s.vip.grantedAt) {
                     const grantedDate = new Date(s.vip.grantedAt);
                     grantedDate.setHours(0,0,0,0);
-                    const daysDiff = Math.floor((today - grantedDate) / (1000 * 60 * 60 * 24)) + 1;
+                    const daysDiff = Math.floor((today.getTime() - grantedDate.getTime()) / (1000 * 60 * 60 * 24)) + 1;
                     const daysLeft = vipDuration - daysDiff + 1;
 
                     if (daysLeft <= 0) {

@@ -237,13 +237,14 @@
             font-size: 1.15rem;
             line-height: 1.6;
             font-style: italic;
-            padding: 15px;
+            padding: 20px;
             display: flex;
-            align-items: center; /* Vertically centered if short */
+            flex-direction: column;
             justify-content: center;
-            height: 100%;
-            overflow-y: auto;     /* Scroll if too long */
-            scrollbar-width: thin;
+            align-items: center;
+            text-align: center;
+            min-height: 100%; /* Allow it to grow if text is long */
+            width: 100%;
         }
 
         /* ── KIDS SCROLL BAND ──────────────────── */
@@ -1097,6 +1098,6 @@
         <div style="opacity:0.3; font-size:0.6rem;">v2.1-AI</div>
     </div>
 
-    <script src="display.js?v=99999"></script>
+    <script src="display.js?v=100000"></script>
 </body>
 </html>
