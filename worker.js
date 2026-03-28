@@ -768,12 +768,13 @@ Deine Aufgabe: Schreibe eine kurze, begeisterte und persönliche Nachricht (ca. 
 1. Begrüße ${studentName} herzlich.
 2. Beziehe dich auf den heutigen Plan und erwähne mindestens eine Aktivität.
 3. Lobe oder motiviere das Kind passend zu seinen Abzeichen ${logsToday ? "und den heutigen Beobachtungen" : ""}.
-4. BEENDUNG: Beende den Text NIEMALS mitten im Satz. Der letzte Satz MUSS vollständig abgeschlossen sein. Brich nicht ab, bevor der Text einen freundlichen Abschied oder ein passendes Emoji-Ende hat.`;
+4. FORMAT: Antworte NUR mit dem reinen Text. Benutze KEIN Markdown (keine Sternchen, keine Backticks wie \`\`\`). 
+5. ABSCHLUSS: Der Text MUSS mit einem vollständigen Satz und einem Punkt oder Ausrufezeichen enden. Brich NIEMALS mittendrin ab.`;
 
                 const apiKey = (env.KREATIV_API || "").trim().replace(/^"|"$/g, '');
                 if (!apiKey || apiKey.length < 10) return new Response("Ungültiger API Key", { status: 500, headers: corsHeaders });
 
-                const result = await callGemini(prompt, apiKey, { temperature: 0.8, maxTokens: 1000 });
+                const result = await callGemini(prompt, apiKey, { temperature: 0.8, maxTokens: 1500 });
 
                 if (result.success) {
                     return new Response(JSON.stringify({ text: result.text, model: result.model }), {
@@ -1049,7 +1050,13 @@ async function callGemini(prompt, apiKey, options = {}) {
                         generationConfig: {
                             temperature: options.temperature || 0.7,
                             maxOutputTokens: options.maxTokens || 2000
-                        }
+                        },
+                        safetySettings: [
+                            { category: "HARM_CATEGORY_HARASSMENT", threshold: "BLOCK_NONE" },
+                            { category: "HARM_CATEGORY_HATE_SPEECH", threshold: "BLOCK_NONE" },
+                            { category: "HARM_CATEGORY_SEXUALLY_EXPLICIT", threshold: "BLOCK_NONE" },
+                            { category: "HARM_CATEGORY_DANGEROUS_CONTENT", threshold: "BLOCK_NONE" }
+                        ]
                     })
                 });
 

@@ -654,4 +654,5 @@ input[type="number"] {
     padding: 12px;
     border-radius: 10px;
     border-left: 3px solid var(--accent);
+    white-space: pre-wrap;
 }
