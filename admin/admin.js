@@ -51,6 +51,49 @@ document.addEventListener('DOMContentLoaded', async () => {
     document.getElementById('search-students')?.addEventListener('input', (e) => {
         renderAdminList(e.target.value.toLowerCase());
     });
+
+    // ── BADGE CHIP CLICKS (permanent single listener) ──
+    // Attached here once so it doesn't stack on every renderAdminList call.
+    document.getElementById('admin-student-list')?.addEventListener('click', async (e) => {
+        const btn = e.target.closest('.badge-chip-btn');
+        if (!btn || btn.disabled) return;
+        const studentId = btn.dataset.student;
+        const badgeId = btn.dataset.badge;
+        if (!studentId || !badgeId) return;
+
+        btn.style.opacity = '0.5';
+        btn.disabled = true;
+
+        const student = students.find(s => s.id === studentId);
+        if (!student) { btn.style.opacity = '1'; btn.disabled = false; return; }
+
+        const current = student.badges || [];
+        const newBadges = current.includes(badgeId)
+            ? current.filter(id => id !== badgeId)
+            : [...current, badgeId];
+
+        try {
+            const res = await fetch(`${API_URL}/students/${studentId}/badges`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ badges: newBadges })
+            });
+            if (res.ok) {
+                // Update local state directly — no full re-fetch needed
+                student.badges = newBadges;
+                renderAdminList(document.getElementById('search-students')?.value.toLowerCase() || '');
+            } else {
+                const errText = await res.text();
+                alert(`Fehler beim Zuweisen: ${res.status} \u2014 ${errText}`);
+                btn.style.opacity = '1';
+                btn.disabled = false;
+            }
+        } catch (err) {
+            alert('Verbindungsfehler: ' + err.message);
+            btn.style.opacity = '1';
+            btn.disabled = false;
+        }
+    });
 });
 
 async function fetchRewards() {
@@ -494,46 +537,7 @@ function renderAdminList(filter = "") {
         `;
         container.appendChild(item);
     });
-
-    // Event delegation for badge chip buttons (data-student + data-badge)
-    container.addEventListener('click', async (e) => {
-        const btn = e.target.closest('.badge-chip-btn');
-        if (!btn) return;
-        const studentId = btn.dataset.student;
-        const badgeId = btn.dataset.badge;
-        if (!studentId || !badgeId) return;
-
-        btn.style.opacity = '0.5';
-        btn.disabled = true;
-
-        const student = students.find(s => s.id === studentId);
-        if (!student) { btn.style.opacity = '1'; btn.disabled = false; return; }
-
-        const current = student.badges || [];
-        const newBadges = current.includes(badgeId)
-            ? current.filter(id => id !== badgeId)
-            : [...current, badgeId];
-
-        try {
-            const res = await fetch(`${API_URL}/students/${studentId}/badges`, {
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ badges: newBadges })
-            });
-            if (res.ok) {
-                await fetchStudents(); // Re-render with updated state
-            } else {
-                const errText = await res.text();
-                alert(`Fehler beim Zuweisen: ${res.status} — ${errText}`);
-                btn.style.opacity = '1';
-                btn.disabled = false;
-            }
-        } catch (err) {
-            alert('Verbindungsfehler: ' + err.message);
-            btn.style.opacity = '1';
-            btn.disabled = false;
-        }
-    }); // Fresh listener added each time renderAdminList rebuilds the container
+    // NOTE: Badge click listener is set up ONCE in DOMContentLoaded — not here.
 }
 
 async function toggleStudentBadge(studentId, badgeId) {

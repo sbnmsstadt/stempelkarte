@@ -260,7 +260,7 @@ export default {
             // PUT /api/students/:id/badges — assign/remove badges on a student
             if (path.match(/^\/api\/students\/[^/]+\/badges$/) && method === "PUT") {
                 const parts = path.split("/").filter(Boolean);
-                const studentId = parts[1];
+                const studentId = parts[2]; // ["api","students","luk","badges"] → index 2
                 const { badges } = await request.json(); // array of badge IDs
                 const studentsRaw = await env.DATABASE.get("students");
                 let students = JSON.parse(studentsRaw || "[]");
