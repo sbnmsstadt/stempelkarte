@@ -173,7 +173,8 @@ function renderStudentOfWeek() {
 
 // ── BIRTHDAY MODE ──────────────────────────────
 let birthdayModeActive = false;
-let confettiInterval = null;
+let birthdayInterval = null;
+let goalInterval = null;
 
 function checkBirthdayMode() {
     const today = new Date();
@@ -203,12 +204,16 @@ function checkBirthdayMode() {
     }
 }
 
-function startConfetti() {
-    const colors = ['#ec4899', '#f59e0b', '#10b981', '#8b5cf6', '#3b82f6', '#ef4444'];
-    stopConfetti();
-    confettiInterval = setInterval(() => {
+function startConfetti(isGoal = false) {
+    const colors = isGoal ? ['#3b82f6', '#8b5cf6', '#3b82f6', '#8b5cf6', '#ffffff'] : ['#ec4899', '#f59e0b', '#10b981', '#8b5cf6', '#3b82f6', '#ef4444'];
+    
+    // Stop previous of same type
+    if (isGoal) { if (goalInterval) clearInterval(goalInterval); }
+    else { if (birthdayInterval) clearInterval(birthdayInterval); }
+
+    const interval = setInterval(() => {
         const el = document.createElement('div');
-        el.className = 'birthday-confetti';
+        el.className = 'birthday-confetti'; // CSS is generic enough
         el.style.left = Math.random() * 100 + 'vw';
         el.style.background = colors[Math.floor(Math.random() * colors.length)];
         const dur = (Math.random() * 2 + 2).toFixed(1) + 's';
@@ -216,11 +221,18 @@ function startConfetti() {
         el.style.width = el.style.height = (Math.random() * 8 + 8) + 'px';
         document.body.appendChild(el);
         setTimeout(() => el.remove(), parseFloat(dur) * 1000 + 100);
-    }, 250);
+    }, isGoal ? 150 : 250); // Goal is faster!
+
+    if (isGoal) goalInterval = interval;
+    else birthdayInterval = interval;
 }
 
-function stopConfetti() {
-    if (confettiInterval) { clearInterval(confettiInterval); confettiInterval = null; }
+function stopConfetti(isGoal = false) {
+    if (isGoal) {
+        if (goalInterval) { clearInterval(goalInterval); goalInterval = null; }
+    } else {
+        if (birthdayInterval) { clearInterval(birthdayInterval); birthdayInterval = null; }
+    }
 }
 
 
@@ -386,13 +398,13 @@ function showGoalCelebration(title = "Filmtag") {
     // Show overlay
     overlay.classList.add('active');
     
-    // Intense Confetti
-    startConfetti();
+    // Intense Confetti (type: Goal)
+    startConfetti(true);
     
     // Auto-hide after 20 seconds
     setTimeout(() => {
         overlay.classList.remove('active');
-        stopConfetti();
+        stopConfetti(true); // Stop only goal confetti
     }, 20000);
 }
 
