@@ -6,6 +6,7 @@ console.log("🚀 Infoboard script loading...");
 let students = [];
 let settings = {};
 let rewards = [];
+let planFlipInterval = null; 
 
 // ── PARTICLES ──────────────────────────────────
 function createParticles() {
@@ -570,7 +571,6 @@ window.addEventListener('resize', () => {
 });
 
 // ── 3D PLAN FLIP LOGIC ────────────────────────
-let planFlipInterval = null;
 function initPlanFlip() {
     if (planFlipInterval) clearInterval(planFlipInterval);
 
