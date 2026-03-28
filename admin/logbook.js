@@ -29,6 +29,9 @@ const Logbook = {
                             <label style="font-size: 0.8rem; font-weight: 700; color: var(--text-muted);">DATUM:</label>
                             <input type="date" id="logbook-date-picker" value="${this.currentDate}" onchange="Logbook.setDate(this.value)" style="background:transparent; border:none; color:white; font-weight:700; cursor:pointer;">
                         </div>
+                        <button onclick="Logbook.showArchiveList()" class="icon-btn-small" title="Archivierte Berichte" style="background:rgba(18, 180, 255, 0.1); border-color: #0ea5e9;">
+                            📂 Berichts-Archiv
+                        </button>
                         <button onclick="Logbook.generateAISummary()" class="add-stamp-btn" style="background: linear-gradient(135deg, #f59e0b, #d97706); border: none; box-shadow: 0 4px 15px rgba(245,158,11,0.3);">
                             ✨ KI Zusammenfassung
                         </button>
@@ -69,6 +72,18 @@ const Logbook = {
                     </div>
                     <div id="history-list" class="history-list">
                         <!-- History items go here -->
+                    </div>
+                </div>
+            </div>
+            <!-- Archive List Modal (NEW) -->
+            <div id="archive-list-modal" class="history-modal-overlay hidden">
+                <div class="history-card" style="max-width: 400px;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem;">
+                        <h2 style="margin:0;">📂 Berichts-Archiv</h2>
+                        <button onclick="Logbook.closeArchiveList()" style="background:transparent; border:none; color:white; cursor:pointer; font-size:1.8rem;">&times;</button>
+                    </div>
+                    <div id="archive-list-content" class="history-list">
+                        <p class="subtitle" style="text-align:center;">Lade Archiv...</p>
                     </div>
                 </div>
             </div>
@@ -319,6 +334,49 @@ const Logbook = {
 
     closeHistory() {
         document.getElementById('history-modal').classList.add('hidden');
+    },
+
+    async showArchiveList() {
+        const modal = document.getElementById('archive-list-modal');
+        const content = document.getElementById('archive-list-content');
+        modal.classList.remove('hidden');
+
+        try {
+            const res = await fetch(`${API_URL}/ai/day-summary/list`);
+            const data = await res.json();
+            
+            if (data.dates && data.dates.length > 0) {
+                // Sort dates descending
+                const sorted = data.dates.sort().reverse();
+                content.innerHTML = sorted.map(date => {
+                    const d = new Date(date).toLocaleDateString('de-DE', {
+                        day: '2-digit', month: '2-digit', year: 'numeric'
+                    });
+                    return `
+                        <div class="history-item pos" onclick="Logbook.loadArchivedReport('${date}')" style="cursor:pointer; padding: 12px 18px;">
+                            <div style="font-weight:700;">📅 Bericht vom ${d}</div>
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5l7 7-7 7"/></svg>
+                        </div>
+                    `;
+                }).join('');
+            } else {
+                content.innerHTML = '<p class="subtitle" style="text-align:center; padding:2rem;">Noch keine Berichte archiviert.</p>';
+            }
+        } catch (err) {
+            content.innerHTML = '<p style="color:#ff6b6b; text-align:center; padding:1rem;">Fehler beim Laden.</p>';
+        }
+    },
+
+    closeArchiveList() {
+        document.getElementById('archive-list-modal').classList.add('hidden');
+    },
+
+    loadArchivedReport(date) {
+        this.currentDate = date;
+        this.updateDateDisplay();
+        this.closeArchiveList();
+        this.renderStudents();
+        this.generateAISummary(); // This will now fetch the archived version
     }
 };
 

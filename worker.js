@@ -688,6 +688,14 @@ export default {
                 });
             }
 
+            if (path === "/api/ai/day-summary/list" && method === "GET") {
+                const list = await env.DATABASE.list({ prefix: "archived_summary_" });
+                const dates = list.keys.map(k => k.name.replace("archived_summary_", ""));
+                return new Response(JSON.stringify({ dates }), {
+                    headers: { ...corsHeaders, "Content-Type": "application/json" }
+                });
+            }
+
             // --- PERSONAL AI Motivation Endpoint (NEW) ---
             if (path === "/api/ai/student-motivation" && method === "GET") {
                 console.log("Personal AI Motivation Request received for path:", path);
