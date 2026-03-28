@@ -415,7 +415,7 @@ function renderProjects() {
     const el = document.getElementById('projects-list');
     if (!el) return;
     const txt = settings.currentProjects || "Keine aktuellen Projekte.";
-    el.innerHTML = txt;
+    el.innerHTML = formatList(txt);
 }
 
 // ── UPCOMING PROJECTS ─────────────────────────
@@ -423,7 +423,7 @@ function renderUpcomingProjects() {
     const el = document.getElementById('upcoming-projects-list');
     if (!el) return;
     const txt = settings.upcomingProjects || "Keine kommenden Projekte geplant.";
-    el.innerHTML = txt;
+    el.innerHTML = formatList(txt);
 }
 
 // ── DAILY NOTES ───────────────────────────────
@@ -431,7 +431,7 @@ function renderDailyNotes() {
     const el = document.getElementById('daily-notes-list');
     if (!el) return;
     const txt = settings.dailyNotes || "Keine besonderen Notizen für heute.";
-    el.innerHTML = txt;
+    el.innerHTML = formatList(txt);
 }
 
 // ── TODAY PLAN ────────────────────────────────
@@ -440,7 +440,7 @@ function renderTodayPlan() {
     if (!el) return;
 
     const txt = settings.todayPlan || "Noch kein Plan für heute eingetragen.";
-    el.innerHTML = txt;
+    el.innerHTML = formatList(txt);
 }
 
 
@@ -477,6 +477,16 @@ function renderVIPs() {
                 </div>
             </div>`;
     }).join('');
+}
+
+// ── LIST FORMATTER HELPER ──────────────────────
+function formatList(txt) {
+    if (!txt || typeof txt !== 'string') return txt;
+    return txt.split('\n')
+        .map(line => line.trim())
+        .filter(line => line.length > 0)
+        .map(line => (line.startsWith('•') || line.startsWith('-') || line.startsWith('*')) ? line : `• ${line}`)
+        .join('<br>');
 }
 
 // ── TICKER (RAF-based, never resets) ───────────────────────────────
