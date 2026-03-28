@@ -302,7 +302,7 @@ function renderTicker() {
     // Sort newest first, filter out "Admin-Korrektur", take last 20
     items.sort((a,b) => new Date(b.date) - new Date(a.date));
     const display = items
-        .filter(it => it.reason !== "Admin-Korrektur")
+        .filter(it => it.reason !== "Admin-Korrektur" && !it.reason.toLowerCase().includes("entfernt"))
         .slice(0, 20);
 
     // Add VIP info
