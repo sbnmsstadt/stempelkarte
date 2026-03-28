@@ -796,6 +796,9 @@ async function saveSettings() {
                         if (aiRes.ok) {
                             const aiData = await aiRes.json();
                             if (aiData.text) {
+                                // Diagnostic alert
+                                alert("KI Antwort erhalten:\n" + aiData.text);
+
                                 // Fetch latest settings again just to be safe
                                 const sRes = await fetch(`${API_URL}/settings`);
                                 if (sRes.ok) {
@@ -811,9 +814,12 @@ async function saveSettings() {
                                 }
                             }
                         } else {
+                            const errTxt = await aiRes.text();
+                            alert("KI FEHLER: " + aiRes.status + "\n" + errTxt);
                             console.error("AI Day Plan API error:", aiRes.status);
                         }
                     } catch (err) {
+                        alert("Hintergrund-Fehler (AI): " + err.message);
                         console.error("AI Background generation failed:", err);
                     }
                 })();
