@@ -651,15 +651,17 @@ export default {
             if (path === "/api/ai/day-summary" && method === "GET") {
                 const date = url.searchParams.get("date") || new Date().toISOString().split('T')[0];
                 const force = url.searchParams.get("force") === "true";
-                
-                // Check for archived summary unless force is true
+                const cacheKey = `day_summary_${date}`;
+
+                // --- KV Server-Side Cache Check ---
                 if (!force) {
+                    // Check older archive format first for backwards compatibility
                     const archived = await env.DATABASE.get(`archived_summary_${date}`);
-                    if (archived) {
-                        return new Response(JSON.stringify({ text: archived, isArchived: true }), {
-                            headers: { ...corsHeaders, "Content-Type": "application/json" }
-                        });
-                    }
+                    if (archived) return new Response(JSON.stringify({ text: archived, isArchived: true }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+
+                    // Check new fast cache
+                    const cached = await env.DATABASE.get(cacheKey);
+                    if (cached) return new Response(JSON.stringify({ text: cached, isCached: true }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
                 }
 
                 const studentsRaw = await env.DATABASE.get("students");
@@ -694,6 +696,9 @@ export default {
                 const result = await callGemini(prompt, apiKey, { temperature: 0.7, maxTokens: 2000 });
                 
                 if (result.success) {
+                    // Cache the result
+                    await env.DATABASE.put(cacheKey, result.text);
+
                     return new Response(JSON.stringify({ text: result.text, model: result.model }), {
                         headers: { ...corsHeaders, "Content-Type": "application/json" }
                     });
@@ -745,6 +750,21 @@ export default {
                 const student = students.find(s => String(s.id).toLowerCase() === studentId.toLowerCase());
                 if (!student) return new Response("Student not found", { status: 404, headers: corsHeaders });
 
+                const todayStr = new Date().toISOString().split('T')[0];
+                const force = urlParams.get('force') === 'true';
+                const cacheKey = `motivation_${student.id}_${todayStr}`;
+
+                // --- KV Server-Side Cache Check ---
+                if (!force) {
+                    const cached = await env.DATABASE.get(cacheKey);
+                    if (cached) {
+                        console.log("Serving motivation from KV cache for:", student.id);
+                        return new Response(JSON.stringify({ text: cached, isCached: true }), {
+                            headers: { ...corsHeaders, "Content-Type": "application/json" }
+                        });
+                    }
+                }
+
                 const planText = settings.todayPlan || "noch kein spezieller Plan";
                 const studentName = student.name.split(' ')[0]; // Nur Vorname
                 const studentBadges = (student.badges || []).map(bid => {
@@ -752,7 +772,7 @@ export default {
                     return b ? b.name : '';
                 }).filter(Boolean).join(', ');
 
-                const todayStr = new Date().toISOString().split('T')[0];
+                // const todayStr is already defined above
                 const logsToday = (student.pedagogical_logs || [])
                     .filter(l => l.date === todayStr)
                     .map(l => l.text)
@@ -777,6 +797,9 @@ Deine Aufgabe: Schreibe eine kurze, begeisterte und persönliche Nachricht (ca. 
                 const result = await callGemini(prompt, apiKey, { temperature: 0.8, maxTokens: 1500 });
 
                 if (result.success) {
+                    // --- Store in KV for 24 hours ---
+                    await env.DATABASE.put(cacheKey, result.text);
+                    
                     return new Response(JSON.stringify({ text: result.text, model: result.model }), {
                         headers: { ...corsHeaders, "Content-Type": "application/json" }
                     });
