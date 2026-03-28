@@ -367,7 +367,7 @@ function showGoalCelebration(title = "Filmtag") {
     // Update text if title provided
     if (title) {
         const textEl = overlay.querySelector('.celebration-text');
-        if (textEl) textEl.textContent = `Das Ziel "${title}" ist gesichert! 🎉🍿`;
+        if (textEl) textEl.textContent = `GÖNNUNG PUR! Der "${title}" ist gesichert! 🎉🍿✨🎬`;
     }
 
     // Show overlay
