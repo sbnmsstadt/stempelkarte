@@ -764,8 +764,25 @@ async function saveSettings() {
         .map(line => line.trim())
         .filter(line => line.length > 0)
         .map(line => {
+            // Use Intl.Segmenter to correctly handle multi-character emojis (like 🏃‍♀️ or 👨‍👩‍👧)
+            const segmenter = new Intl.Segmenter('en', { granularity: 'grapheme' });
+            const segments = Array.from(segmenter.segment(line));
+            const firstSegment = segments[0]?.segment || "";
+            
+            // Check if first segment is an emoji (rough check: non-ASCII and not punctuation)
+            const isEmoji = /\p{Extended_Pictographic}/u.test(firstSegment);
+            
+            if (isEmoji) {
+                const label = line.substring(firstSegment.length).trim();
+                return { emoji: firstSegment, label: label || "Aktivität" };
+            }
+
+            // Fallback to space-based splitting if no emoji at start
             const firstSpace = line.indexOf(' ');
-            if (firstSpace === -1) return { emoji: "🌟", label: line };
+            if (firstSpace === -1) {
+                return { emoji: "✨", label: line };
+            }
+            
             return {
                 emoji: line.substring(0, firstSpace).trim(),
                 label: line.substring(firstSpace).trim()
