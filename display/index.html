@@ -831,8 +831,8 @@
             display: flex;
             align-items: center;
             gap: 16px;
-            flex: 1;
-            padding: 8px 0;
+            width: 100%;
+            padding: 4px 0;
         }
 
         .sotw-avatar {
@@ -869,10 +869,11 @@
             flex-direction: column;
             gap: 18px;
             overflow: hidden;
+            min-height: 0;
         }
 
-        .left-col .card.birthday-card { flex: 1.4; }
-        .left-col .card.sotw-card { flex: 0; min-height: 110px; }
+        .left-col .card.birthday-card { flex: 1; min-height: 0; }
+        .left-col .card.sotw-card { flex-shrink: 0; min-height: 120px; }
     </style>
 </head>
 <body>

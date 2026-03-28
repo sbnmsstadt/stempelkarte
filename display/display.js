@@ -104,17 +104,29 @@ function renderStudentOfWeek() {
     const content = document.getElementById('sotw-content');
     if (!card || !content) return;
 
-    const sotw = settings?.studentOfWeek;
+    const sotw = settings && settings.studentOfWeek;
     if (!sotw || !sotw.studentId) {
         card.style.display = 'none';
         return;
     }
 
     const student = students.find(s => String(s.id) === String(sotw.studentId));
-    if (!student) { card.style.display = 'none'; return; }
+    if (!student) {
+        // Student might not be loaded yet — show with only the name stored in sotw
+        card.style.display = 'block';
+        content.innerHTML = `
+            <div class="sotw-avatar">⭐</div>
+            <div class="sotw-info">
+                <div class="sotw-name">${sotw.studentId}</div>
+                ${sotw.reason ? `<div class="sotw-reason">"${sotw.reason}"</div>` : ''}
+            </div>
+            <div style="font-size:2.5rem; animation: vipPulse 2s ease-in-out infinite;">⭐</div>
+        `;
+        return;
+    }
 
     const avatar = student.avatar || student.name.charAt(0).toUpperCase();
-    card.style.display = 'flex';
+    card.style.display = 'block';
     content.innerHTML = `
         <div class="sotw-avatar">${avatar}</div>
         <div class="sotw-info">
