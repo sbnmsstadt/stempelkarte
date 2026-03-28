@@ -212,10 +212,12 @@ input[type="text"], input[type="number"], input[type="date"] {
 input[type=number]::-webkit-inner-spin-button, 
 input[type=number]::-webkit-outer-spin-button { 
   -webkit-appearance: none; 
+  appearance: none;
   margin: 0; 
 }
 input[type=number] {
   -moz-appearance: textfield;
+  appearance: textfield;
 }
 
 .subtitle {
@@ -429,4 +431,16 @@ input[type=number] {
 
 .login-card button:hover {
     background: var(--primary-light);
+}
+.add-badge-toggle:hover {
+    background: rgba(255,255,255,0.08) !important;
+    border-color: rgba(255,255,255,0.4) !important;
+    color: white !important;
+}
+
+.add-badge-toggle.active {
+    background: var(--primary) !important;
+    border-color: var(--primary-light) !important;
+    color: white !important;
+    transform: rotate(45deg);
 }

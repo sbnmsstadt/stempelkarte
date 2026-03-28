@@ -492,22 +492,46 @@ function renderAdminList(filter = "") {
         const hasBadges = allBadges.length > 0;
         let badgeSection = '';
         if (hasBadges) {
-            const badgeChips = allBadges.map(b => {
-                const active = studentBadgeIds.includes(b.id);
-                return `<button 
-                    data-student="${student.id}" 
-                    data-badge="${b.id}"
-                    class="badge-chip-btn"
-                    title="${b.description || b.name}"
-                    style="display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:20px;font-size:0.72rem;font-weight:700;cursor:pointer;transition:all 0.2s;border:1px solid ${b.color};background:${active ? b.color + '33' : 'transparent'};color:${active ? b.color : 'rgba(255,255,255,0.3)'};">
-                    ${b.emoji} ${b.name}
-                </button>`;
-            }).join('');
+            // Show only EARNED badges prominently
+            const earnedChips = allBadges
+                .filter(b => studentBadgeIds.includes(b.id))
+                .map(b => `
+                    <button 
+                        data-student="${student.id}" 
+                        data-badge="${b.id}"
+                        class="badge-chip-btn active"
+                        title="Abzeichen entfernen: ${b.name}"
+                        style="display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:20px;font-size:0.72rem;font-weight:700;cursor:pointer;transition:all 0.2s;border:1px solid ${b.color};background:${b.color}33;color:${b.color}; shadow: 0 4px 10px ${b.color}22;">
+                        ${b.emoji} ${b.name}
+                    </button>`).join('');
+
+            // Full picker for unassigned badges (hidden by default)
+            const unassignedChips = allBadges
+                .filter(b => !studentBadgeIds.includes(b.id))
+                .map(b => `
+                    <button 
+                        data-student="${student.id}" 
+                        data-badge="${b.id}"
+                        class="badge-chip-btn"
+                        title="Abzeichen hinzufügen: ${b.name}"
+                        style="display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:20px;font-size:0.72rem;font-weight:700;cursor:pointer;transition:all 0.2s;border:1px solid rgba(255,255,255,0.2);background:rgba(255,255,255,0.05);color:rgba(255,255,255,0.4);">
+                        ${b.emoji} ${b.name}
+                    </button>`).join('');
 
             badgeSection = `
-                <div style="margin-top:10px; padding-top:8px; border-top:1px solid rgba(255,255,255,0.08);">
-                    <div style="font-size:0.7rem; color:var(--text-muted); font-weight:700; margin-bottom:6px;">ABZEICHEN:</div>
-                    <div style="display:flex; flex-wrap:wrap; gap:6px;">${badgeChips}</div>
+                <div class="badge-row" style="margin-top:12px; padding-top:10px; border-top:1px solid rgba(255,255,255,0.08);">
+                    <div style="display:flex; flex-wrap:wrap; gap:6px; align-items:center;">
+                        ${earnedChips}
+                        <button class="add-badge-toggle" onclick="this.parentElement.nextElementSibling.classList.toggle('hidden'); this.classList.toggle('active')" style="
+                            width:32px; height:32px; border-radius:10px; border:1px dashed rgba(255,255,255,0.2); background:rgba(255,255,255,0.03); color:rgba(255,255,255,0.5); cursor:pointer; font-weight:800; font-size:1.1rem; display:flex; align-items:center; justify-content:center; transition: all 0.2s;
+                        ">＋</button>
+                    </div>
+                    <div class="badge-picker-extra hidden" style="margin-top:10px; padding:10px; background:rgba(0,0,0,0.2); border-radius:14px; border:1px solid rgba(255,255,255,0.05); animation: fadeIn 0.3s ease-out;">
+                        <div style="font-size:0.65rem; color:var(--text-muted); font-weight:900; margin-bottom:8px; opacity:0.8; letter-spacing:0.05em;">VERFÜGBARE ABZEICHEN:</div>
+                        <div style="display:flex; flex-wrap:wrap; gap:6px;">
+                            ${unassignedChips || '<span style="font-size:0.7rem; color:rgba(255,255,255,0.2);">Alle Abzeichen bereits vergeben.</span>'}
+                        </div>
+                    </div>
                 </div>`;
         }
 
