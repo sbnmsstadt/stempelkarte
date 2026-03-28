@@ -634,7 +634,8 @@ export default {
                 }
 
                 try {
-                    const result = await callGemini(promptText, env.KREATIV_API, { temperature: 0.7 });
+                    const apiKey = (env.KREATIV_API || env.KI_API || "").trim().replace(/^"|"$/g, '');
+                    const result = await callGemini(promptText, apiKey, { temperature: 0.7 });
                     
                     if (result.success) {
                         return new Response(JSON.stringify({ text: result.text, model: result.model }), {
@@ -872,17 +873,15 @@ Deine Aufgabe: Schreibe eine ausführliche, begeisterte Nachricht für die Infot
                     const res = await fetch(url);
                     const data = await res.json();
                     
-                    // Simple Test Generation to see if POST works here
-                    const testRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ contents: [{ parts: [{ text: "Hi" }] }] })
-                    });
-                    const testData = await testRes.json();
+                    // NEW: Real Generation Test with callGemini
+                    const testResult = await callGemini("Hi, this is a diagnostic test.", apiKey, { maxTokens: 10 });
 
                     return new Response(JSON.stringify({ 
+                        success: testResult.success,
+                        modelUsed: testResult.model,
+                        textReceived: testResult.text,
                         availableModels: data, 
-                        postTest: { status: testRes.status, data: testData }
+                        fullDiagnostic: testResult
                     }), {
                         headers: { ...corsHeaders, "Content-Type": "application/json" }
                     });
@@ -1045,10 +1044,11 @@ async function callGemini(prompt, apiKey, options = {}) {
             const data = await listRes.json();
             const models = data.models || [];
             
-            // Preference: flash 1.5 (8B) -> flash 1.5 -> flash newest -> pro 1.5 -> pro newest -> anything else
-            const best = models.find(m => m.name.includes("gemini-1.5-flash-8b") && m.supportedGenerationMethods.includes("generateContent")) ||
-                         models.find(m => m.name.includes("gemini-1.5-flash") && m.supportedGenerationMethods.includes("generateContent")) ||
+            // Preference: flash 2.5 -> flash 2.0 -> flash 1.5 -> flash newest -> pro newer -> anything else
+            const best = models.find(m => m.name.includes("gemini-2.5-flash") && m.supportedGenerationMethods.includes("generateContent")) ||
                          models.find(m => m.name.includes("gemini-2.0-flash") && m.supportedGenerationMethods.includes("generateContent")) ||
+                         models.find(m => (m.name.includes("gemini-1.5-flash") || m.name.includes("gemini-1.5-flash-8b")) && m.supportedGenerationMethods.includes("generateContent")) ||
+                         models.find(m => m.name.includes("gemini-3.1-flash") && m.supportedGenerationMethods.includes("generateContent")) ||
                          models.find(m => m.name.includes("flash") && m.supportedGenerationMethods.includes("generateContent")) ||
                          models.find(m => m.name.includes("pro") && m.supportedGenerationMethods.includes("generateContent")) ||
                          models.find(m => m.supportedGenerationMethods.includes("generateContent"));
@@ -1066,12 +1066,13 @@ async function callGemini(prompt, apiKey, options = {}) {
 
     // Step 2: Candidates - Include stable and latest models
     let candidates = [
+        "models/gemini-2.5-flash",
+        "models/gemini-2.0-flash",
         "models/gemini-1.5-flash-8b", 
         "models/gemini-1.5-flash", 
-        "models/gemini-2.0-flash-exp",
-        "models/gemini-1.5-flash-latest",
-        "models/gemini-1.5-pro",
-        "models/gemini-pro"
+        "models/gemini-3.1-flash-lite-preview",
+        "models/gemini-pro-latest",
+        "models/gemini-flash-latest"
     ];
     
     // If discovery found a model, try it FIRST (even if not in hardcoded list)

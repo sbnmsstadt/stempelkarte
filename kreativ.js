@@ -99,17 +99,20 @@ async function generateIdeas() {
         }
 
         const data = await response.json();
+        let jsonText = data.text;
         
-        if (data.candidates && data.candidates[0] && data.candidates[0].content && data.candidates[0].content.parts[0]) {
-            let jsonText = data.candidates[0].content.parts[0].text;
-            
-            // Cleanup just in case the model ignored the instructions
-            jsonText = jsonText.replace(/\`\`\`json/g, '').replace(/\`\`\`/g, '').trim();
-            
-            const ideas = JSON.parse(jsonText);
-            renderIdeas(ideas);
+        if (jsonText) {
+            try {
+                // Cleanup just in case the model ignored the instructions
+                jsonText = jsonText.replace(/\`\`\`json/g, '').replace(/\`\`\`/g, '').trim();
+                const ideas = JSON.parse(jsonText);
+                renderIdeas(ideas);
+            } catch (parseError) {
+                console.error("JSON Parse Error:", parseError, jsonText);
+                throw new Error("Die KI-Antwort war kein gültiges JSON. Erhalten: " + jsonText.substring(0, 100) + "...");
+            }
         } else {
-            throw new Error("Unerwartete Antwortstruktur der API");
+            throw new Error("Antwort-Struktur fehlerhaft (V3): Kein Text im 'data.text' Feld.");
         }
 
     } catch (err) {
