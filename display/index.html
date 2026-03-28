@@ -219,20 +219,18 @@
             backface-visibility: hidden;
             display: flex;
             flex-direction: column;
-            background: #0f172a; /* Solid background prevents mirroring/ghosting */
-            border-radius: 15px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            background: #0f172a !important; /* Solid background prevents mirroring/ghosting */
+            border-radius: 20px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.6);
+            margin: 0 !important;
         }
 
         .flip-card-front {
-            transform: rotateY(0deg) translateZ(1px);
+            transform: rotateY(0deg);
         }
 
         .flip-card-back {
-            transform: rotateY(180deg) translateZ(1px);
-            justify-content: center;
-            align-items: center;
-            text-align: center;
+            transform: rotateY(180deg);
         }
 
         .ai-motivation {
@@ -997,25 +995,36 @@
 
             <!-- Side-by-Side row (Hauptfokus) -->
             <div style="display: flex; gap: 18px; flex: 1.8;">
-                <!-- Tagesplan -->
-                <div class="card tagesplan-card flip-container" style="flex:1;">
-                    <div class="card-header">
-                        <div class="card-icon">📅</div>
-                        <div class="card-title" id="tagesplan-card-title">TAGESPLAN</div>
-                    </div>
-                    <div class="card-content" style="padding:0; overflow:visible;">
-                        <div class="flip-card-inner" id="tagesplan-flipper">
-                            <div class="flip-card-front" style="padding:15px; height:100%; overflow:auto;">
+                <!-- Tagesplan (Full Card Flip) -->
+                <div class="flip-container" style="flex:1;">
+                    <div class="flip-card-inner" id="tagesplan-flipper">
+                        
+                        <!-- FRONT SIDE: Full Card -->
+                        <div class="flip-card-front card" style="padding:22px;">
+                            <div class="card-header">
+                                <div class="card-icon">📅</div>
+                                <div class="card-title">TAGESPLAN</div>
+                            </div>
+                            <div class="card-content" style="padding:0; margin-top:16px; overflow:auto;">
                                 <div id="today-plan-list" class="today-plan-content">
                                     Lade Plan...
                                 </div>
                             </div>
-                            <div class="flip-card-back">
-                                <div id="today-plan-ai" class="today-plan-content ai-motivation" style="color: #fcd34d;">
+                        </div>
+
+                        <!-- BACK SIDE: Full Card (AI) -->
+                        <div class="flip-card-back card" style="padding:22px;">
+                            <div class="card-header">
+                                <div class="card-icon">🤖</div>
+                                <div class="card-title">HORT-ASSISTENT</div>
+                            </div>
+                            <div class="card-content" style="padding:0; margin-top:16px; overflow:auto;">
+                                <div id="today-plan-ai" class="today-plan-content ai-motivation" style="color:#fcd34d;">
                                     Bereite Motivation vor...
                                 </div>
                             </div>
                         </div>
+
                     </div>
                 </div>
 
@@ -1088,6 +1097,6 @@
         <div style="opacity:0.3; font-size:0.6rem;">v2.1-AI</div>
     </div>
 
-    <script src="display.js?v=999"></script>
+    <script src="display.js?v=99999"></script>
 </body>
 </html>

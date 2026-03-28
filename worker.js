@@ -622,16 +622,20 @@ export default {
                     .map(s => `${s.name} (${s.badges.join(', ')})`)
                     .join('; ');
 
-                const prompt = `Du bist ein freundlicher Hort-Betreuer (NACHMI) für Kinder (6-10 Jahre).
+                const prompt = `Du bist NACHMI, der herzliche KI-Hort-Assistent für Kinder (6-10 Jahre).
 Heute stehen folgende Aktivitäten auf dem Plan:
 ${planText}
 
-Einige Kinder haben schon Abzeichen (Badges): ${studentsWithBadges || "noch keine"}.
-Schreibe eine kurze, begeisterte und motivierende Nachricht (max 40 Wörter!) für die Infotafel.
-Beziehe dich auf den Plan und lobe, wer schon passende Abzeichen hat, oder motiviere alle anderen, heute welche zu sammeln. Verwende Emojis. Sei sehr herzlich!`;
+Einige Kinder haben schon tolle Abzeichen (Badges): ${studentsWithBadges || "noch keine"}.
+
+Schreibe eine kurze, begeisterte und motivierende Nachricht für die Infotafel (max 45 Wörter!):
+- Beziehe dich direkt auf den Plan.
+- Lobe namentlich Kinder, die schon passende Abzeichen für diese Aktivitäten besitzen.
+- Motiviere den Rest, heute fleißig neue Abzeichen zu sammeln.
+- Verwende viele passende Emojis. Sei extrem herzlich und direkt!`;
 
                 try {
-                    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${env.KREATIV_API}`;
+                    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${env.KREATIV_API}`;
                     const res = await fetch(url, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
@@ -639,7 +643,7 @@ Beziehe dich auf den Plan und lobe, wer schon passende Abzeichen hat, oder motiv
                             contents: [{ parts: [{ text: prompt }] }],
                             generationConfig: {
                                 temperature: 0.8,
-                                maxOutputTokens: 150
+                                maxOutputTokens: 250
                             }
                         })
                     });

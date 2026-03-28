@@ -571,24 +571,10 @@ function initPlanFlip() {
 
     // Toggle every 15 seconds for a more dynamic feel
     planFlipInterval = setInterval(() => {
-        const container = document.querySelector('.tagesplan-card.flip-container');
-        const titleEl = document.getElementById('tagesplan-card-title');
-
-        if (!container) {
-            return;
-        }
+        const container = document.querySelector('.flip-container');
+        if (!container) return;
         
         container.classList.toggle('flipped');
-
-        if (titleEl) {
-            const isFlipped = container.classList.contains('flipped');
-            titleEl.textContent = isFlipped ? "HORT-ASSISTENT" : "TAGESPLAN";
-
-            const iconEl = container.querySelector('.card-icon');
-            if (iconEl) {
-                iconEl.textContent = isFlipped ? "🤖" : "📅";
-            }
-        }
     }, 15000);
 }
 
