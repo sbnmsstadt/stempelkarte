@@ -635,7 +635,7 @@ export default {
 
                 try {
                     const apiKey = (env.KI_API || "").trim().replace(/^"|"$/g, '');
-                    const result = await callGemini(promptText, apiKey, { temperature: 0.7 });
+                    const result = await callGemini(promptText, apiKey, { temperature: 0.7, maxTokens: 4000 });
                     
                     if (result.success) {
                         return new Response(JSON.stringify({ text: result.text, model: result.model }), {

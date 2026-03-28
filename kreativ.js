@@ -114,17 +114,21 @@ async function generateIdeas() {
                 // Cleanup common Markdown blocks
                 jsonText = jsonText.replace(/\`\`\`json/g, '').replace(/\`\`\`/g, '').trim();
                 
-                // Fix potential trailing commas (common in AI outputs) before parsing
+                // Fix: Replace real newlines inside JSON strings with escaped \n (Gemini sometimes does this)
+                jsonText = jsonText.replace(/"([^"]*)"/g, (m, p1) => '"' + p1.replace(/\n/g, '\\n') + '"');
+                
+                // Fix potential trailing commas before parsing
                 jsonText = jsonText.replace(/,\s*([\]}])/g, '$1');
                 
                 const ideas = JSON.parse(jsonText);
                 renderIdeas(ideas);
             } catch (parseError) {
                 console.error("JSON Parse Error:", parseError, jsonText);
-                throw new Error(`Die KI-Antwort (V5) war kein gültiges JSON. Fehler: ${parseError.message}. Erhalten: ` + jsonText.substring(0, 200) + "...");
+                // Providing more context (500 chars) in V6 to pinpoint the exact syntax error
+                throw new Error(`KI-Antwort (V6) ungültig. Fehler: ${parseError.message}. Erhalten: ` + jsonText.substring(0, 500) + "...");
             }
         } else {
-            throw new Error("Antwort-Struktur fehlerhaft (V5): Kein Text im 'data.text' Feld.");
+            throw new Error("Antwort-Struktur fehlerhaft (V6): Kein Text im 'data.text' Feld.");
         }
 
     } catch (err) {
