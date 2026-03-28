@@ -670,7 +670,11 @@ Deine Aufgabe: Schreibe eine ausführliche, begeisterte Nachricht für die Infot
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({
                             contents: [{ parts: [{ text: prompt }] }],
-                            generationConfig: { temperature: 0.8, maxOutputTokens: 500 }
+                            generationConfig: { 
+                                temperature: 0.9, 
+                                maxOutputTokens: 600,
+                                stopSequences: [] 
+                            }
                         })
                     });
                     
@@ -678,8 +682,9 @@ Deine Aufgabe: Schreibe eine ausführliche, begeisterte Nachricht für die Infot
                         const data = await res.json();
                         const generatedText = data?.candidates?.[0]?.content?.parts?.[0]?.text;
                         if (generatedText) {
+                            const timeStr = new Date().toLocaleTimeString('de-DE');
                             return new Response(JSON.stringify({ 
-                                text: generatedText.trim(), 
+                                text: `[GEN-TIME: ${timeStr}] \n\n${generatedText.trim()}`, 
                                 model: modelToUse + " " + discoveryLog 
                             }), {
                                 headers: { ...corsHeaders, "Content-Type": "application/json" }

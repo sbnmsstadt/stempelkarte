@@ -787,15 +787,20 @@ async function saveSettings() {
                             return { name: s.name.split(' ')[0], badges: badgeNames };
                         });
 
+                        const payload = { planText: todayPlan, students: studentData };
+                        // DEBUG ALERT
+                        alert("Sende Payload an KI:\n" + JSON.stringify(payload));
+
                         const aiRes = await fetch(`${API_URL}/ai/day-plan`, {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ planText: todayPlan, students: studentData })
+                            body: JSON.stringify(payload)
                         });
 
                         if (aiRes.ok) {
                             const aiData = await aiRes.json();
                             if (aiData.text) {
+                                alert("KI ANTWORT ERHALTEN:\n" + aiData.text);
                                 // Fetch latest settings again just to be safe
                                 const sRes = await fetch(`${API_URL}/settings`);
                                 if (sRes.ok) {
