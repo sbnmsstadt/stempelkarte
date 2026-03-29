@@ -1676,9 +1676,39 @@ function handleTamaActionDetection(tama) {
             showSpeechBubble(`Ich bin jetzt schlauer! 📚`);
         } else if (tama.lastAction === 'style') {
             showSpeechBubble(`Steht mir das? 🎩`);
+        } else if (tama.lastAction === 'handwash') {
+            triggerHandWashAnimation();
+            showSpeechBubble(`Hände sind sauber! Vorbildlich, ${tama.lastActionStudentName || 'Abenteurer'}! 🧼✨`);
         }
     }
 }
-
-
-
+function triggerHandWashAnimation() {
+    // Spawn bubbles across the full screen width/height for maximum effect
+    for (let i = 0; i < 40; i++) {
+        setTimeout(() => {
+            const bubble = document.createElement('div');
+            bubble.style.position = 'fixed';
+            bubble.style.left = Math.random() * 100 + 'vw';
+            bubble.style.bottom = '-10vh';
+            bubble.style.fontSize = (Math.random() * 2 + 1) + 'rem';
+            bubble.style.zIndex = '1000';
+            bubble.style.pointerEvents = 'none';
+            bubble.innerText = '🫧';
+            bubble.className = 'bubble-particle'; // For CSS if needed, but styling via JS for now
+            
+            // Random horizontal drift
+            const drift = (Math.random() - 0.5) * 200;
+            bubble.animate([
+                { transform: 'translateY(0) translateX(0) scale(0)', opacity: 0 },
+                { transform: `translateY(-110vh) translateX(${drift}px) scale(1.5)`, opacity: 0.8 },
+                { transform: `translateY(-130vh) translateX(${drift * 1.5}px) scale(2)`, opacity: 0 }
+            ], {
+                duration: 2000 + Math.random() * 1500,
+                easing: 'ease-out'
+            });
+            
+            document.body.appendChild(bubble);
+            setTimeout(() => bubble.remove(), 4000);
+        }, i * 50);
+    }
+}

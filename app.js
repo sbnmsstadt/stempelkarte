@@ -1142,8 +1142,6 @@ function renderTamagotchiUI(tama, student) {
 async function careForTama(action) {
     if (!currentStudent) return;
     
-    // Interactions are now FREE (Daily limit of 2)
-
     try {
         const response = await fetch(`${API_URL}/tamagotchi/care`, {
             method: 'POST',
@@ -1159,7 +1157,7 @@ async function careForTama(action) {
             const avatar = document.getElementById('tama-ui-avatar');
             if (avatar) {
                 const originalText = avatar.innerText;
-                avatar.innerText = "✨✔️"; 
+                avatar.innerText = (action === "handwash") ? "🧼✨" : "✨✔️"; 
                 avatar.style.transform = "scale(1.5) translateY(-5px)";
                 avatar.classList.add('tama-interact-pulse'); 
                 setTimeout(() => {
@@ -1177,7 +1175,10 @@ async function careForTama(action) {
             } else if (action === "love") {
                 toast.textContent = "Tamagotchi liebt dich! ❤️";
             } else if (action === "clean") {
-                toast.textContent = "Alles wieder blitzblank! 🧼";
+                toast.textContent = "Alles wieder blitzblank! 🚿";
+            } else if (action === "handwash") {
+                toast.textContent = "Hände sind sauber! Jetzt darfst du essen! 🧼✨";
+                startHandwashTimer();
             } else {
                 toast.textContent = "Tamagotchi freut sich! ✨";
             }
@@ -1193,10 +1194,51 @@ async function careForTama(action) {
             silentSync();
         } else {
             const msg = await response.text();
-            alert(msg); // Show the specific "limit reached" or other error message
+            if (response.status === 403 && msg.includes("Hände Waschen")) {
+                showTamaReminder(msg);
+            } else {
+                alert(msg); // Show the specific "limit reached" or other error message
+            }
         }
     } catch (err) {
         console.error("Care error:", err);
         alert("Netzwerkfehler beim Pflegen des Klassentiers.");
     }
+}
+
+// Custom function for the Tamagotchi "Reminder" Popup
+function showTamaReminder(message) {
+    const overlay = document.createElement('div');
+    overlay.className = 'overlay active';
+    overlay.style.zIndex = "10000";
+    overlay.innerHTML = `
+        <div class="glass-card" style="max-width:320px; text-align:center; padding:2rem; animation: bounceIn 0.5s;">
+            <div style="font-size:3rem; margin-bottom:1rem;">🧼🤔</div>
+            <h3 style="color:#fbbf24; margin-bottom:1rem;">Halt Stopp!</h3>
+            <p style="font-size:1.1rem; line-height:1.4; color:white; font-weight:700;">${message}</p>
+            <button onclick="this.closest('.overlay').remove()" class="add-stamp-btn" style="margin-top:1.5rem; width:100%;">Okay, ich wasche sie! 🧼</button>
+        </div>
+    `;
+    document.body.appendChild(overlay);
+}
+
+let handwashInterval = null;
+function startHandwashTimer() {
+    const timerEl = document.getElementById('handwash-timer');
+    if (!timerEl) return;
+    
+    clearInterval(handwashInterval);
+    let timeLeft = 60;
+    timerEl.innerText = `${timeLeft}s`;
+    timerEl.style.display = 'block';
+    
+    handwashInterval = setInterval(() => {
+        timeLeft--;
+        if (timeLeft <= 0) {
+            clearInterval(handwashInterval);
+            timerEl.style.display = 'none';
+        } else {
+            timerEl.innerText = `${timeLeft}s`;
+        }
+    }, 1000);
 }

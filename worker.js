@@ -770,6 +770,14 @@ export default {
 
                 let logMsg = "";
                 if (action === "feed") { 
+                    // Check for Hand Wash (must be within last 60 seconds)
+                    const now = Date.now();
+                    const lastWash = student.lastHandWash || 0;
+                    if (now - lastWash > 60000) {
+                        // Return special error message for the frontend to handle
+                        return new Response(`${student.name}, vor dem Essen erst Hände Waschen! 🧼`, { status: 403, headers: corsHeaders });
+                    }
+
                     settings.tamagotchi.stats.hunger = Math.min(100, (settings.tamagotchi.stats.hunger || 0) + 25); 
                     settings.tamagotchi.lastAction = 'feed';
                     settings.tamagotchi.lastActionTime = new Date().toISOString();
@@ -834,6 +842,12 @@ export default {
                     settings.tamagotchi.lastAction = 'style';
                     settings.tamagotchi.lastActionTime = new Date().toISOString();
                     logMsg = "Tamagotchi neu gestylt 🎩";
+                }
+                else if (action === "handwash") {
+                    student.lastHandWash = Date.now();
+                    settings.tamagotchi.lastAction = 'handwash';
+                    settings.tamagotchi.lastActionTime = new Date().toISOString();
+                    logMsg = "Hände gewaschen 🧼";
                 }
                 
                 student.history.push({ date: today, reason: logMsg, emoji: "🐣" });
