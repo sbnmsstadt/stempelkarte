@@ -1125,8 +1125,8 @@ function renderTamagotchiUI(tama, student) {
     if (limitText && student.tamaActions) {
         const today = new Date().toISOString().split('T')[0];
         const count = student.tamaActions.date === today ? student.tamaActions.count : 0;
-        limitText.textContent = `Limit: ${count}/2 heute genutzt`;
-        if (count >= 2) limitText.style.color = "#ef4444";
+        limitText.textContent = `Limit: ${count}/5 heute genutzt`;
+        if (count >= 5) limitText.style.color = "#ef4444";
         else limitText.style.color = "rgba(255,255,255,0.3)";
     }
 }

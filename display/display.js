@@ -948,15 +948,27 @@ function updateWeatherView() {
     
     if (code >= 71 && code <= 77) {
         overlay.classList.add('weather-snow');
-        if (bgImg) bgImg.style.filter = 'brightness(0.8) saturate(0.5) sepia(0.2)';
+        if (bgImg) {
+            bgImg.src = 'assets/tama_bg.png'; // No snow BG yet
+            bgImg.style.filter = 'brightness(0.8) saturate(0.5) sepia(0.2)';
+        }
     } else if (code >= 51 && code <= 82) {
         overlay.classList.add('weather-rain');
-        if (bgImg) bgImg.style.filter = 'brightness(0.6) saturate(0.8)';
+        if (bgImg) {
+            bgImg.src = 'assets/tama_bg_rain.png';
+            bgImg.style.filter = 'brightness(0.6) saturate(0.8)';
+        }
     } else if (code <= 3) {
         overlay.classList.add('weather-sun');
-        if (bgImg) bgImg.style.filter = 'brightness(1.1) saturate(1.2)';
+        if (bgImg) {
+            bgImg.src = 'assets/tama_bg.png';
+            bgImg.style.filter = 'brightness(1.1) saturate(1.2)';
+        }
     } else {
-        if (bgImg) bgImg.style.filter = 'brightness(0.9)';
+        if (bgImg) {
+            bgImg.src = 'assets/tama_bg.png';
+            bgImg.style.filter = 'brightness(0.9)';
+        }
     }
 }
 

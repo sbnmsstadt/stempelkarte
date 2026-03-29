@@ -122,9 +122,16 @@ export default {
                             settings.tamagotchi.isSleeping = true;
                         }
 
-                        // 20% chance per hour to poop
                         if (Math.random() < 0.2 * hoursPassed) {
                             settings.tamagotchi.poopCount = Math.min(3, (settings.tamagotchi.poopCount || 0) + 1);
+                        }
+
+                        // --- Hat Expiration ---
+                        if (settings.tamagotchi.currentHat && settings.tamagotchi.hatExpires) {
+                            if (now > settings.tamagotchi.hatExpires) {
+                                settings.tamagotchi.currentHat = null;
+                                settings.tamagotchi.hatExpires = null;
+                            }
                         }
 
                         settings.tamagotchi.lastUpdate = now;
@@ -717,8 +724,8 @@ export default {
                     student.tamaActions.date = today;
                 }
 
-                if (student.tamaActions.count >= 2) {
-                    return new Response("Du hast dich heute schon 2x um das Tier gekümmert!", { status: 403, headers: corsHeaders });
+                if (student.tamaActions.count >= 5) {
+                    return new Response("Du hast dich heute schon 5x um das Tier gekümmert!", { status: 403, headers: corsHeaders });
                 }
 
                 const settingsRaw = await env.DATABASE.get("settings");
@@ -786,6 +793,7 @@ export default {
                 else if (action === "style") {
                     const hats = ['hat_party', 'hat_crown', 'hat_cool', 'hat_detective'];
                     settings.tamagotchi.currentHat = hats[Math.floor(Math.random() * hats.length)];
+                    settings.tamagotchi.hatExpires = Date.now() + 1 * 60 * 60 * 1000; // 1 Hour
                     settings.tamagotchi.lastAction = 'style';
                     settings.tamagotchi.lastActionTime = new Date().toISOString();
                     logMsg = "Tamagotchi neu gestylt 🎩";
