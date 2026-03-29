@@ -1023,3 +1023,46 @@ async function contributeGroupReward() {
         alert("Fehler bei der Verbindung.");
     }
 }
+
+// Badge Info Modal
+async function openBadgeInfo() {
+    const overlay = document.getElementById('badge-info-overlay');
+    const grid = document.getElementById('all-badges-grid');
+    if (!overlay || !grid) return;
+
+    grid.innerHTML = '<div style="text-align:center; padding: 20px; opacity:0.6;">Suche Abzeichen... ✨</div>';
+    overlay.classList.add('active');
+
+    try {
+        const res = await fetch(`${API_URL}/badges`);
+        if (!res.ok) throw new Error("Fetch failed");
+        const allBadges = await res.json();
+        
+        const studentBadgeIds = currentStudent ? (currentStudent.badges || []) : [];
+        
+        grid.innerHTML = allBadges.map(b => {
+            const isEarned = studentBadgeIds.includes(b.id);
+            return `
+                <div class="badge-info-item ${isEarned ? 'earned' : 'locked'}">
+                    <div class="badge-info-icon" style="background: ${b.color}${isEarned ? '20' : '05'}">
+                        ${b.emoji}
+                    </div>
+                    <div class="badge-info-content">
+                        <h4 style="color: ${isEarned ? (b.color || 'white') : 'rgba(255,255,255,0.4)'}">${b.name}</h4>
+                        <p>${b.description || 'Sammle weiter Stempel!'}</p>
+                    </div>
+                    <div class="badge-status-tag ${isEarned ? 'earned' : 'locked'}">
+                        ${isEarned ? '✅ Erreicht' : '🔒 Noch offen'}
+                    </div>
+                </div>
+            `;
+        }).join('');
+    } catch (e) {
+        console.error("Badge Load Error:", e);
+        grid.innerHTML = '<div style="text-align:center; padding: 20px; color: #ef4444;">Abzeichen konnten nicht geladen werden.</div>';
+    }
+}
+
+function closeBadgeInfoOverlay() {
+    document.getElementById('badge-info-overlay').classList.remove('active');
+}

@@ -692,3 +692,72 @@ input[type="number"] {
     border-left: 3px solid var(--accent);
     white-space: pre-wrap;
 }
+
+/* Badge Gallery in Info Overlay */
+.badge-info-item {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 12px 16px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--glass-border);
+    border-radius: 16px;
+    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.badge-info-item.earned {
+    background: rgba(255, 255, 255, 0.08);
+    border-color: rgba(255, 255, 255, 0.2);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+}
+
+.badge-info-item.locked {
+    opacity: 0.6;
+    filter: grayscale(0.8);
+    border-style: dashed;
+}
+
+.badge-info-icon {
+    font-size: 1.8rem;
+    width: 44px;
+    height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 12px;
+    flex-shrink: 0;
+}
+
+.badge-info-content h4 {
+    font-weight: 800;
+    font-size: 0.95rem;
+    margin: 0;
+    color: white;
+}
+
+.badge-info-content p {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    margin: 2px 0 0 0;
+}
+
+.badge-status-tag {
+    margin-left: auto;
+    font-size: 0.65rem;
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    padding: 4px 8px;
+    border-radius: 6px;
+}
+
+.badge-status-tag.earned {
+    color: var(--success);
+    background: hsla(142, 70%, 45%, 0.15);
+}
+
+.badge-status-tag.locked {
+    color: var(--text-muted);
+    background: rgba(255, 255, 255, 0.05);
+}
