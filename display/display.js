@@ -1625,10 +1625,9 @@ function renderTamagotchi() {
         else if (stats.fun < 30) statusText = "Langweilig... 🥱";
         else if (stats.love < 50) statusText = "Braucht Liebe ❤️";
         const now = Date.now();
-        const actionTime = tama.lastActionTime ? new Date(tama.lastActionTime).getTime() : 0;
-        const lastUpdate = tama.lastUpdate ? new Date(tama.lastUpdate).getTime() : now;
-        const referenceTime = Math.max(actionTime, lastUpdate);
-        const inactiveSeconds = (now - referenceTime) / 1000;
+        // Calc inactivity relative ONLY to last interaction
+        const actionTime = tama.lastActionTime ? new Date(tama.lastActionTime).getTime() : (tama.born || tama.hatchDate || now);
+        const inactiveSeconds = (now - actionTime) / 1000;
 
         // --- Interaction Protection ---
         handleTamaActionDetection(tama);
