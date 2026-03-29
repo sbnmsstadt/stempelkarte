@@ -62,10 +62,10 @@ export default {
                     }
                 }
 
-                // Poop & Trash Chance: 52% per active hour
-                if (Math.random() < 0.52 * activeHours) {
+                // Poop & Trash Chance: 250% per active hour (avg 2.5 events/hour)
+                if (Math.random() < 2.5 * activeHours) {
                     const type = Math.random();
-                    if (type < 0.6) {
+                    if (type < 0.7) { // 70% Poop, 30% Trash
                         settings.tamagotchi.poopCount = Math.min(20, (settings.tamagotchi.poopCount || 0) + 1);
                     } else {
                         settings.tamagotchi.trashCount = Math.min(20, (settings.tamagotchi.trashCount || 0) + 1);
@@ -943,6 +943,44 @@ export default {
                     settings.tamagotchi.lastAction = 'style';
                     settings.tamagotchi.lastActionTime = Date.now();
                     logMsg = "Tamagotchi neu gestylt 🎩";
+                }
+                else if (action === "read") {
+                    settings.tamagotchi.stats.readCount = (settings.tamagotchi.stats.readCount || 0) + 1;
+                    settings.tamagotchi.stats.intelligence = Math.min(100, (settings.tamagotchi.stats.intelligence || 0) + 2);
+                    settings.tamagotchi.lastAction = 'read';
+                    settings.tamagotchi.lastActionTime = Date.now();
+                    logMsg = "Gemeinsam ein Buch gelesen 📖";
+                }
+                else if (action === "homework") {
+                    const readCount = settings.tamagotchi.stats.readCount || 0;
+                    // Probability of success: starts at 20%, goes up to 90% after 15 reads
+                    const successProb = Math.min(0.9, 0.2 + (readCount * 0.05));
+                    const isSuccessful = Math.random() < successProb;
+                    
+                    // Generate Simple Math Problem (Addition up to 20)
+                    const a = Math.floor(Math.random() * 10) + 1;
+                    const b = Math.floor(Math.random() * 10) + 1;
+                    const realResult = a + b;
+                    const displayResult = isSuccessful ? realResult : (realResult + (Math.random() < 0.5 ? 1 : -1) * (Math.floor(Math.random() * 3) + 1));
+                    
+                    settings.tamagotchi.lastHomework = {
+                        a, b, op: '+',
+                        result: displayResult,
+                        isCorrect: isSuccessful
+                    };
+                    
+                    if (isSuccessful) {
+                        settings.tamagotchi.stats.intelligence = Math.min(100, (settings.tamagotchi.stats.intelligence || 0) + 5);
+                        settings.tamagotchi.stats.xp = (settings.tamagotchi.stats.xp || 0) + 15;
+                        logMsg = "Hausaufgaben gelöst! 📝✨";
+                    } else {
+                        // Fail decreases fun because it's frustrating
+                        settings.tamagotchi.stats.fun = Math.max(0, (settings.tamagotchi.stats.fun || 0) - 15);
+                        logMsg = "Hausaufgaben waren zu schwer... 😵‍💫";
+                    }
+                    
+                    settings.tamagotchi.lastAction = 'homework';
+                    settings.tamagotchi.lastActionTime = Date.now();
                 }
                 else if (action === "handwash") {
                     student.lastHandWash = Date.now();

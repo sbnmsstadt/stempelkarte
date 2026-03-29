@@ -1277,12 +1277,20 @@ function updateWeatherView() {
     }
 }
 
-function showSpeechBubble(text) {
+let _bubbleTimeout = null;
+function showSpeechBubble(text, duration = 4000) {
     const bubble = document.getElementById('tama-bubble');
     if (!bubble) return;
+    
+    if (_bubbleTimeout) clearTimeout(_bubbleTimeout);
+    
     bubble.textContent = text;
     bubble.classList.add('active');
-    setTimeout(() => bubble.classList.remove('active'), 4000);
+    
+    _bubbleTimeout = setTimeout(() => {
+        bubble.classList.remove('active');
+        _bubbleTimeout = null;
+    }, duration);
 }
 
 function triggerFeedAnimation(foodEmoji = '🍎') {
@@ -1795,6 +1803,13 @@ function handleTamaActionDetection(tama) {
         } else if (tama.lastAction === 'handwash') {
             triggerHandWashAnimation();
             showSpeechBubble(`Hände sind sauber! 🧼✨`);
+        } else if (tama.lastAction === 'read') {
+            triggerReadAnimation();
+            showSpeechBubble(`Ich liebe lesen! 📖`);
+        } else if (tama.lastAction === 'homework') {
+            triggerHomeworkAnimation(tama.lastHomework);
+        } else if (tama.lastAction === 'train') {
+            showSpeechBubble(`Ich werde immer schlauer! 🧠✨`);
         }
     }
 }
@@ -1879,4 +1894,39 @@ function triggerBubbleEffect(count, isShower, targetX) {
             setTimeout(() => bubble.remove(), 2500);
         }, i * (isShower ? 25 : 45));
     }
+}
+
+function triggerReadAnimation() {
+    const gridEl = document.getElementById('tama-pixel-grid');
+    if (!gridEl) return;
+    
+    const book = document.createElement('div');
+    book.className = 'pixel-food'; // Reuse food styling for side-item
+    book.textContent = '📖';
+    gridEl.appendChild(book);
+    
+    setTimeout(() => book.remove(), 2500);
+}
+
+function triggerHomeworkAnimation(problem) {
+    if (!problem) return;
+    
+    // Step 1: Thinking
+    showSpeechBubble("Hm... 🤔", 2000);
+    
+    // Step 2: Show Problem
+    setTimeout(() => {
+        showSpeechBubble(`${problem.a} ${problem.op} ${problem.b} = ?`, 3000);
+    }, 2000);
+    
+    // Step 3: Show Result
+    setTimeout(() => {
+        const text = `${problem.a} ${problem.op} ${problem.b} = ${problem.result}`;
+        if (problem.isCorrect) {
+            showSpeechBubble(`${text} 🌟 Richtig!`, 5000);
+            triggerLoveAnimation(); // Celebrate
+        } else {
+            showSpeechBubble(`${text} 🤯 Oh nein...`, 5000);
+        }
+    }, 5000);
 }
