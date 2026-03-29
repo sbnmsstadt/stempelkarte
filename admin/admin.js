@@ -736,6 +736,19 @@ function renderAdminList(filter = "") {
                     <input type="number" class="admin-stamp-input" value="${student.stamps}" onchange="updateStamps('${student.id}', this.value)">
                     <span class="subtitle" style="margin-left:8px">Stempel</span>
                 </div>
+                
+                <div class="admin-row-attendance" style="margin-top:12px; padding-top:10px; border-top:1px solid rgba(255,255,255,0.08); display:flex; align-items:center; gap:10px;">
+                    <span class="subtitle" style="font-size:0.65rem; font-weight:900; opacity:0.8;">ANWESENHEIT:</span>
+                    <div style="display:flex; gap:6px;">
+                        ${['mon', 'tue', 'wed', 'thu', 'fri'].map(day => `
+                            <label class="attendance-checkbox-label" style="display:flex; align-items:center; gap:4px; font-size:0.75rem; font-weight:700; cursor:pointer;">
+                                <input type="checkbox" onchange="updateAttendance('${student.id}', '${day}', this.checked)" ${student.attendance && student.attendance[day] ? 'checked' : ''} style="accent-color:var(--success);"> 
+                                ${day === 'mon' ? 'M' : day === 'tue' ? 'D' : day === 'wed' ? 'M' : day === 'thu' ? 'D' : 'F'}
+                            </label>
+                        `).join(' ')}
+                    </div>
+                </div>
+
                 <div class="admin-button-group" style="flex-wrap:wrap; justify-content:flex-end;">
                     ${vipEligible ? `<button onclick="toggleVip('${student.id}', ${!isVip})" class="icon-btn-small" style="padding:4px 8px; font-size:0.7rem; font-weight:800; ${isVip ? 'color:gold; border-color:gold;' : 'color:var(--text-muted);'}" title="${isVip ? 'VIP entziehen' : 'VIP vergeben'}">
                         ⭐ ${isVip ? 'VIP' : 'VIP?'}
@@ -825,6 +838,27 @@ async function updateStamps(id, c) {
         })
     });
     fetchStudents();
+}
+
+async function updateAttendance(id, day, val) {
+    const attObj = {};
+    attObj[day] = val;
+    
+    try {
+        await fetch(`${API_URL}/students/${id}`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ attendance: attObj })
+        });
+        // Silent update current local state for faster feel, but no full re-render needed
+        const s = window.students.find(x => x.id === id);
+        if (s) {
+            if (!s.attendance) s.attendance = {};
+            s.attendance[day] = val;
+        }
+    } catch (err) {
+        console.error("Attendance update error:", err);
+    }
 }
 
 function showStatus(m, t) { console.log(m); }

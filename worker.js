@@ -429,7 +429,8 @@ export default {
                     avatar: null,
                     badges: [],
                     history: [],
-                    redemptions: {} 
+                    redemptions: {},
+                    attendance: { mon: false, tue: false, wed: false, thu: false, fri: false }
                 };
                 students.push(newStudent);
                 await env.DATABASE.put("students", JSON.stringify(students));
@@ -447,7 +448,7 @@ export default {
                 if (pathParts.length === 4) {
                     const id = pathParts[3];
                     const body = await request.json();
-                    const { stamps, avatar, badges, reason } = body;
+                    const { stamps, avatar, badges, reason, attendance } = body;
                     const studentsRaw = await env.DATABASE.get("students");
                     let students = JSON.parse(studentsRaw || "[]");
 
@@ -458,6 +459,9 @@ export default {
                     if (students[index].avatar === undefined) students[index].avatar = null;
                     if (students[index].badges === undefined) students[index].badges = [];
                     if (students[index].history === undefined) students[index].history = [];
+                    if (students[index].attendance === undefined) {
+                        students[index].attendance = { mon: false, tue: false, wed: false, thu: false, fri: false };
+                    }
 
                     if (stamps !== undefined) {
                         // If stamps increased, track history
@@ -471,6 +475,12 @@ export default {
                         students[index].stamps = stamps;
                     }
                     if (avatar !== undefined) students[index].avatar = avatar;
+                    if (attendance !== undefined) {
+                        students[index].attendance = { 
+                            ...students[index].attendance, 
+                            ...attendance 
+                        };
+                    }
                     if (badges !== undefined) {
                         const prevB = students[index].badges || [];
                         const currentB = badges || [];

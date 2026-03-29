@@ -143,6 +143,7 @@ function renderAll() {
     renderVIPs();
     renderTicker();
     renderStudentOfWeek();
+    renderAttendance(); // NEW: Today's attendance list
     renderBadgeGalerie();
     renderTamagotchi(); // NEW: Digital Pet logic
     checkBirthdayMode();
@@ -198,6 +199,47 @@ function renderStudentOfWeek() {
         </div>
         <div style="font-size:2.5rem; animation: vipPulse 2s ease-in-out infinite;">⭐</div>
     `;
+}
+function renderAttendance() {
+    const list = document.getElementById('attendance-list');
+    if (!list) return;
+
+    const days = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'];
+    const todayIndex = new Date().getDay();
+    const todayKey = days[todayIndex];
+
+    // Only filter for school days
+    if (todayIndex === 0 || todayIndex === 6) {
+        smoothUpdate(list, `<div class="empty-state">Wochenende! 🍿</div>`);
+        return;
+    }
+
+    const presentStudents = students.filter(s => s.attendance && s.attendance[todayKey]);
+
+    if (presentStudents.length === 0) {
+        smoothUpdate(list, `<div class="empty-state">Heute ist noch keiner da. 🤔</div>`);
+        return;
+    }
+
+    const html = presentStudents.map(s => {
+        const avatar = s.avatar || s.name.charAt(0).toUpperCase();
+        
+        // Map badge IDs to emojis
+        const badgeEmojis = (s.badges || []).map(bid => {
+            const b = badges.find(x => x.id === bid);
+            return b ? `<span class="attendance-badge-icon" title="${b.name}">${b.emoji}</span>` : '';
+        }).join('');
+
+        return `
+            <div class="attendance-item">
+                <div class="attendance-avatar">${avatar}</div>
+                <div class="attendance-name">${s.name.split(' ')[0]}</div>
+                <div class="attendance-badges">${badgeEmojis}</div>
+            </div>
+        `;
+    }).join('');
+
+    smoothUpdate(list, html);
 }
 
 // ── BADGE GALLERY (Motivation) ─────────────────
