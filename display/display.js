@@ -693,7 +693,7 @@ updateClock();
 setInterval(updateClock, 1000);
 
 fetchData();
-setInterval(fetchData, 15000); // alle 15 Sek.
+setInterval(fetchData, 5000); // Poll every 5 seconds for responsive Tamagotchi village
 
 // Start the ticker RAF loop immediately (it runs forever)
 startTickerLoop();
@@ -725,94 +725,166 @@ window.addEventListener('resize', () => {
 });
 
 // ── TAMAGOTCHI: PIXEL ART DATA ─────────────────
-const TAMA_SIZE = 12;
+const TAMA_SIZE = 24; // 24x24 now (doubled resolution)
 const PET_FRAMES = {
     baby: {
         neutral: [
-            "............",
-            "..P......P..",
-            ".PPP....PPP.",
-            ".BBBBBBBBBB.",
-            "BBBBBBBBBBBB",
-            "BBEEBBBBEEBB",
-            "BBEEBBBBEEBB",
-            "BBBBBBBBBBBB",
-            "DBBBBMNBBBD.",
-            "DDBBBMMBBBD.",
-            ".DDDDDDDDDD.",
-            "..BB....BB.."
+            "........................",
+            "........................",
+            "....PPPP........PPPP....",
+            "...PPPPPP......PPPPPP...",
+            "...PPPPPP......PPPPPP...",
+            "....PPPP........PPPP....",
+            "........................",
+            "....BBBBBBBBBBBBBBBB....",
+            "...BBBBBBBBBBBBBBBBBB...",
+            "..BBBBBBBBBBBBBBBBBBBB..",
+            ".BBBBBBBBBBBBBBBBBBBBBB.",
+            ".BBBBBBBBBBBBBBBBBBBBBB.",
+            ".BBEEEEEEBBBBBBEEEEEEBB.",
+            ".BBEEEEEEBBBBBBEEEEEEBB.",
+            ".BBEEEEEEBBBBBBEEEEEEBB.",
+            ".BBBBBBBBBBBBBBBBBBBBBB.",
+            ".BBBBBBBBBBBBBBBBBBBBBB.",
+            ".DBBBBBBBBBMMBBBBBBBBBD.",
+            ".DBBBBBBBBMMMMBBBBBBBBD.",
+            "..DDBBBBBBMMMMBBBBBBDD..",
+            "...DDDDDDDDDDDDDDDDDD...",
+            "....DDDDDDDDDDDDDDDD....",
+            "......BBBB....BBBB......",
+            "......BBBB....BBBB......"
         ],
         blink: [
-            "............",
-            "..P......P..",
-            ".PPP....PPP.",
-            ".BBBBBBBBBB.",
-            "BBBBBBBBBBBB",
-            "BBDDBBBBDDBB",
-            "BBDDBBBBDDBB",
-            "BBBBBBBBBBBB",
-            "DBBBBMNBBBD.",
-            "DDBBBMMBBBD.",
-            ".DDDDDDDDDD.",
-            "..BB....BB.."
+            "........................",
+            "........................",
+            "....PPPP........PPPP....",
+            "...PPPPPP......PPPPPP...",
+            "...PPPPPP......PPPPPP...",
+            "....PPPP........PPPP....",
+            "........................",
+            "....BBBBBBBBBBBBBBBB....",
+            "...BBBBBBBBBBBBBBBBBB...",
+            "..BBBBBBBBBBBBBBBBBBBB..",
+            ".BBBBBBBBBBBBBBBBBBBBBB.",
+            ".BBBBBBBBBBBBBBBBBBBBBB.",
+            ".BBDDDDDDBBBBBBDDDDDDBB.",
+            ".BBDDDDDDBBBBBBDDDDDDBB.",
+            ".BBDDDDDDBBBBBBDDDDDDBB.",
+            ".BBBBBBBBBBBBBBBBBBBBBB.",
+            ".BBBBBBBBBBBBBBBBBBBBBB.",
+            ".DBBBBBBBBBMMBBBBBBBBBD.",
+            ".DBBBBBBBBMMMMBBBBBBBBD.",
+            "..DDBBBBBBMMMMBBBBBBDD..",
+            "...DDDDDDDDDDDDDDDDDD...",
+            "....DDDDDDDDDDDDDDDD....",
+            "......BBBB....BBBB......",
+            "......BBBB....BBBB......"
         ],
         sad: [
-            "............",
-            "..P......P..",
-            ".PPP....PPP.",
-            ".BBBBBBBBBB.",
-            "BBBBBBBBBBBB",
-            "BBEEBBBBEEBB",
-            "BBEEBBBBEEBB",
-            "BBBBBBBBBBBB",
-            "DBBMMMMMMBD.",
-            "DDBBMMMMBBD.",
-            ".DDDDDDDDDD.",
-            "..BB....BB.."
+            "........................",
+            "........................",
+            "....PPPP........PPPP....",
+            "...PPPPPP......PPPPPP...",
+            "...PPPPPP......PPPPPP...",
+            "....PPPP........PPPP....",
+            "........................",
+            "....BBBBBBBBBBBBBBBB....",
+            "...BBBBBBBBBBBBBBBBBB...",
+            "..BBBBBBBBBBBBBBBBBBBB..",
+            ".BBBBBBBBBBBBBBBBBBBBBB.",
+            ".BBBBBBBBBBBBBBBBBBBBBB.",
+            ".BBEEEEEEBBBBBBEEEEEEBB.",
+            ".BBEEEEEEBBBBBBEEEEEEBB.",
+            ".BBEEEEEEBBBBBBEEEEEEBB.",
+            ".BBBBBBBBBBBBBBBBBBBBBB.",
+            ".BBBBBBBBBBBBBBBBBBBBBB.",
+            ".DBBBMMMMMMMMMMMMMMBBBD.",
+            ".DBBBMMMMMMMMMMMMMMBBBD.",
+            "..DDBBBBMMMMMMMMBBBBBDD..",
+            "...DDDDDDDDDDDDDDDDDD...",
+            "....DDDDDDDDDDDDDDDD....",
+            "......BBBB....BBBB......",
+            "......BBBB....BBBB......"
         ],
         sleep: [
-            "............",
-            "..P......P..",
-            ".PPP....PPP.",
-            ".BBBBBBBBBB.",
-            "BBBBBBBBBBBB",
-            "BBDDBBBBDDBB",
-            "BBDDBBBBDDBB",
-            "BBBBBBBBBBBB",
-            "DBBBBMNBBBD.",
-            "DDBBBBBBBBD.",
-            ".DDDDDDDDDD.",
-            "..BB....BB.."
+            "........................",
+            "........................",
+            "....PPPP........PPPP....",
+            "...PPPPPP......PPPPPP...",
+            "...PPPPPP......PPPPPP...",
+            "....PPPP........PPPP....",
+            "........................",
+            "....BBBBBBBBBBBBBBBB....",
+            "...BBBBBBBBBBBBBBBBBB...",
+            "..BBBBBBBBBBBBBBBBBBBB..",
+            ".BBBBBBBBBBBBBBBBBBBBBB.",
+            ".BBBBBBBBBBBBBBBBBBBBBB.",
+            ".BBDDDDDDBBBBBBDDDDDDBB.",
+            ".BBDDDDDDBBBBBBDDDDDDBB.",
+            ".BBDDDDDDBBBBBBDDDDDDBB.",
+            ".BBBBBBBBBBBBBBBBBBBBBB.",
+            ".BBBBBBBBBBBBBBBBBBBBBB.",
+            ".DBBBBBBBBBBBBBBBBBBBBD.",
+            ".DBBBBBBBBBBBBBBBBBBBBD.",
+            "..DDBBBBBBBBBBBBBBBBDD..",
+            "...DDDDDDDDDDDDDDDDDD...",
+            "....DDDDDDDDDDDDDDDD....",
+            "......BBBB....BBBB......",
+            "......BBBB....BBBB......"
+        ],
+        bored: [
+            "........................",
+            "........................",
+            "....PPPP........PPPP....",
+            "...PPPPPP......PPPPPP...",
+            "...PPPPPP......PPPPPP...",
+            "....PPPP........PPPP....",
+            "........................",
+            "....BBBBBBBBBBBBBBBB....",
+            "...BBBBBBBBBBBBBBBBBB...",
+            "..BBBBBBBBBBBBBBBBBBBB..",
+            ".BBBBBBBBBBBBBBBBBBBBBB.",
+            ".BBBBBBBBBBBBBBBBBBBBBB.",
+            ".BBEEEEEEBBBBBBEEEEEEBB.",
+            ".BBEEEEEEBBBBBBEEEEEEBB.",
+            ".BBEEEEEEBBBBBBEEEEEEBB.",
+            ".BBBBBBBBBBBBBBBBBBBBBB.",
+            ".BBBBBBBBBBBBBBBBBBBBBB.",
+            ".DBBBBBBBBBBBBBBBBBBBBD.",
+            ".DBBBBBBBMMMMMMBBBBBBDD.",
+            "..DDBBBBBMMMMMMBBBBBBDD..",
+            "...DDDDDDDDDDDDDDDDDD...",
+            "....DDDDDDDDDDDDDDDD....",
+            "......BBBB....BBBB......",
+            "......BBBB....BBBB......"
         ]
     },
     egg: {
         neutral: [
-            "............",
-            "....WWWW....",
-            "...WWWWWW...",
-            "..WWWWWWWW..",
-            "..WWWWWWWW..",
-            "..WWWWWWWW..",
-            "..WWWWWWWW..",
-            "..WWWWWWWW..",
-            "..WWWWWWWW..",
-            "...WWWWWW...",
-            "....WWWW....",
-            "............"
-        ],
-        bored: [
-            "............",
-            "..P......P..",
-            ".PPP....PPP.",
-            ".BBBBBBBBBB.",
-            "BBBBBBBBBBBB",
-            "BBEEBBBBEEBB",
-            "BBEEBBBBEEBB",
-            "BBBBBBBBBBBB",
-            "DBBBBBBBBBBD.",
-            "DDBBBMMBBBD.",
-            ".DDDDDDDDDD.",
-            "..BB....BB.."
+            "........................",
+            "........................",
+            "........................",
+            "........WWWWWWWW........",
+            "......WWWWWWWWWWWW......",
+            ".....WWWWWWWWWWWWWW.....",
+            "....WWWWWWWWWWWWWWWW....",
+            "....WWWWWWWWWWWWWWWW....",
+            "....WWWWWWWWWWWWWWWW....",
+            "....WWWWWWWWWWWWWWWW....",
+            "....WWWWWWWWWWWWWWWW....",
+            "....WWWWWWWWWWWWWWWW....",
+            "....WWWWWWWWWWWWWWWW....",
+            "....WWWWWWWWWWWWWWWW....",
+            "....WWWWWWWWWWWWWWWW....",
+            "....WWWWWWWWWWWWWWWW....",
+            "....WWWWWWWWWWWWWWWW....",
+            "....WWWWWWWWWWWWWWWW....",
+            ".....WWWWWWWWWWWWWW.....",
+            "......WWWWWWWWWWWW......",
+            "........WWWWWWWW........",
+            "........................",
+            "........................",
+            "........................"
         ]
     }
 };
@@ -820,6 +892,7 @@ const PET_FRAMES = {
 // ── TAMAGOTCHI INTERACTION HELPERS ────────────────
 let _isInteractionActive = false;
 let _zzzInterval = null;
+let _lastActionTimeSeen = null; // Track fresh interactions village
 
 function spawnZzz() {
     const container = document.getElementById('tama-zzz-container');
@@ -970,9 +1043,8 @@ function renderTamagotchi() {
         const loveVal = document.getElementById('tama-love-val');
         const funVal = document.getElementById('tama-fun-val');
 
-        if (nameEl) nameEl.textContent = (tama.name || "PIXEL-PET").toUpperCase();
-        
         const stats = tama.stats || { hunger: 50, thirst: 50, love: 50, fun: 50 };
+
         if (hungerEl) hungerEl.style.width = `${stats.hunger}%`;
         if (thirstEl) thirstEl.style.width = `${stats.thirst}%`;
         if (loveEl) loveEl.style.width = `${stats.love}%`;
@@ -989,6 +1061,29 @@ function renderTamagotchi() {
         else if (stats.thirst < 30) statusText = "Durstig! 💧";
         else if (stats.fun < 30) statusText = "Langweilig... 🥱";
         else if (stats.love < 50) statusText = "Braucht Liebe ❤️";
+        const now = Date.now();
+        const actionTime = tama.lastActionTime ? new Date(tama.lastActionTime).getTime() : 0;
+        const lastUpdate = tama.lastUpdate ? new Date(tama.lastUpdate).getTime() : now;
+        const referenceTime = Math.max(actionTime, lastUpdate);
+        const inactiveSeconds = (now - referenceTime) / 1000;
+
+        // Fresh action detected? Hop back!
+        if (tama.lastActionTime && tama.lastActionTime !== _lastActionTimeSeen) {
+            _lastActionTimeSeen = tama.lastActionTime;
+            if (gridEl.classList.contains('walking-away')) {
+                gridEl.classList.remove('walking-away');
+                gridEl.classList.add('hopping-back');
+                setTimeout(() => gridEl.classList.remove('hopping-back'), 1200);
+            }
+        }
+
+        // Walk away after 60s of silence
+        if (inactiveSeconds > 60 && !tama.isSleeping && !gridEl.classList.contains('chasing') && !gridEl.classList.contains('hopping-back')) {
+            gridEl.classList.add('walking-away');
+        } else if (inactiveSeconds < 15) {
+            // Ensure we are not stuck "far away" if an action happened
+            gridEl.classList.remove('walking-away');
+        }
         
         if (statusEl) statusEl.textContent = statusText;
     }
