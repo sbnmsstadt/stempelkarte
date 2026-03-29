@@ -837,7 +837,7 @@ function spawnZzz() {
     z.textContent = 'Z';
     // Offset from head
     z.style.left = (Math.random() * 20 + 45) + '%';
-    z.style.bottom = '90px';
+    z.style.bottom = '60px'; /* Lowered from 90px */
     container.appendChild(z);
     setTimeout(() => z.remove(), 3000);
 }
@@ -917,7 +917,7 @@ function triggerLoveAnimation() {
         h.className = 'heart-particle';
         h.textContent = '❤️';
         h.style.left = (Math.random() * 40 + 30) + '%';
-        h.style.bottom = (Math.random() * 20 + 40) + 'px';
+        h.style.bottom = (Math.random() * 20 + 30) + 'px'; /* Lowered from 40px base */
         container.appendChild(h);
         setTimeout(() => h.remove(), 4000);
     };
