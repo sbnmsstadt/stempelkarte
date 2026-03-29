@@ -404,7 +404,7 @@ export default {
             }
 
             if (path === "/api/students" && method === "POST") {
-                const { name, birthday } = await request.json();
+                const { name, birthday, attendance, pickupTime } = await request.json();
                 const studentsRaw = await env.DATABASE.get("students");
                 let students = studentsRaw ? JSON.parse(studentsRaw) : [];
 
@@ -430,8 +430,8 @@ export default {
                     badges: [],
                     history: [],
                     redemptions: {},
-                    attendance: { mon: false, tue: false, wed: false, thu: false, fri: false, sat: false, sun: false },
-                    pickupTime: "15:30"
+                    attendance: attendance || { mon: false, tue: false, wed: false, thu: false, fri: false, sat: false, sun: false },
+                    pickupTime: pickupTime || "15:30"
                 };
                 students.push(newStudent);
                 await env.DATABASE.put("students", JSON.stringify(students));

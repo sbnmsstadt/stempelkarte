@@ -810,17 +810,55 @@ function copyLink(id) {
 }
 
 async function createNewStudent() {
-    const name = document.getElementById('new-student-name').value;
-    const b = document.getElementById('new-student-birthday').value;
-    if (!name) return;
-    const response = await fetch(`${API_URL}/students`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, birthday: b })
+    const nameInput = document.getElementById('new-student-name');
+    const birthdayInput = document.getElementById('new-student-birthday');
+    const pickupInput = document.getElementById('new-student-pickup');
+    
+    const name = nameInput.value.trim();
+    const birthday = birthdayInput.value;
+    const pickupTime = pickupInput.value;
+    
+    // Collect attendance from chips
+    const attendance = {};
+    document.querySelectorAll('.new-student-chip').forEach(chip => {
+        attendance[chip.dataset.day] = chip.classList.contains('active');
     });
-    if (response.ok) {
-        document.getElementById('new-student-name').value = '';
-        fetchStudents();
+
+    if (!name) {
+        alert("Bitte einen Namen eingeben.");
+        return;
+    }
+
+    try {
+        const response = await fetch(`${API_URL}/students`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ name, birthday, attendance, pickupTime })
+        });
+
+        if (response.ok) {
+            // Reset fields
+            nameInput.value = '';
+            birthdayInput.value = '';
+            document.querySelectorAll('.new-student-chip').forEach(chip => chip.classList.remove('active'));
+            
+            // Reset pickup selection UI
+            pickupInput.value = '15:30';
+            const btn1530 = document.getElementById('new-pickup-btn-1530');
+            const btn1630 = document.getElementById('new-pickup-btn-1630');
+            if (btn1530 && btn1630) {
+                btn1530.classList.add('active');
+                btn1530.style.color = 'white';
+                btn1630.classList.remove('active');
+                btn1630.style.color = 'rgba(255,255,255,0.3)';
+            }
+
+            fetchStudents();
+        } else {
+            alert("Fehler beim Erstellen des Schülers.");
+        }
+    } catch (err) {
+        alert("Verbindungsfehler.");
     }
 }
 

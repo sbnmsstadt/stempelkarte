@@ -1135,10 +1135,18 @@
             font-size: 0.85rem;
             font-weight: 800;
             color: white;
+            flex: 1;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            min-width: 0;
+            overflow: hidden;
+        }
+        .attendance-name-text {
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
-            flex: 1;
+            flex-shrink: 1;
         }
         .attendance-time-tag {
             font-size: 0.65rem;
@@ -1147,7 +1155,8 @@
             padding: 2px 6px;
             border-radius: 6px;
             color: var(--primary-light);
-            margin-left: 4px;
+            margin-left: auto;
+            flex-shrink: 0;
         }
         .attendance-badges {
             display: flex;

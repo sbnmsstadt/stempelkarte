@@ -104,7 +104,28 @@
                     <div style="display:flex; flex-direction:column; gap:12px;">
                         <input type="text" id="new-student-name" placeholder="Vollständiger Name">
                         <input type="date" id="new-student-birthday" title="Geburtstag">
-                        <button id="add-btn" class="add-stamp-btn">Hinzufügen</button>
+                        
+                        <div style="display:flex; flex-direction:column; gap:8px; margin-top: 5px;">
+                            <p style="font-size: 0.75rem; color: var(--text-muted); font-weight: 700; margin: 0;">BETREUUNGSTAGE:</p>
+                            <div style="display:flex; gap:6px;">
+                                <div class="attendance-chip new-student-chip" data-day="mon" onclick="this.classList.toggle('active')">M</div>
+                                <div class="attendance-chip new-student-chip" data-day="tue" onclick="this.classList.toggle('active')">D</div>
+                                <div class="attendance-chip new-student-chip" data-day="wed" onclick="this.classList.toggle('active')">M</div>
+                                <div class="attendance-chip new-student-chip" data-day="thu" onclick="this.classList.toggle('active')">D</div>
+                                <div class="attendance-chip new-student-chip" data-day="fri" onclick="this.classList.toggle('active')">F</div>
+                            </div>
+                        </div>
+
+                        <div style="display:flex; flex-direction:column; gap:8px;">
+                            <p style="font-size: 0.75rem; color: var(--text-muted); font-weight: 700; margin: 0;">ABHOLZEIT:</p>
+                            <div class="pickup-toggle-container" style="display:flex; background:rgba(255,255,255,0.05); border-radius:8px; padding:2px; border:1px solid rgba(255,255,255,0.1); width: fit-content;">
+                                <button id="new-pickup-btn-1530" onclick="selectNewPickup(this, '15:30')" class="pickup-btn active" style="border:none; background:none; color:white; font-size:0.7rem; font-weight:800; padding:4px 10px; border-radius:6px; cursor:pointer;">15:30</button>
+                                <button id="new-pickup-btn-1630" onclick="selectNewPickup(this, '16:30')" class="pickup-btn" style="border:none; background:none; color:rgba(255,255,255,0.3); font-size:0.7rem; font-weight:800; padding:4px 10px; border-radius:6px; cursor:pointer;">16:30</button>
+                            </div>
+                            <input type="hidden" id="new-student-pickup" value="15:30">
+                        </div>
+
+                        <button id="add-btn" class="add-stamp-btn" style="margin-top: 5px;">Hinzufügen</button>
                     </div>
                     <p id="status-msg" style="font-size: 0.8rem; margin-top: 10px; display:none;"></p>
                 </div>
@@ -316,5 +337,16 @@
 
     <script src="admin.js?v=3"></script>
     <script src="logbook.js?v=1"></script>
+    <script>
+        function selectNewPickup(btn, time) {
+            const container = btn.parentElement;
+            container.querySelectorAll('.pickup-btn').forEach(b => {
+                const isActive = b === btn;
+                b.classList.toggle('active', isActive);
+                b.style.color = isActive ? 'white' : 'rgba(255,255,255,0.3)';
+            });
+            document.getElementById('new-student-pickup').value = time;
+        }
+    </script>
 </body>
 </html>
