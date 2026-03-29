@@ -1750,8 +1750,9 @@ function handleTamaActionDetection(tama) {
             triggerLoveAnimation();
             showSpeechBubble(`Hab dich lieb, ${tama.lastActionStudentName || 'Abenteurer'}! ❤️`);
         } else if (tama.lastAction === 'feed') {
-            triggerFeedAnimation();
-            showSpeechBubble(`Lecker! 🍎`);
+            const foodEmoji = (tama.lastSubAction === 'donut') ? '🍩' : '🍎';
+            triggerFeedAnimation(foodEmoji);
+            showSpeechBubble(`Yummy! ${foodEmoji}`);
         } else if (tama.lastAction === 'water') {
             triggerWaterAnimation();
             showSpeechBubble(`Erfrischend! 💧`);
@@ -1773,41 +1774,47 @@ function triggerShowerAnimation() {
 }
 
 function triggerBubbleEffect(count, isShower) {
+    const screen = document.querySelector('.tama-screen');
     const gridEl = document.getElementById('tama-pixel-grid');
-    if (!gridEl) return;
+    if (!screen || !gridEl) return;
     
-    const rect = gridEl.getBoundingClientRect();
-    const centerX = rect.left + rect.width / 2;
-    const width = rect.width * 1.5;
+    // Position relative to the screen container
+    const width = screen.offsetWidth;
 
     for (let i = 0; i < count; i++) {
         setTimeout(() => {
             const bubble = document.createElement('div');
-            bubble.style.position = 'fixed';
-            // Spawn around the Tamagotchi
-            const randomX = (centerX - width/2) + Math.random() * width;
+            bubble.style.position = 'absolute';
+            // Spawn at the bottom area of the grid
+            const randomX = Math.random() * width;
             bubble.style.left = randomX + 'px';
-            bubble.style.bottom = (window.innerHeight - rect.bottom - 20) + 'px';
+            bubble.style.bottom = '10px';
             bubble.style.fontSize = (Math.random() * 1.5 + 0.8) + 'rem';
-            bubble.style.zIndex = '1000';
+            bubble.style.zIndex = '14'; // Above pet, below scanlines
             bubble.style.pointerEvents = 'none';
-            bubble.innerText = isShower ? (Math.random() > 0.5 ? '🫧' : '🧼') : '🫧';
+            
+            if (isShower) {
+                const waterCodes = ['🫧', '💦', '💧', '🧼'];
+                bubble.innerText = waterCodes[Math.floor(Math.random() * waterCodes.length)];
+            } else {
+                bubble.innerText = '🫧';
+            }
             
             // Random horizontal drift
-            const drift = (Math.random() - 0.5) * 60;
-            const height = 150 + Math.random() * 100;
+            const drift = (Math.random() - 0.5) * 80;
+            const height = 180 + Math.random() * 80;
 
             bubble.animate([
                 { transform: 'translateY(0) scale(0)', opacity: 0 },
-                { transform: `translateY(-${height/2}px) translateX(${drift/2}px) scale(1.2)`, opacity: 0.8 },
+                { transform: `translateY(-${height/2}px) translateX(${drift/2}px) scale(1.5)`, opacity: 0.9 },
                 { transform: `translateY(-${height}px) translateX(${drift}px) scale(0)`, opacity: 0 }
             ], {
-                duration: 1500 + Math.random() * 1000,
+                duration: 1800 + Math.random() * 1000,
                 easing: 'ease-out'
             });
             
-            document.body.appendChild(bubble);
+            screen.appendChild(bubble);
             setTimeout(() => bubble.remove(), 3000);
-        }, i * (isShower ? 40 : 60));
+        }, i * (isShower ? 30 : 50));
     }
 }
