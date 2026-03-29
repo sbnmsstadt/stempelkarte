@@ -225,7 +225,8 @@ async function resetTamagotchi() {
         hatchDate: null,
         lastUpdate: Date.now(),
         stats: { hunger: 100, thirst: 100, love: 100, energy: 100 },
-        stage: "egg"
+        stage: "egg",
+        isSleeping: false
     };
     
     try {
@@ -239,6 +240,39 @@ async function resetTamagotchi() {
             loadSettings();
         }
     } catch (err) { alert("Fehler beim Zurücksetzen."); }
+}
+
+// ── TAMAGOTCHI TEST CONSOLE ──────────────────────
+async function testTamaStats(h, t, l) {
+    if (!currentSettings) return;
+    const newSettings = { ...currentSettings };
+    if (!newSettings.tamagotchi) return;
+    newSettings.tamagotchi.stats = { hunger: h, thirst: t, love: l };
+    
+    try {
+        await fetch(`${API_URL}/settings`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(newSettings)
+        });
+        loadSettings();
+    } catch (err) { }
+}
+
+async function toggleTamaSleep(active) {
+    if (!currentSettings) return;
+    const newSettings = { ...currentSettings };
+    if (!newSettings.tamagotchi) return;
+    newSettings.tamagotchi.isSleeping = active;
+    
+    try {
+        await fetch(`${API_URL}/settings`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(newSettings)
+        });
+        loadSettings();
+    } catch (err) { }
 }
 
 async function fetchStudentsSilent() {

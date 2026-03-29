@@ -1067,14 +1067,15 @@
 
         /* Pixel Colors (Polished Palette) */
         .px-transparent { background: transparent; }
-        .px-body { background: #60a5fa; box-shadow: inset -2px -2px 0 rgba(0,0,0,0.2), inset 2px 2px 0 rgba(255,255,255,0.2); }
-        .px-body-dark { background: #3b82f6; box-shadow: inset -2px -2px 0 rgba(0,0,0,0.3); }
+        .px-body { background: #f472b6; box-shadow: inset -2px -2px 0 rgba(0,0,0,0.2), inset 2px 2px 0 rgba(255,255,255,0.2); }
+        .px-body-dark { background: #db2777; box-shadow: inset -2px -2px 0 rgba(0,0,0,0.3); }
         .px-eye { background: #fff; box-shadow: 0 0 6px #fff; }
-        .px-eye-closed { background: #3b82f6; } 
+        .px-eye-closed { background: #db2777; } 
         .px-mouth { background: #0f172a; }
         .px-red { background: #f87171; box-shadow: 0 0 5px #ef4444; }
-        .px-white { background: #e2e8f0; }
-        .px-pink { background: #f472b6; }
+        .px-white { background: #fff; }
+        .px-pink { background: #fde047; } /* Mapping Pink Char to Yellow for Ears as requested */
+        .px-yellow { background: #fde047; box-shadow: inset -1px -1px 0 rgba(0,0,0,0.2); }
 
         @keyframes scanline {
             0% { transform: translateY(-100%); }
@@ -1130,52 +1131,51 @@
 
         .tama-stats-overlay {
             position: absolute;
-            top: 20px;
-            left: 20px;
-            right: 20px;
+            top: 15px;
+            left: 15px;
+            right: 15px;
             z-index: 10;
             display: flex;
-            flex-direction: column;
-            gap: 10px;
-            background: rgba(0,0,0,0.3);
-            padding: 12px 18px;
-            border-radius: 14px;
-            border: 1px solid rgba(255,255,255,0.06);
-            backdrop-filter: blur(10px);
-            box-shadow: 0 4px 15px rgba(0,0,0,0.4);
+            flex-direction: row; /* Horizontal */
+            justify-content: space-between;
+            gap: 15px;
+            padding: 8px 12px;
+            background: rgba(0,0,0,0.5); /* Solid Dark background (Pixel Style) */
+            border: 2px solid #444; /* Pixel Border */
+            box-shadow: 4px 4px 0 rgba(0,0,0,0.3);
         }
 
         .stat-row { 
             display: flex; 
             align-items: center; 
-            gap: 12px;
+            gap: 6px;
+            flex: 1;
         }
         
-        .stat-icon { font-size: 0.9rem; filter: drop-shadow(0 0 4px rgba(0,0,0,0.5)); }
+        .stat-icon { font-size: 0.8rem; }
         
         .stat-bar-outer {
             flex: 1;
-            height: 6px;
-            background: rgba(255,255,255,0.05);
-            border-radius: 4px;
-            border: 1px solid rgba(0,0,0,0.3);
+            height: 10px;
+            background: #111;
+            border: 1px solid #555;
             overflow: hidden;
             position: relative;
+            image-rendering: pixelated;
         }
         
         .stat-bar-inner {
             height: 100%;
-            box-shadow: 0 0 8px currentColor;
-            transition: width 1s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            transition: width 0.5s steps(10); /* Pixelated transition */
         }
 
         .stat-val {
-            font-size: 0.6rem;
+            font-size: 0.55rem;
             font-weight: 800;
             font-variant-numeric: tabular-nums;
-            min-width: 30px;
+            min-width: 25px;
             text-align: right;
-            opacity: 0.8;
+            font-family: 'Press Start 2P', cursive;
         }
 
         .celebration-title { font-size: 5rem; font-weight: 900; background: linear-gradient(to right, #fff, #60a5fa); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; margin: 0; line-height: 1.1; }
