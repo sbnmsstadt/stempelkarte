@@ -1060,9 +1060,8 @@
         }
 
         .tama-pixel-grid.walking-away {
-            opacity: 0.6;
             filter: blur(2px) saturate(0.6);
-            transition: transform 10s ease-in-out, opacity 10s, filter 10s;
+            transition: transform 10s ease-in-out, filter 10s;
             animation: pixelGlow 3s ease-in-out infinite !important;
         }
 
@@ -1133,18 +1132,18 @@
 
         .tama-stats-overlay {
             position: absolute;
-            top: 15px;
-            left: 15px;
-            right: 15px;
+            top: 8px;
+            left: 10px;
+            right: 10px;
             z-index: 10;
             display: flex;
             flex-direction: row; /* Horizontal */
             justify-content: space-between;
-            gap: 15px;
-            padding: 8px 12px;
+            gap: 10px;
+            padding: 4px 10px;
             background: rgba(0,0,0,0.5); /* Solid Dark background (Pixel Style) */
-            border: 2px solid #444; /* Pixel Border */
-            box-shadow: 4px 4px 0 rgba(0,0,0,0.3);
+            border: 1px solid #444; /* Thinner border */
+            box-shadow: 2px 2px 0 rgba(0,0,0,0.3);
         }
 
         @keyframes zzz-float {
@@ -1422,7 +1421,7 @@
             </div>
 
             <!-- Tamagotchi Widget: NEW RETRO PIXEL STYLE -->
-            <div class="card tamagotchi-card" id="tamagotchi-card" style="display:none; flex-shrink:0; background: rgba(15,15,20,0.6); border-color: rgba(255,255,255,0.1); min-height: 370px;">
+            <div class="card tamagotchi-card" id="tamagotchi-card" style="display:none; flex-shrink:0; background: rgba(15,15,20,0.6); border-color: rgba(255,255,255,0.1); min-height: 280px;">
                 <div class="card-header" style="background: rgba(255,255,255,0.03); margin: -22px -22px 12px -22px; padding: 12px 22px; border-bottom: 1px solid rgba(255,255,255,0.05); display: flex; align-items: center; justify-content: space-between;">
                     <div style="display: flex; align-items: center; gap: 10px;">
                         <div class="card-icon" style="font-size: 1.2rem; margin:0;">👾</div>
@@ -1431,7 +1430,7 @@
                     <div id="tama-status-text" style="font-family: 'Press Start 2P', cursive; font-size: 0.5rem; color: #facc15; letter-spacing: 0.5px; text-shadow: 0 0 8px rgba(250, 204, 21, 0.3);">Lädt...</div>
                 </div>
                 
-                <div class="tama-screen" style="min-height: 330px; position: relative; overflow: hidden;">
+                <div class="tama-screen" style="min-height: 220px; position: relative; overflow: hidden;">
                     <!-- Stats Overlay (HUD STYLE) -->
                     <div class="tama-stats-overlay" style="top: 10px; left: 10px;">
                         <div class="stat-row">
@@ -1475,7 +1474,7 @@
                     <div id="tama-heart-container" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 16;"></div>
 
                     <!-- Pure Code Pixel Pet Grid (12x12) -->
-                    <div id="tama-pixel-grid" class="tama-pixel-grid" style="bottom: 20px;"></div>
+                    <div id="tama-pixel-grid" class="tama-pixel-grid" style="bottom: 5px;"></div>
                 </div>
             </div>
         </div>
