@@ -6,6 +6,8 @@ let rewards = [];
 let planFlipInterval = null; 
 let _celebrationSignaled = false; // Prevents repeated popups
 let _lastCelebrationId = null;   // Tracks last seen celebration event
+let _isBlinking = false;         // Global blink state for Tamagotchi
+let _blinkStarted = false;       // Flag to prevent multiple blink loops
 
 // ── PARTICLES ──────────────────────────────────
 function createParticles() {
@@ -53,9 +55,31 @@ async function fetchData() {
         const now = new Date();
         document.getElementById('last-updated').textContent =
             `Zuletzt: ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}:${String(now.getSeconds()).padStart(2, '0')}`;
+        // Start Blinking Cycle for Tamagotchi (Once)
+        if (!_blinkStarted) {
+            _blinkStarted = true;
+            startBlinkingCycle();
+        }
+
     } catch (err) {
         console.error('Fetch error:', err);
     }
+}
+
+// ── BLINK LOGIC ────────────────────────────────
+function startBlinkingCycle() {
+    const blink = () => {
+        _isBlinking = true;
+        renderTamagotchi();
+        setTimeout(() => {
+            _isBlinking = false;
+            renderTamagotchi();
+        }, 200); // 200ms blink duration
+
+        // Schedule next blink (3-7s random)
+        setTimeout(blink, 3000 + Math.random() * 4000);
+    };
+    setTimeout(blink, 2000);
 }
 
 // ── SMOOTH UPDATE HELPER ───────────────────────
@@ -709,11 +733,14 @@ function renderTamagotchi() {
     const tama = settings.tamagotchi;
     if (!tama || !card) return;
 
-    // Asset Paths (PROPER RELATIVE PATHS)
+    // Asset Paths (EXTENDED WITH EMOTIONS)
     const ASSETS = {
         bg: 'assets/tama_bg.png',
         egg: 'assets/tama_egg.png',
-        baby: 'assets/tama_baby.png'
+        baby_neutral: 'assets/tama_baby.png',
+        baby_happy: 'assets/tama_baby_happy.png',
+        baby_sad: 'assets/tama_baby_sad.png',
+        baby_blink: 'assets/tama_baby_blink.png'
     };
 
     const bgImg = document.getElementById('tama-bg-img');
@@ -751,12 +778,6 @@ function renderTamagotchi() {
         if (nameEl) nameEl.textContent = (tama.name || "PIXEL-PET").toUpperCase();
         
         // Stats
-        if (hungerEl) hungerEl.style.width = `${tama.stats.hunger}%`;
-        if (thirstEl) thirstEl.style.width = `${tama.stats.thirst}%`;
-        if (loveEl) loveEl.style.width = `${tama.stats.love}%`;
-
-        // Avatar based on stage and mood
-        let avatar = "🐣";
         if (tama.stage === "baby") avatar = "🐣";
         else if (tama.stage === "child") avatar = "🐥";
         else if (tama.stage === "teen") avatar = "🐦";
