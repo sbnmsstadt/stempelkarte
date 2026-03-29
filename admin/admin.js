@@ -61,7 +61,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             if (overviewTitle) overviewTitle.innerText = "Pädagogisches Logbuch";
             logbook.classList.remove('hidden');
             document.getElementById('search-students').parentElement.style.display = 'none';
-            navBtn.querySelector('h3').innerText = "⬅ Zur Schüler-Übersicht";
+            navBtn.querySelector('h3').innerText = "⬅ Übersicht";
 
             // Initialize/Render Logbook
             Logbook.init();
