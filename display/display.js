@@ -1200,20 +1200,6 @@ const POOP_ASSET = [
 ];
 
 let _tearInterval = null;
-let _flyInterval = null;
-
-function spawnFly() {
-    const container = document.getElementById('tama-zzz-container');
-    if (!container) return;
-    const f = document.createElement('div');
-    f.className = 'fly-particle';
-    f.textContent = '🪰';
-    // Random position near the pet
-    f.style.left = (Math.random() * 60 + 20) + '%';
-    f.style.bottom = (Math.random() * 40 + 20) + 'px';
-    container.appendChild(f);
-    setTimeout(() => f.remove(), 4000);
-}
 
 function spawnTear() {
     const container = document.getElementById('tama-zzz-container');
@@ -1403,63 +1389,6 @@ function triggerLoveAnimation() {
     setTimeout(() => {
         _isInteractionActive = false;
     }, 6000); // Love effect for 6 seconds
-}
-
-function triggerHandwashAnimation() {
-    if (_isInteractionActive) return;
-    _isInteractionActive = true;
-    const container = document.getElementById('tama-zzz-container');
-    if (!container) return;
-    const spawnBubble = () => {
-        const b = document.createElement('div');
-        b.className = 'zzz-particle'; // Reuse float animation
-        b.style.color = '#fff';
-        b.textContent = '🫧';
-        b.style.left = (Math.random() * 40 + 30) + '%';
-        b.style.bottom = '40px';
-        container.appendChild(b);
-        setTimeout(() => b.remove(), 2000);
-    };
-    let count = 0;
-    const itv = setInterval(() => {
-        spawnBubble();
-        count++;
-        if (count > 8) { clearInterval(itv); _isInteractionActive = false; }
-    }, 300);
-}
-
-function triggerTeethbrushAnimation() {
-    if (_isInteractionActive) return;
-    _isInteractionActive = true;
-    const container = document.getElementById('tama-zzz-container');
-    if (!container) return;
-    const spawnSparkle = () => {
-        const s = document.createElement('div');
-        s.className = 'zzz-particle';
-        s.textContent = '✨';
-        s.style.left = (Math.random() * 20 + 40) + '%';
-        s.style.bottom = '55px';
-        container.appendChild(s);
-        setTimeout(() => s.remove(), 1000);
-    };
-    let count = 0;
-    const itv = setInterval(() => {
-        spawnSparkle();
-        count++;
-        if (count > 10) { clearInterval(itv); _isInteractionActive = false; }
-    }, 200);
-}
-
-function triggerShowerAnimation() {
-    if (_isInteractionActive) return;
-    _isInteractionActive = true;
-    const container = document.getElementById('tama-item-container');
-    if (!container) return;
-    const item = document.createElement('div');
-    item.className = 'tama-water-item'; // Reuse drop animation
-    item.textContent = '🚿';
-    container.appendChild(item);
-    setTimeout(() => { item.remove(); _isInteractionActive = false; }, 4000);
 }
 
 function renderTamagotchi() {
@@ -1657,18 +1586,6 @@ function renderTamagotchi() {
         const referenceTime = Math.max(actionTime, lastUpdate);
         const inactiveSeconds = (now - referenceTime) / 1000;
 
-        // --- Hygiene Effect (Flies) ---
-        if (stats.hygiene < 30 && !tama.isSleeping) {
-            if (!_flyInterval) {
-                _flyInterval = setInterval(spawnFly, 1500);
-            }
-        } else {
-            if (_flyInterval) {
-                clearInterval(_flyInterval);
-                _flyInterval = null;
-            }
-        }
-
         // --- Interaction Protection ---
         handleTamaActionDetection(tama);
         
@@ -1743,17 +1660,6 @@ function handleTamaActionDetection(tama) {
             showSpeechBubble(`Erfrischend! 💧`);
         } else if (tama.lastAction === 'clean') {
             showSpeechBubble(`Danke fürs Putzen! ✨`);
-        } else if (tama.lastAction === 'handwash') {
-            triggerHandwashAnimation();
-            showSpeechBubble(`Hände sind blütenrein! 🧼`);
-        } else if (tama.lastAction === 'teethbrush') {
-            triggerTeethbrushAnimation();
-            showSpeechBubble(`Meine Zähne glänzen! 🪥`);
-        } else if (tama.lastAction === 'shower') {
-            triggerShowerAnimation();
-            showSpeechBubble(`Ich bin wieder frisch! 🚿`);
-        } else if (tama.lastAction === 'handwash_required') {
-            showSpeechBubble(`${tama.lastActionStudentName || 'Abenteurer'}, vor dem Essen erst Hände waschen! 🧼`);
         } else if (tama.lastAction === 'train') {
             showSpeechBubble(`Ich bin jetzt schlauer! 📚`);
         } else if (tama.lastAction === 'style') {

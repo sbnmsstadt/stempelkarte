@@ -834,33 +834,6 @@ input[type="number"] {
 }
 
 /* --- Tamagotchi Poop & Stink --- */
-.zzz-particle {
-    position: absolute;
-    font-family: 'Press Start 2P', cursive;
-    color: #a5f3fc;
-    font-size: 0.8rem;
-    font-weight: bold;
-    pointer-events: none;
-    animation: zzzFloat 3s ease-out forwards;
-    z-index: 999;
-}
-
-.fly-particle {
-    position: absolute;
-    font-size: 0.6rem;
-    pointer-events: none;
-    z-index: 100;
-    animation: flyBuzz 2s infinite ease-in-out;
-}
-
-@keyframes flyBuzz {
-    0% { transform: translate(0, 0) rotate(0); }
-    25% { transform: translate(10px, -15px) rotate(15deg); }
-    50% { transform: translate(-5px, -10px) rotate(-10deg); }
-    75% { transform: translate(-10px, -5px) rotate(5deg); }
-    100% { transform: translate(0, 0) rotate(0); }
-}
-
 .poop-container {
     position: absolute;
     top: 0;

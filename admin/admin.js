@@ -250,7 +250,7 @@ async function resetTamagotchi() {
 }
 
 // ── TAMAGOTCHI TEST CONSOLE ──────────────────────
-async function testTamaStats(h, t, l, f, hy) {
+async function testTamaStats(h, t, l, f) {
     if (!currentSettings) return;
     const newSettings = JSON.parse(JSON.stringify(currentSettings));
     if (!newSettings.tamagotchi) return;
@@ -258,8 +258,7 @@ async function testTamaStats(h, t, l, f, hy) {
         hunger: h, 
         thirst: t, 
         love: l,
-        fun: f || 100,
-        hygiene: hy || 100
+        fun: f || 100
     };
     
     try {
@@ -290,12 +289,6 @@ async function simulateTamaAction(action) {
         newSettings.tamagotchi.stats.thirst = Math.min(100, (newSettings.tamagotchi.stats.thirst || 0) + 25);
     } else if (action === 'love') {
         newSettings.tamagotchi.stats.love = Math.min(100, (newSettings.tamagotchi.stats.love || 0) + 25);
-    } else if (action === 'handwash') {
-        newSettings.tamagotchi.stats.hygiene = Math.min(100, (newSettings.tamagotchi.stats.hygiene || 0) + 15);
-    } else if (action === 'teethbrush') {
-        newSettings.tamagotchi.stats.hygiene = Math.min(100, (newSettings.tamagotchi.stats.hygiene || 0) + 25);
-    } else if (action === 'shower') {
-        newSettings.tamagotchi.stats.hygiene = Math.min(100, (newSettings.tamagotchi.stats.hygiene || 0) + 50);
     } else if (action === 'poop') {
         newSettings.tamagotchi.poopCount = Math.min(20, (newSettings.tamagotchi.poopCount || 0) + 1);
     }

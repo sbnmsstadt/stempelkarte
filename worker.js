@@ -766,17 +766,6 @@ export default {
 
                 let logMsg = "";
                 if (action === "feed") { 
-                    const lastWash = student.lastHandwashTime || 0;
-                    const elapsed = Date.now() - lastWash;
-                    if (elapsed > 60000) {
-                        // Special: Update lastAction to trigger "Wash hands!" bubble on Infoboard
-                        settings.tamagotchi.lastAction = 'handwash_required';
-                        settings.tamagotchi.lastActionTime = new Date().toISOString();
-                        settings.tamagotchi.lastActionStudentName = student.name;
-                        await env.DATABASE.put("settings", JSON.stringify(settings));
-                        
-                        return new Response(`${student.name}, vor dem Essen erst Hände waschen! 🧼`, { status: 403, headers: corsHeaders });
-                    }
                     settings.tamagotchi.stats.hunger = Math.min(100, (settings.tamagotchi.stats.hunger || 0) + 25); 
                     settings.tamagotchi.lastAction = 'feed';
                     settings.tamagotchi.lastActionTime = new Date().toISOString();
@@ -802,30 +791,11 @@ export default {
                     logMsg = "Tamagotchi gestreichelt ❤️"; 
                 }
                 else if (action === "clean") {
-                    settings.tamagotchi.stats.hygiene = Math.min(100, (settings.tamagotchi.stats.hygiene || 0) + 30);
+                    settings.tamagotchi.stats.hygiene = Math.min(100, (settings.tamagotchi.stats.hygiene || 0) + 40);
                     settings.tamagotchi.poopCount = 0;
                     settings.tamagotchi.lastAction = 'clean';
                     settings.tamagotchi.lastActionTime = new Date().toISOString();
                     logMsg = "Tamagotchi Display geputzt ✨";
-                }
-                else if (action === "handwash") {
-                    student.lastHandwashTime = Date.now();
-                    settings.tamagotchi.stats.hygiene = Math.min(100, (settings.tamagotchi.stats.hygiene || 0) + 15);
-                    settings.tamagotchi.lastAction = 'handwash';
-                    settings.tamagotchi.lastActionTime = new Date().toISOString();
-                    logMsg = "Hände gewaschen 🧼";
-                }
-                else if (action === "teethbrush") {
-                    settings.tamagotchi.stats.hygiene = Math.min(100, (settings.tamagotchi.stats.hygiene || 0) + 25);
-                    settings.tamagotchi.lastAction = 'teethbrush';
-                    settings.tamagotchi.lastActionTime = new Date().toISOString();
-                    logMsg = "Zähne geputzt 🪥";
-                }
-                else if (action === "shower") {
-                    settings.tamagotchi.stats.hygiene = Math.min(100, (settings.tamagotchi.stats.hygiene || 0) + 50);
-                    settings.tamagotchi.lastAction = 'shower';
-                    settings.tamagotchi.lastActionTime = new Date().toISOString();
-                    logMsg = "Geduscht 🚿";
                 }
                 else if (action === "train") {
                     settings.tamagotchi.stats.intelligence = Math.min(100, (settings.tamagotchi.stats.intelligence || 0) + 5);

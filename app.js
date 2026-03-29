@@ -1191,18 +1191,7 @@ async function careForTama(action) {
             silentSync();
         } else {
             const msg = await response.text();
-            if (response.status === 403 && msg.includes("Hände waschen")) {
-                // Special styling for hygiene warning
-                Swal.fire({
-                    title: 'Hygiene-Check! 🧼',
-                    text: msg,
-                    icon: 'warning',
-                    confirmButtonText: 'Verstanden!',
-                    confirmButtonColor: '#60a5fa'
-                });
-            } else {
-                alert(msg);
-            }
+            alert(msg); // Show the specific "limit reached" or other error message
         }
     } catch (err) {
         console.error("Care error:", err);
