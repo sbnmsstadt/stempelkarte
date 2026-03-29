@@ -724,44 +724,138 @@ window.addEventListener('resize', () => {
     if (students.length) renderKids();
 });
 
-// ── TAMAGOTCHI ─────────────────────────────────
+// ── TAMAGOTCHI: PIXEL ART DATA ─────────────────
+const TAMA_SIZE = 12;
+const PET_FRAMES = {
+    baby: {
+        neutral: [
+            "............",
+            "............",
+            "....BBBB....",
+            "...BBBBBB...",
+            "..BBBBBBBB..",
+            "..BBEEBBEE..",
+            "..BBEEBBEE..",
+            "..BBBBBBBB..",
+            "..BBBMMBBB..",
+            "...BBBBBB...",
+            "....BBBB....",
+            "............"
+        ],
+        blink: [
+            "............",
+            "............",
+            "....BBBB....",
+            "...BBBBBB...",
+            "..BBBBBBBB..",
+            "..BBBBBBBB..",
+            "..BBBBBBBB..",
+            "..BBBBBBBB..",
+            "..BBBMMBBB..",
+            "...BBBBBB...",
+            "....BBBB....",
+            "............"
+        ],
+        sad: [
+            "............",
+            "............",
+            "....BBBB....",
+            "...BBBBBB...",
+            "..BBBBBBBB..",
+            "..BBEEBBEE..",
+            "..BBEEBBEE..",
+            "..BBBBBBBB..",
+            "..BBMMMMBB..",
+            "...BMBBMB...",
+            "....BBBB....",
+            "............"
+        ]
+    },
+    egg: {
+        neutral: [
+            "............",
+            ".....WW.....",
+            "....WWWW....",
+            "...WWWWWW...",
+            "..WWWWWWWW..",
+            "..WWWWWWWW..",
+            "..WWWWWWWW..",
+            "..WWWWWWWW..",
+            "...WWWWWW...",
+            "....WWWW....",
+            ".....WW.....",
+            "............"
+        ]
+    }
+};
+
 function renderTamagotchi() {
     const card = document.getElementById('tamagotchi-card');
     const tama = settings.tamagotchi;
     if (!tama || !card) return;
 
-    const ASSETS = {
-        bg: 'assets/tama_bg.png',
-        egg: 'assets/tama_egg.png'
-    };
-
-    const bgImg = document.getElementById('tama-bg-img');
-    const spriteImg = document.getElementById('tama-sprite-img');
-    const emojiFallback = document.getElementById('tama-avatar-emoji');
+    const gridEl = document.getElementById('tama-pixel-grid');
     const nameEl = document.getElementById('tama-name');
     const statusEl = document.getElementById('tama-status-text');
+    const bgImg = document.getElementById('tama-bg-img');
 
-    if (bgImg) bgImg.src = ASSETS.bg;
+    if (bgImg && !bgImg.src) bgImg.src = 'assets/tama_bg.png';
 
-    if (tama.status === "egg") {
-        card.style.display = 'block';
-        if (nameEl) nameEl.textContent = "GEHEIMNISVOLLES EI";
-        if (spriteImg) {
-            spriteImg.src = ASSETS.egg;
-            spriteImg.style.display = 'block';
-            spriteImg.style.animation = 'tamaEggWiggle 3s ease-in-out infinite';
+    // 1. Initialize Grid if empty
+    if (gridEl && gridEl.children.length === 0) {
+        for (let i = 0; i < TAMA_SIZE * TAMA_SIZE; i++) {
+            const px = document.createElement('div');
+            px.className = 'pixel px-transparent';
+            gridEl.appendChild(px);
         }
-        if (emojiFallback) emojiFallback.style.display = 'none';
-        if (statusEl) statusEl.textContent = "SCHLÜPFT IM SEPTEMBER...";
-        return;
     }
 
+    // 2. Determine Frame
+    let stage = tama.stage || "baby";
+    if (tama.status === "egg") stage = "egg";
+    
+    let mood = "neutral";
     if (tama.status === "hatched") {
+        if (tama.stats.hunger < 30 || tama.stats.thirst < 30 || tama.stats.love < 30) mood = "sad";
+        if (_isBlinking) mood = "blink";
+    }
+
+    const frame = (PET_FRAMES[stage] && PET_FRAMES[stage][mood]) || PET_FRAMES.baby.neutral;
+
+    // 3. Render Frame to Grid
+    if (gridEl) {
+        const pixels = gridEl.children;
+        for (let r = 0; r < TAMA_SIZE; r++) {
+            for (let c = 0; c < TAMA_SIZE; c++) {
+                const char = frame[r][c];
+                const idx = r * TAMA_SIZE + c;
+                let cls = "px-transparent";
+                if (char === 'B') cls = "px-body";
+                if (char === 'E') cls = "px-eye";
+                if (char === 'M') cls = "px-mouth";
+                if (char === 'W') cls = "px-white";
+                if (char === 'R') cls = "px-red";
+                
+                if (pixels[idx].className !== `pixel ${cls}`) {
+                    pixels[idx].className = `pixel ${cls}`;
+                }
+            }
+        }
+    }
+
+    // 4. Update UI Text
+    if (tama.status === "egg") {
         card.style.display = 'block';
+        if (nameEl) nameEl.textContent = "MYSTERY EGG";
+        if (statusEl) statusEl.textContent = "WACKELT...";
+        gridEl.style.animation = 'tamaEggWiggle 3s ease-in-out infinite';
+    } else {
+        card.style.display = 'block';
+        gridEl.style.animation = 'pixelFloat 3s ease-in-out infinite';
+        
         const hungerEl = document.getElementById('tama-hunger');
         const thirstEl = document.getElementById('tama-thirst');
         const loveEl = document.getElementById('tama-love');
-        
         const hungerVal = document.getElementById('tama-hunger-val');
         const thirstVal = document.getElementById('tama-thirst-val');
         const loveVal = document.getElementById('tama-love-val');
@@ -775,28 +869,6 @@ function renderTamagotchi() {
         if (hungerVal) hungerVal.textContent = `${tama.stats.hunger}%`;
         if (thirstVal) thirstVal.textContent = `${tama.stats.thirst}%`;
         if (loveVal) loveVal.textContent = `${tama.stats.love}%`;
-
-        let avatar = "🐣";
-        if (tama.stage === "baby") avatar = "🐣";
-        else if (tama.stage === "child") avatar = "🐥";
-        else if (tama.stage === "teen") avatar = "🐦";
-        else if (tama.stage === "adult") avatar = "🦉";
-
-        if (tama.stats.hunger < 20 || tama.stats.thirst < 20) avatar = "🤒";
-        else if (tama.stats.love < 30) avatar = "😢";
-        
-        if (emojiFallback) {
-            emojiFallback.style.display = 'block';
-            if (emojiFallback.textContent !== avatar) {
-                emojiFallback.style.animation = 'tamaEat 0.5s ease-in-out';
-                setTimeout(() => {
-                    emojiFallback.textContent = avatar;
-                    emojiFallback.style.animation = 'tamaFloat 3s ease-in-out infinite';
-                }, 500);
-            }
-        }
-
-        if (spriteImg) spriteImg.style.display = 'none';
 
         let status = "Glücklich ✨";
         if (tama.stats.hunger < 30) status = "Hungrig! 🍏";

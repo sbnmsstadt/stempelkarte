@@ -1030,10 +1030,44 @@
         }
 
         @keyframes tamaEggWiggle {
-            0%, 90%, 100% { transform: rotate(0); }
-            92%, 96% { transform: rotate(-10deg); }
-            94%, 98% { transform: rotate(10deg); }
+            0%, 90%, 100% { transform: translate(-50%, 0) rotate(0); }
+            92%, 96% { transform: translate(-50%, 0) rotate(-10deg); }
+            94%, 98% { transform: translate(-50%, 0) rotate(10deg); }
         }
+
+        @keyframes pixelFloat {
+            0%, 100% { transform: translate(-50%, 0); }
+            50% { transform: translate(-50%, -10px); }
+        }
+
+        .tama-pixel-grid {
+            position: absolute;
+            bottom: 40px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: grid;
+            grid-template-columns: repeat(12, 12px);
+            grid-template-rows: repeat(12, 12px);
+            gap: 1.5px;
+            z-index: 4;
+            animation: pixelFloat 3s ease-in-out infinite;
+        }
+
+        .pixel {
+            width: 12px;
+            height: 12px;
+            border-radius: 2px;
+            transition: background 0.2s;
+        }
+
+        /* Pixel Colors */
+        .px-transparent { background: transparent; }
+        .px-body { background: #60a5fa; box-shadow: inset -2px -2px 0 rgba(0,0,0,0.2); }
+        .px-eye { background: #fff; box-shadow: 0 0 4px #fff; }
+        .px-eye-closed { background: #60a5fa; } /* Same as body color to hide */
+        .px-mouth { background: #1e293b; }
+        .px-red { background: #ef4444; }
+        .px-white { background: #fff; }
 
         @keyframes scanline {
             0% { transform: translateY(-100%); }
@@ -1107,6 +1141,7 @@
             image-rendering: pixelated;
             z-index: 3;
             filter: drop-shadow(0 0 5px rgba(255,255,255,0.2));
+            display: none !important; /* PNG Sprite hidden */
         }
 
         .celebration-title { font-size: 5rem; font-weight: 900; background: linear-gradient(to right, #fff, #60a5fa); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; margin: 0; line-height: 1.1; }
@@ -1300,7 +1335,11 @@
                     <img id="tama-bg-img" src="" class="tama-bg" alt="screen bg">
                     <div class="tama-scanlines"></div>
                     <div class="tama-scanline-move"></div>
-                    <img id="tama-sprite-img" src="" class="tama-sprite" alt="pet sprite" style="animation: tamaFloat 3s ease-in-out infinite;">
+                    
+                    <!-- NEW: Pure Code Pixel Pet Grid (12x12) -->
+                    <div id="tama-pixel-grid" class="tama-pixel-grid"></div>
+
+                    <img id="tama-sprite-img" src="" class="tama-sprite" alt="pet sprite">
                     <div id="tama-avatar-emoji" style="display:none; position:absolute; bottom:40px; left:50%; transform:translateX(-50%); font-size: 4rem;">🥚</div>
                 </div>
 
