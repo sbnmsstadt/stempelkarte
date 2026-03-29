@@ -72,7 +72,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             if (overviewTitle) overviewTitle.innerText = "Schüler-Übersicht";
             logbook.classList.add('hidden');
             document.getElementById('search-students').parentElement.style.display = 'flex';
-            navBtn.querySelector('h3').innerText = "Pädagogisches Logbuch";
+            navBtn.querySelector('h3').innerText = "Pädagog. Logbuch";
         }
     });
 
