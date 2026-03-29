@@ -1060,7 +1060,7 @@
         }
 
         .tama-pixel-grid.walking-away {
-            transform: translate(-50%, -24px) scale(0.35);
+            transform: translate(-50%, -40px) scale(0.28);
             opacity: 0.6;
             filter: blur(2px) saturate(0.6);
             transition: transform 10s ease-in-out, opacity 10s, filter 10s;
@@ -1072,8 +1072,8 @@
         }
 
         @keyframes tamaHopBack {
-            0% { transform: translate(-50%, -24px) scale(0.35); opacity: 0.6; }
-            40% { transform: translate(-50%, -10px) scale(1.15); opacity: 1; }
+            0% { transform: translate(-50%, -160px) scale(0.28); opacity: 0.6; }
+            40% { transform: translate(-50%, -20px) scale(1.3); opacity: 1; }
             100% { transform: translate(-50%, 0) scale(1); opacity: 1; }
         }
 
@@ -1104,13 +1104,13 @@
         .tama-screen {
             position: relative;
             width: 100%;
-            height: 420px; 
+            height: 380px; 
             background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%);
             border-radius: 12px;
             overflow: hidden;
             border: 4px solid rgba(0,0,0,0.5);
             box-shadow: inset 0 0 40px rgba(0,0,0,0.8);
-            margin-bottom: 4px;
+            margin-bottom: 12px;
             image-rendering: pixelated;
         }
 
@@ -1423,7 +1423,7 @@
             </div>
 
             <!-- Tamagotchi Widget: NEW RETRO PIXEL STYLE -->
-            <div class="card tamagotchi-card" id="tamagotchi-card" style="display:none; flex-shrink:0; background: rgba(15,15,20,0.6); border-color: rgba(255,255,255,0.1); height: 580px;">
+            <div class="card tamagotchi-card" id="tamagotchi-card" style="display:none; flex-shrink:0; background: rgba(15,15,20,0.6); border-color: rgba(255,255,255,0.1); min-height: 520px;">
                 <div class="card-header" style="background: rgba(255,255,255,0.03); margin: -22px -22px 12px -22px; padding: 12px 22px; border-bottom: 1px solid rgba(255,255,255,0.05);">
                     <div class="card-icon" style="font-size: 1.2rem;">👾</div>
                     <div class="card-title" id="tama-name" style="font-family: 'Press Start 2P', cursive; font-size: 0.7rem; color: #60a5fa; letter-spacing: 1px;">NACHMI-PET</div>
@@ -1476,7 +1476,7 @@
                     <div id="tama-pixel-grid" class="tama-pixel-grid"></div>
                 </div>
 
-                <div id="tama-status-text" style="font-family: 'Press Start 2P', cursive; font-size: 0.52rem; color: #facc15; text-align: center; margin-top: 2px; opacity: 0.8; letter-spacing: 1px; text-shadow: 0 0 10px rgba(250, 204, 21, 0.4);">Lädt...</div>
+                <div id="tama-status-text" style="font-family: 'Press Start 2P', cursive; font-size: 0.55rem; color: #facc15; text-align: center; margin-top: 5px; letter-spacing: 1px; text-shadow: 0 0 10px rgba(250, 204, 21, 0.4);">Lädt...</div>
             </div>
         </div>
 
