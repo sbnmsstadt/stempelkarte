@@ -789,24 +789,24 @@ const PET_FRAMES = {
             ".PPPP..PPPP.",
             ".BBBBBBBBBB.",
             "BBBBBBBBBBBB",
-            "BBEEBBBBEEBB",
+            "BBEEBBBBEEBB", // White eyes for happy/neutral
             "BBBBBBBBBBBB",
-            "DBBBBBMMBBBD",
+            "DBBBMMMMBBBD", // Small smile
             "DDBBBBBBBBDD",
             ".DDDDDDDDDD.",
             "..BB....BB.."
         ],
-        blink: [
+        happy: [
             "............",
             "............",
             "..PP....PP..",
             ".PPPP..PPPP.",
             ".BBBBBBBBBB.",
             "BBBBBBBBBBBB",
-            "BBDDBBBBDDBB",
+            "BBEEEEBBEEBB", // Wide eyes
             "BBBBBBBBBBBB",
-            "DBBBBBMMBBBD",
-            "DDBBBBBBBBDD",
+            "DBBMMMMMMBBD", // Smiling mouth corners
+            "DBBBMMMMBBBD",
             ".DDDDDDDDDD.",
             "..BB....BB.."
         ],
@@ -817,10 +817,10 @@ const PET_FRAMES = {
             ".PPPP..PPPP.",
             ".BBBBBBBBBB.",
             "BBBBBBBBBBBB",
-            "BBEEBBBBEEBB",
+            "BBDDBBBBDDBB", // Dark downward dots
             "BBBBBBBBBBBB",
-            "DBBMMMMMMBBD",
-            "DDBBBBBBBBDD",
+            "DBBBMMMMBBBD", // Frowny corners
+            "DBBMM..MMBBD",
             ".DDDDDDDDDD.",
             "..BB....BB.."
         ],
@@ -860,10 +860,38 @@ const PET_FRAMES = {
             "..PPPPPPPP..",
             ".BBBBBBBBBB.",
             "BBBBBBBBBBBB",
-            "BBEBBBBBBBBE",
+            "BBEEBBBBEEBB",
             "BBBBBBBBBBBB",
             "BBBBMMMMBBBB",
             "BBBBBBBBBBBB",
+            "DBBBBBBBBBBD",
+            "DDBBBBBBBBDD",
+            ".DDDDDDDDDD."
+        ],
+        happy: [
+            "....PPPP....",
+            "...PPPPPP...",
+            "..PPPPPPPP..",
+            ".BBBBBBBBBB.",
+            "BBBBBBBBBBBB",
+            "BBEEEEBBEEBB", // Happier looking eyes
+            "BBBBBBBBBBBB",
+            "BBMMMMMMMMBB", // Ultra wide grin
+            "BBBBMMMMBBBB",
+            "DBBBBBBBBBBD",
+            "DDBBBBBBBBDD",
+            ".DDDDDDDDDD."
+        ],
+        sad: [
+            "....PPPP....",
+            "...PPPPPP...",
+            "..PPPPPPPP..",
+            ".BBBBBBBBBB.",
+            "BBBBBBBBBBBB",
+            "BBDDBBBBDDBB",
+            "BBBBBBBBBBBB",
+            "BBMMBBBBMMBB", // Frowning corners
+            "BBBBMMMMBBBB",
             "DBBBBBBBBBBD",
             "DDBBBBBBBBDD",
             ".DDDDDDDDDD."
@@ -957,6 +985,174 @@ const HAT_ASSETS = {
         "............",
         "............",
         "............"
+    ],
+    hat_top: [
+        "....MMMM....",
+        "....MMMM....",
+        ".MMMMMMMMMM.",
+        "............",
+        "............",
+        "............",
+        "............",
+        "............",
+        "............",
+        "............",
+        "............",
+        "............"
+    ],
+    hat_wizard: [
+        ".....AA.....",
+        "....AAAA....",
+        "...AAAAAA...",
+        "............",
+        "............",
+        "............",
+        "............",
+        "............",
+        "............",
+        "............",
+        "............",
+        "............"
+    ],
+    hat_ninja: [
+        "............",
+        "............",
+        "............",
+        "MMMMMMMMMMMM",
+        "MM..WWWW..MM",
+        "MMMMMMMMMMMM",
+        "............",
+        "............",
+        "............",
+        "............",
+        "............",
+        "............"
+    ],
+    hat_bow: [
+        "............",
+        "....RR.RR...",
+        ".....RRR....",
+        "............",
+        "............",
+        "............",
+        "............",
+        "............",
+        "............",
+        "............",
+        "............",
+        "............"
+    ],
+    hat_viking: [
+        "W..........W",
+        "WW........WW",
+        ".DDDDDDDDDD.",
+        "............",
+        "............",
+        "............",
+        "............",
+        "............",
+        "............",
+        "............",
+        "............",
+        "............"
+    ],
+    hat_santahat: [
+        ".......WW...",
+        "......RRRR..",
+        ".....RRRRRR.",
+        "....WWWWWWWW",
+        "............",
+        "............",
+        "............",
+        "............",
+        "............",
+        "............",
+        "............",
+        "............"
+    ],
+    hat_cowboy: [
+        "............",
+        "....DDDD....",
+        "...DDDDDD...",
+        "DDDDDDDDDDDD",
+        "............",
+        "............",
+        "............",
+        "............",
+        "............",
+        "............",
+        "............",
+        "............"
+    ],
+    hat_chef: [
+        "...WWWWW....",
+        "...WWWWW....",
+        "..WWWWWWW...",
+        "..WWWWWWW...",
+        "............",
+        "............",
+        "............",
+        "............",
+        "............",
+        "............",
+        "............",
+        "............"
+    ],
+    hat_headphones: [
+        "....PPPP....",
+        "...P....P...",
+        "..P......P..",
+        ".PP......PP.",
+        ".PP......PP.",
+        "............",
+        "............",
+        "............",
+        "............",
+        "............",
+        "............",
+        "............"
+    ],
+    hat_straw: [
+        "............",
+        "....YYYY....",
+        "...YYYYYY...",
+        "YYYYYYYYYYYY",
+        "............",
+        "............",
+        "............",
+        "............",
+        "............",
+        "............",
+        "............",
+        "............"
+    ],
+    hat_graduation: [
+        "............",
+        ".MMMMMMMMMM.",
+        "....MMMM....",
+        ".....MM.....",
+        "............",
+        "............",
+        "............",
+        "............",
+        "............",
+        "............",
+        "............",
+        "............"
+    ],
+    hat_eyepatch: [
+        "............",
+        "............",
+        "....MMMMM...",
+        "MMMMMMMMMMMM",
+        "....MMMMM...",
+        "............",
+        "............",
+        "............",
+        "............",
+        "............",
+        "............",
+        "............"
     ]
 };
 
@@ -974,6 +1170,39 @@ const POOP_ASSET = [
     ".....YYYY...",
     "....YYYYYY.."
 ];
+
+let _tearInterval = null;
+
+function spawnTear() {
+    const container = document.getElementById('tama-zzz-container');
+    if (!container) return;
+    
+    const spray = (side) => {
+        const t = document.createElement('div');
+        t.className = 'tear-particle';
+        t.textContent = '💧';
+        
+        // Horizontal spread direction
+        const vx = (side === 'left') ? -(Math.random() * 40 + 20) : (Math.random() * 40 + 20);
+        t.style.setProperty('--vx', `${vx}px`);
+        
+        t.style.left = (side === 'left' ? 40 : 55) + '%';
+        t.style.bottom = '55px';
+        container.appendChild(t);
+        setTimeout(() => t.remove(), 1500);
+    };
+
+    spray('left');
+    spray('right');
+    
+    // Low love -> Double spray
+    if (settings.tamagotchi && settings.tamagotchi.stats.love < 10) {
+        setTimeout(() => {
+            spray('left');
+            spray('right');
+        }, 300);
+    }
+}
 
 // ── TAMAGOTCHI INTERACTION HELPERS ────────────────
 let _isInteractionActive = false;
@@ -1169,6 +1398,7 @@ function renderTamagotchi() {
         if (tama.isSleeping) mood = "sleep";
         else if (tama.stats.hunger < 30 || tama.stats.thirst < 30 || tama.stats.love < 30) mood = "sad";
         else if (tama.stats.fun < 30) mood = "bored";
+        else if (tama.stats.hunger > 80 && tama.stats.thirst > 80 && tama.stats.love > 80) mood = "happy";
         else if (_isBlinking) mood = "blink";
     }
 
@@ -1197,6 +1427,8 @@ function renderTamagotchi() {
                 if (char === 'R') cls = "px-red";
                 if (char === 'P') cls = "px-pink";
                 if (char === 'Y') cls = "px-yellow";
+                if (char === 'T') cls = "px-blue"; // Tears
+                if (char === 'A') cls = "px-accent"; // Wizard hat or similar
                 if (char === 'N') cls = "px-white"; // Nose/Mouth detail
                 
                 const targetCls = `pixel ${cls}`;
@@ -1249,6 +1481,18 @@ function renderTamagotchi() {
             if (_zzzInterval) {
                 clearInterval(_zzzInterval);
                 _zzzInterval = null;
+            }
+        }
+        
+        // Handle Tears (Love < 20)
+        if (tama.stats.love < 20 && !tama.isSleeping) {
+            if (!_tearInterval) {
+                _tearInterval = setInterval(spawnTear, 1200);
+            }
+        } else {
+            if (_tearInterval) {
+                clearInterval(_tearInterval);
+                _tearInterval = null;
             }
         }
 

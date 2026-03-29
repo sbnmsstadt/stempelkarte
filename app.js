@@ -1113,7 +1113,15 @@ function renderTamagotchiUI(tama, student) {
     const limitText = document.getElementById('tama-limit-text');
     
     if (nameEl) nameEl.textContent = tama.name || "Pixelino";
-    if (avatarEl) avatarEl.textContent = (tama.stats.level >= 10) ? "🦖" : "🐣";
+    if (avatarEl) {
+        let base = (tama.stats.level >= 10) ? "🦖" : "🐣";
+        if (tama.isSleeping) base = "😴";
+        else if (tama.stats.love < 20) base = "😭";
+        else if (tama.stats.hunger < 30 || tama.stats.thirst < 30) base = "😵‍💫";
+        else if (tama.stats.hunger > 80 && tama.stats.love > 80) base = (tama.stats.level >= 10) ? "🐲" : "🐥";
+        
+        avatarEl.textContent = base;
+    }
     if (levelEl) levelEl.textContent = `LVL ${tama.stats.level || 1}`;
     
     if (xpBarEl) {
@@ -1164,7 +1172,13 @@ async function careForTama(action) {
             // --- Show a toast notification ---
             const toast = document.createElement('div');
             toast.className = 'tama-toast';
-            toast.textContent = "Tamagotchi freut sich! ❤️ (Kostenlos)";
+            if (action === "style") {
+                toast.textContent = "Neues Outfit am Start! 🔥 (24h)";
+            } else if (action === "love") {
+                toast.textContent = "Tamagotchi liebt dich! ❤️";
+            } else {
+                toast.textContent = "Tamagotchi freut sich! ✨";
+            }
             document.body.appendChild(toast);
             setTimeout(() => toast.remove(), 2500);
 

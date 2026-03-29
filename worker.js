@@ -806,9 +806,14 @@ export default {
                     logMsg = "Mit Tamagotchi gelernt 📚";
                 }
                 else if (action === "style") {
-                    const hats = ['hat_party', 'hat_crown', 'hat_cool', 'hat_detective'];
+                    const hats = [
+                        'hat_party', 'hat_crown', 'hat_cool', 'hat_detective', 
+                        'hat_top', 'hat_wizard', 'hat_ninja', 'hat_bow',
+                        'hat_viking', 'hat_santahat', 'hat_cowboy', 'hat_chef',
+                        'hat_headphones', 'hat_straw', 'hat_graduation', 'hat_eyepatch'
+                    ];
                     settings.tamagotchi.currentHat = hats[Math.floor(Math.random() * hats.length)];
-                    settings.tamagotchi.hatExpires = Date.now() + 1 * 60 * 60 * 1000; // 1 Hour
+                    settings.tamagotchi.hatExpires = Date.now() + 24 * 60 * 60 * 1000; // 24 Hours
                     settings.tamagotchi.lastAction = 'style';
                     settings.tamagotchi.lastActionTime = new Date().toISOString();
                     logMsg = "Tamagotchi neu gestylt 🎩";
