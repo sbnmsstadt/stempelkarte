@@ -1122,11 +1122,20 @@ async function careForTama(action) {
                 const originalText = avatar.innerText;
                 avatar.innerText = "✨✔️"; 
                 avatar.style.transform = "scale(1.5) translateY(-5px)";
+                avatar.classList.add('tama-interact-pulse'); // Add specific class
                 setTimeout(() => {
                     avatar.innerText = originalText;
                     avatar.style.transform = "scale(1)";
-                }, 1000);
+                    avatar.classList.remove('tama-interact-pulse');
+                }, 1500);
             }
+
+            // --- Show a toast notification ---
+            const toast = document.createElement('div');
+            toast.className = 'tama-toast';
+            toast.textContent = "Tamagotchi sagt Danke! ❤️ (-1 Stempel)";
+            document.body.appendChild(toast);
+            setTimeout(() => toast.remove(), 2500);
 
             updateStampDisplay(currentStudent);
             renderRewards(currentStudent);

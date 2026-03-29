@@ -61,6 +61,9 @@ async function fetchData() {
             startBlinkingCycle();
         }
 
+        // Trigger Tamagotchi action detection even if renderAll wasn't called yet
+        handleTamaActionDetection(settings.tamagotchi);
+
     } catch (err) {
         console.error('Fetch error:', err);
     }
@@ -709,11 +712,14 @@ async function fetchFilmtagLive() {
         const newCurrent = newSettings?.groupReward?.current;
         const oldCelebId = settings?.celebration?.id;
         const newCelebId = newSettings?.celebration?.id;
+        const oldTamaActionTime = settings?.tamagotchi?.lastActionTime;
+        const newTamaActionTime = newSettings?.tamagotchi?.lastActionTime;
 
-        if (oldCurrent !== newCurrent || oldCelebId !== newCelebId) {
+        if (oldCurrent !== newCurrent || oldCelebId !== newCelebId || oldTamaActionTime !== newTamaActionTime) {
             settings = newSettings;
             renderFilmtag();
             checkCelebrationMode();
+            renderTamagotchi(); // Crucial: ensure Tamagotchi reacts to live updates!
         }
     } catch (_) { /* silent fail */ }
 }
@@ -1060,37 +1066,8 @@ function renderTamagotchi() {
         const inactiveSeconds = (now - referenceTime) / 1000;
 
         // --- Interaction Protection ---
-        let shouldTrigger = false;
-        if (_lastActionTimeSeen === null) {
-            _lastActionTimeSeen = tama.lastActionTime || "none";
-            console.log("Tamagotchi base interaction set:", _lastActionTimeSeen);
-        } else if (tama.lastActionTime && tama.lastActionTime !== _lastActionTimeSeen) {
-            _lastActionTimeSeen = tama.lastActionTime;
-            shouldTrigger = true;
-        }
-
-        // Fresh action detected? Hop back and trigger animation!
-        if (shouldTrigger) {
-            
-            // 1. Hop back if away
-            if (gridEl.classList.contains('walking-away')) {
-                gridEl.classList.remove('walking-away');
-                gridEl.classList.add('hopping-back');
-                setTimeout(() => gridEl.classList.remove('hopping-back'), 1200);
-            }
-
-            // 2. Trigger Specific Animation
-            if (tama.lastAction === 'play') {
-                triggerPlayAnimation();
-            } else if (tama.lastAction === 'love') {
-                triggerLoveAnimation();
-            } else if (tama.lastAction === 'feed') {
-                triggerFeedAnimation();
-            } else if (tama.lastAction === 'water') {
-                triggerWaterAnimation();
-            }
-        }
-
+        handleTamaActionDetection(tama);
+        
         // Walk away after 60s of silence
         if (inactiveSeconds > 60 && !tama.isSleeping && !gridEl.classList.contains('chasing') && !gridEl.classList.contains('hopping-back')) {
             if (!gridEl.classList.contains('walking-away')) {
@@ -1118,6 +1095,45 @@ function renderTamagotchi() {
         }
         
         if (statusEl) statusEl.textContent = statusText;
+    }
+}
+
+// Dedicated helper to detect and trigger action animations
+function handleTamaActionDetection(tama) {
+    if (!tama || !tama.lastActionTime) return;
+
+    let shouldTrigger = false;
+    if (_lastActionTimeSeen === null) {
+        _lastActionTimeSeen = tama.lastActionTime || "none";
+        console.log("Tamagotchi base interaction set:", _lastActionTimeSeen);
+    } else if (tama.lastActionTime && tama.lastActionTime !== _lastActionTimeSeen) {
+        _lastActionTimeSeen = tama.lastActionTime;
+        shouldTrigger = true;
+    }
+
+    if (shouldTrigger) {
+        const gridEl = document.getElementById('tama-pixel-grid');
+        if (!gridEl) return;
+
+        console.log("TAMAGOTCHI ACTION DETECTED:", tama.lastAction);
+
+        // 1. Hop back if away
+        if (gridEl.classList.contains('walking-away')) {
+            gridEl.classList.remove('walking-away');
+            gridEl.classList.add('hopping-back');
+            setTimeout(() => gridEl.classList.remove('hopping-back'), 1200);
+        }
+
+        // 2. Trigger Specific Animation
+        if (tama.lastAction === 'play') {
+            triggerPlayAnimation();
+        } else if (tama.lastAction === 'love') {
+            triggerLoveAnimation();
+        } else if (tama.lastAction === 'feed') {
+            triggerFeedAnimation();
+        } else if (tama.lastAction === 'water') {
+            triggerWaterAnimation();
+        }
     }
 }
 
