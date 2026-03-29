@@ -8,6 +8,8 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
+    <!-- SweetAlert2 for nicer warnings -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <!-- Confetti Library -->
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
 </head>
@@ -179,24 +181,36 @@
                 </div>
                 
                 <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-bottom: 12px;">
-                    <button onclick="careForTama('feed')" class="add-stamp-btn" style="padding: 8px; font-size: 0.6rem; background: rgba(255,255,255,0.05); flex-direction: column; height: auto; border-radius: 12px;">
+                    <button onclick="careForTama('handwash')" class="add-stamp-btn" style="padding: 8px; font-size: 0.6rem; background: rgba(96, 165, 250, 0.15); flex-direction: column; height: auto; border: 1px solid rgba(96, 165, 250, 0.3); border-radius: 12px;">
+                        <span style="font-size: 1.2rem; display: block;">🧼</span> Hände waschen
+                    </button>
+                    <button onclick="careForTama('teethbrush')" class="add-stamp-btn" style="padding: 8px; font-size: 0.6rem; background: rgba(255, 255, 255, 0.05); flex-direction: column; height: auto; border-radius: 12px;">
+                        <span style="font-size: 1.2rem; display: block;">🪥</span> Zähne putzen
+                    </button>
+                    <button onclick="careForTama('shower')" class="add-stamp-btn" style="padding: 8px; font-size: 0.6rem; background: rgba(255, 255, 255, 0.05); flex-direction: column; height: auto; border-radius: 12px;">
+                        <span style="font-size: 1.2rem; display: block;">🚿</span> Duschen
+                    </button>
+
+                    <button onclick="careForTama('feed')" class="add-stamp-btn" style="padding: 8px; font-size: 0.6rem; background: rgba(255, 255, 255, 0.05); flex-direction: column; height: auto; border-radius: 12px;">
                         <span style="font-size: 1.2rem; display: block;">🍎</span> Füttern
                     </button>
-                    <button onclick="careForTama('water')" class="add-stamp-btn" style="padding: 8px; font-size: 0.6rem; background: rgba(255,255,255,0.05); flex-direction: column; height: auto; border-radius: 12px;">
+                    <button onclick="careForTama('water')" class="add-stamp-btn" style="padding: 8px; font-size: 0.6rem; background: rgba(255, 255, 255, 0.05); flex-direction: column; height: auto; border-radius: 12px;">
                         <span style="font-size: 1.2rem; display: block;">💧</span> Tränken
                     </button>
-                    <button onclick="careForTama('clean')" class="add-stamp-btn" style="padding: 8px; font-size: 0.6rem; background: rgba(255,255,255,0.05); flex-direction: column; height: auto; border-radius: 12px;">
+                    <button onclick="careForTama('clean')" class="add-stamp-btn" style="padding: 8px; font-size: 0.6rem; background: rgba(255, 255, 255, 0.05); flex-direction: column; height: auto; border-radius: 12px;">
                         <span style="font-size: 1.2rem; display: block;">✨</span> Putzen
                     </button>
-                    <button onclick="careForTama('play')" class="add-stamp-btn" style="padding: 8px; font-size: 0.6rem; background: rgba(255,255,255,0.05); flex-direction: column; height: auto; border-radius: 12px;">
+
+                    <button onclick="careForTama('play')" class="add-stamp-btn" style="padding: 8px; font-size: 0.6rem; background: rgba(255, 255, 255, 0.05); flex-direction: column; height: auto; border-radius: 12px;">
                         <span style="font-size: 1.2rem; display: block;">🧶</span> Spielen
                     </button>
-                    <button onclick="careForTama('love')" class="add-stamp-btn" style="padding: 8px; font-size: 0.6rem; background: rgba(255,255,255,0.05); flex-direction: column; height: auto; border-radius: 12px;">
+                    <button onclick="careForTama('love')" class="add-stamp-btn" style="padding: 8px; font-size: 0.6rem; background: rgba(255, 255, 255, 0.05); flex-direction: column; height: auto; border-radius: 12px;">
                         <span style="font-size: 1.2rem; display: block;">❤️</span> Liebe
                     </button>
-                    <button onclick="careForTama('train')" class="add-stamp-btn" style="padding: 8px; font-size: 0.6rem; background: rgba(255,255,255,0.05); flex-direction: column; height: auto; border-radius: 12px;">
+                    <button onclick="careForTama('train')" class="add-stamp-btn" style="padding: 8px; font-size: 0.6rem; background: rgba(255, 255, 255, 0.05); flex-direction: column; height: auto; border-radius: 12px;">
                         <span style="font-size: 1.2rem; display: block;">📚</span> Üben
                     </button>
+
                     <button onclick="careForTama('style')" class="add-stamp-btn" style="grid-column: span 3; padding: 10px; font-size: 0.65rem; background: linear-gradient(135deg, rgba(255,255,255,0.1), rgba(255,255,255,0.05)); border-radius: 12px;">
                         <span style="font-size: 1.1rem; margin-right: 8px;">🎩</span> Pixelino neu stylen
                     </button>

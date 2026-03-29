@@ -833,6 +833,7 @@ input[type="number"] {
     }
 }
 
+/* --- Tamagotchi Poop & Stink --- */
 .zzz-particle {
     position: absolute;
     font-family: 'Press Start 2P', cursive;
@@ -842,6 +843,60 @@ input[type="number"] {
     pointer-events: none;
     animation: zzzFloat 3s ease-out forwards;
     z-index: 999;
+}
+
+.fly-particle {
+    position: absolute;
+    font-size: 0.6rem;
+    pointer-events: none;
+    z-index: 100;
+    animation: flyBuzz 2s infinite ease-in-out;
+}
+
+@keyframes flyBuzz {
+    0% { transform: translate(0, 0) rotate(0); }
+    25% { transform: translate(10px, -15px) rotate(15deg); }
+    50% { transform: translate(-5px, -10px) rotate(-10deg); }
+    75% { transform: translate(-10px, -5px) rotate(5deg); }
+    100% { transform: translate(0, 0) rotate(0); }
+}
+
+.poop-container {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 10;
+}
+
+.poop-item {
+    position: absolute;
+    font-size: 1.4rem;
+    filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.stink-cloud {
+    position: absolute;
+    top: -10px;
+    font-size: 0.8rem;
+    opacity: 0;
+    animation: stinkCloud 3s ease-in-out infinite;
+    pointer-events: none;
+    color: #4ade80; /* Light green stink */
+    filter: blur(1px);
+}
+
+@keyframes stinkCloud {
+    0% { transform: translateY(0) scale(0.5) rotate(0); opacity: 0; }
+    20% { opacity: 0.6; }
+    50% { transform: translateY(-30px) scale(1.2) rotate(15deg); opacity: 0.4; }
+    80% { opacity: 0.2; }
+    100% { transform: translateY(-50px) scale(1.5) rotate(-15deg); opacity: 0; }
 }
 
 @keyframes zzzFloat {

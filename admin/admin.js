@@ -195,11 +195,13 @@ function updateTamagotchiAdmin(tama) {
         const thirst = document.getElementById('tama-admin-thirst');
         const love = document.getElementById('tama-admin-love');
         const fun = document.getElementById('tama-admin-fun');
+        const hygiene = document.getElementById('tama-admin-hygiene');
 
-        if (hunger) hunger.innerText = `${tama.stats.hunger}%`;
-        if (thirst) thirst.innerText = `${tama.stats.thirst}%`;
-        if (love) love.innerText = `${tama.stats.love}%`;
-        if (fun) fun.innerText = `${tama.stats.fun || 0}%`;
+        if (hunger) hunger.innerText = `${Math.round(tama.stats.hunger)}%`;
+        if (thirst) thirst.innerText = `${Math.round(tama.stats.thirst)}%`;
+        if (love) love.innerText = `${Math.round(tama.stats.love)}%`;
+        if (fun) fun.innerText = `${Math.round(tama.stats.fun || 0)}%`;
+        if (hygiene) hygiene.innerText = `${Math.round(tama.stats.hygiene || 0)}%`;
     }
 }
 
@@ -248,7 +250,7 @@ async function resetTamagotchi() {
 }
 
 // ── TAMAGOTCHI TEST CONSOLE ──────────────────────
-async function testTamaStats(h, t, l, f) {
+async function testTamaStats(h, t, l, f, hy) {
     if (!currentSettings) return;
     const newSettings = JSON.parse(JSON.stringify(currentSettings));
     if (!newSettings.tamagotchi) return;
@@ -256,7 +258,8 @@ async function testTamaStats(h, t, l, f) {
         hunger: h, 
         thirst: t, 
         love: l,
-        fun: f || 100
+        fun: f || 100,
+        hygiene: hy || 100
     };
     
     try {
@@ -287,8 +290,14 @@ async function simulateTamaAction(action) {
         newSettings.tamagotchi.stats.thirst = Math.min(100, (newSettings.tamagotchi.stats.thirst || 0) + 25);
     } else if (action === 'love') {
         newSettings.tamagotchi.stats.love = Math.min(100, (newSettings.tamagotchi.stats.love || 0) + 25);
+    } else if (action === 'handwash') {
+        newSettings.tamagotchi.stats.hygiene = Math.min(100, (newSettings.tamagotchi.stats.hygiene || 0) + 15);
+    } else if (action === 'teethbrush') {
+        newSettings.tamagotchi.stats.hygiene = Math.min(100, (newSettings.tamagotchi.stats.hygiene || 0) + 25);
+    } else if (action === 'shower') {
+        newSettings.tamagotchi.stats.hygiene = Math.min(100, (newSettings.tamagotchi.stats.hygiene || 0) + 50);
     } else if (action === 'poop') {
-        newSettings.tamagotchi.poopCount = Math.min(3, (newSettings.tamagotchi.poopCount || 0) + 1);
+        newSettings.tamagotchi.poopCount = Math.min(20, (newSettings.tamagotchi.poopCount || 0) + 1);
     }
     
     try {
