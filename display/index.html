@@ -1060,7 +1060,7 @@
         }
 
         .tama-pixel-grid.walking-away {
-            transform: translate(-50%, -160px) scale(0.28);
+            transform: translate(-50%, -40px) scale(0.28);
             opacity: 0.6;
             filter: blur(2px) saturate(0.6);
             transition: transform 10s ease-in-out, opacity 10s, filter 10s;
@@ -1184,6 +1184,24 @@
         @keyframes tama-chase {
             0%, 100% { transform: translate(-80%, 0); }
             50% { transform: translate(-20%, 0); }
+        }
+
+        @keyframes heart-float {
+            0% { transform: translate(0, 0) scale(0.5); opacity: 0; }
+            20% { opacity: 1; }
+            40% { transform: translate(-10px, -40px) scale(1.2); }
+            60% { transform: translate(10px, -80px) scale(1.0); }
+            100% { transform: translate(0, -120px) scale(1.5); opacity: 0; }
+        }
+
+        .heart-particle {
+            position: absolute;
+            color: #ff4d4d;
+            font-size: 1.2rem;
+            pointer-events: none;
+            z-index: 16;
+            animation: heart-float 4s ease-out forwards;
+            text-shadow: 0 0 10px rgba(255, 77, 77, 0.5);
         }
 
         .tama-pixel-grid.chasing {
@@ -1415,7 +1433,7 @@
                             <span id="tama-love-val" class="stat-val">?%</span>
                         </div>
                         <div class="stat-row">
-                            <span class="stat-icon">🎮</span>
+                            <span class="stat-icon">⚽</span>
                             <div class="stat-bar-outer">
                                 <div id="tama-fun" class="stat-bar-inner" style="background: #fde047;"></div>
                             </div>
@@ -1431,6 +1449,7 @@
                     <!-- Interaction & Effect Layers -->
                     <div id="tama-zzz-container" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 15;"></div>
                     <div id="tama-item-container" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 12;"></div>
+                    <div id="tama-heart-container" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 16;"></div>
 
                     <!-- Pure Code Pixel Pet Grid (12x12) -->
                     <div id="tama-pixel-grid" class="tama-pixel-grid"></div>

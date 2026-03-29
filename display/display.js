@@ -929,7 +929,37 @@ function triggerPlayAnimation() {
         item.remove();
         gridEl.classList.remove('chasing');
         _isInteractionActive = false;
-    }, 8000); // Play for 8 seconds
+    }, 12000); // Play for 12 seconds
+}
+
+function triggerLoveAnimation() {
+    if (_isInteractionActive) return;
+    _isInteractionActive = true;
+
+    const container = document.getElementById('tama-heart-container');
+    if (!container) return;
+
+    const spawnHeart = () => {
+        const h = document.createElement('div');
+        h.className = 'heart-particle';
+        h.textContent = '❤️';
+        h.style.left = (Math.random() * 40 + 30) + '%';
+        h.style.bottom = (Math.random() * 20 + 40) + 'px';
+        container.appendChild(h);
+        setTimeout(() => h.remove(), 4000);
+    };
+
+    // Spawn multiple hearts over time
+    let count = 0;
+    const interval = setInterval(() => {
+        spawnHeart();
+        count++;
+        if (count >= 12) clearInterval(interval);
+    }, 400);
+
+    setTimeout(() => {
+        _isInteractionActive = false;
+    }, 6000); // Love effect for 6 seconds
 }
 
 function renderTamagotchi() {
@@ -1005,14 +1035,8 @@ function renderTamagotchi() {
     } else {
         card.style.display = 'block';
         
-        // Handle Interactions (Play)
-        if (tama.lastAction === 'play' && !_isInteractionActive) {
-            // Only trigger if action is recent (within last 30s)
-            const actionTime = new Date(tama.lastActionTime).getTime();
-            if (Date.now() - actionTime < 30000) {
-                triggerPlayAnimation();
-            }
-        }
+        // Interaction logic moved to change detector below for better reliability
+
 
         // Handle Sleep (No float, Zzz)
         if (tama.isSleeping) {
@@ -1067,13 +1091,22 @@ function renderTamagotchi() {
         const referenceTime = Math.max(actionTime, lastUpdate);
         const inactiveSeconds = (now - referenceTime) / 1000;
 
-        // Fresh action detected? Hop back!
+        // Fresh action detected? Hop back and trigger animation!
         if (tama.lastActionTime && tama.lastActionTime !== _lastActionTimeSeen) {
             _lastActionTimeSeen = tama.lastActionTime;
+            
+            // 1. Hop back if away
             if (gridEl.classList.contains('walking-away')) {
                 gridEl.classList.remove('walking-away');
                 gridEl.classList.add('hopping-back');
                 setTimeout(() => gridEl.classList.remove('hopping-back'), 1200);
+            }
+
+            // 2. Trigger Specific Animation
+            if (tama.lastAction === 'play') {
+                triggerPlayAnimation();
+            } else if (tama.lastAction === 'love') {
+                triggerLoveAnimation();
             }
         }
 
