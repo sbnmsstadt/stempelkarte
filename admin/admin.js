@@ -195,13 +195,11 @@ function updateTamagotchiAdmin(tama) {
         const thirst = document.getElementById('tama-admin-thirst');
         const love = document.getElementById('tama-admin-love');
         const fun = document.getElementById('tama-admin-fun');
-        const hygiene = document.getElementById('tama-admin-hygiene');
 
-        if (hunger) hunger.innerText = `${Math.round(tama.stats.hunger)}%`;
-        if (thirst) thirst.innerText = `${Math.round(tama.stats.thirst)}%`;
-        if (love) love.innerText = `${Math.round(tama.stats.love)}%`;
-        if (fun) fun.innerText = `${Math.round(tama.stats.fun || 0)}%`;
-        if (hygiene) hygiene.innerText = `${Math.round(tama.stats.hygiene || 0)}%`;
+        if (hunger) hunger.innerText = `${tama.stats.hunger}%`;
+        if (thirst) thirst.innerText = `${tama.stats.thirst}%`;
+        if (love) love.innerText = `${tama.stats.love}%`;
+        if (fun) fun.innerText = `${tama.stats.fun || 0}%`;
     }
 }
 
@@ -290,7 +288,7 @@ async function simulateTamaAction(action) {
     } else if (action === 'love') {
         newSettings.tamagotchi.stats.love = Math.min(100, (newSettings.tamagotchi.stats.love || 0) + 25);
     } else if (action === 'poop') {
-        newSettings.tamagotchi.poopCount = Math.min(20, (newSettings.tamagotchi.poopCount || 0) + 1);
+        newSettings.tamagotchi.poopCount = Math.min(3, (newSettings.tamagotchi.poopCount || 0) + 1);
     }
     
     try {

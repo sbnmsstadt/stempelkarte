@@ -116,11 +116,9 @@ export default {
                     if (activeHours > 0 && settings.tamagotchi.status === "hatched") {
                         // Decay stats: 20% per 30 mins = 40% per hour
                         const decay = activeHours * 40;
-                        const lovePenalty = (settings.tamagotchi.poopCount || 0) * activeHours * 2; // +2% per poop per hour
-                        
                         settings.tamagotchi.stats.hunger = Math.max(0, Math.round(settings.tamagotchi.stats.hunger - decay));
                         settings.tamagotchi.stats.thirst = Math.max(0, Math.round(settings.tamagotchi.stats.thirst - decay));
-                        settings.tamagotchi.stats.love = Math.max(0, Math.round(settings.tamagotchi.stats.love - (decay + lovePenalty)));
+                        settings.tamagotchi.stats.love = Math.max(0, Math.round(settings.tamagotchi.stats.love - decay));
                         settings.tamagotchi.stats.fun = Math.max(0, Math.round((settings.tamagotchi.stats.fun || 100) - decay));
                         
                         // Auto-Sleep if Fun is critically low
@@ -130,7 +128,7 @@ export default {
 
                         // Poop Chance: 52% per active hour
                         if (Math.random() < 0.52 * activeHours) {
-                            settings.tamagotchi.poopCount = Math.min(20, (settings.tamagotchi.poopCount || 0) + 1);
+                            settings.tamagotchi.poopCount = Math.min(3, (settings.tamagotchi.poopCount || 0) + 1);
                         }
 
                         // --- Hat Expiration ---
@@ -813,7 +811,7 @@ export default {
                     logMsg = "Mit Tamagotchi gelernt 📚";
                 }
                 else if (action === "poop") {
-                    settings.tamagotchi.poopCount = Math.min(20, (settings.tamagotchi.poopCount || 0) + 1);
+                    settings.tamagotchi.poopCount = Math.min(3, (settings.tamagotchi.poopCount || 0) + 1);
                     settings.tamagotchi.lastAction = 'poop';
                     settings.tamagotchi.lastActionTime = new Date().toISOString();
                     logMsg = "Häufchen gemacht 💩";

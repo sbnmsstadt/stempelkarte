@@ -1476,18 +1476,8 @@ function renderTamagotchi() {
             poopContainer.innerHTML = '';
             for (let i = 0; i < targetPoopCount; i++) {
                 const p = document.createElement('div');
-                p.className = 'poop-item';
-                p.innerHTML = `
-                    <div class="stink-cloud" style="animation-delay: ${Math.random() * 2}s">☁️</div>
-                    💩
-                `;
-                
-                // Random position in the lower half (meadow)
-                const left = 5 + Math.random() * 90;
-                const bottom = 5 + Math.random() * 35;
-                p.style.left = `${left}%`;
-                p.style.bottom = `${bottom}%`;
-                
+                p.textContent = '💩';
+                p.style.fontSize = '1.2rem';
                 poopContainer.appendChild(p);
             }
         }
