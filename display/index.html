@@ -1051,9 +1051,9 @@
             left: 50%;
             transform: translateX(-50%);
             display: grid;
-            grid-template-columns: repeat(24, 6px);
-            grid-template-rows: repeat(24, 6px);
-            gap: 0.6px;
+            grid-template-columns: repeat(12, 12px);
+            grid-template-rows: repeat(12, 12px);
+            gap: 1px;
             z-index: 4;
             transition: transform 1s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 1s, filter 1s;
             animation: pixelFloat 3.5s ease-in-out infinite, pixelGlow 2s ease-in-out infinite;
@@ -1078,9 +1078,9 @@
         }
 
         .pixel {
-            width: 6px;
-            height: 6px;
-            border-radius: 1px;
+            width: 12px;
+            height: 12px;
+            border-radius: 2px;
             transition: background 0.2s steps(4);
         }
 
