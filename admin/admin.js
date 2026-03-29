@@ -1,5 +1,5 @@
 const API_URL = "https://stempelkarte.sb-nmsstadt.workers.dev/api";
-const PIN_ADMIN = "8520"; 
+const PIN_ADMIN = "8520";
 window.students = [];
 let REWARDS = [];
 let lastStudentsSnapshot = "";
@@ -41,10 +41,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     await loadSettings();
     Logbook.init();
     fetchStudents();
-    
+
     // Poll every 5 seconds for new data
     setInterval(fetchStudentsSilent, 5000);
-    
+
     document.getElementById('add-btn')?.addEventListener('click', createNewStudent);
     document.getElementById('add-reward-btn')?.addEventListener('click', createNewReward);
 
@@ -54,7 +54,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         const overviewTitle = document.querySelector('.main-content h2');
         const logbook = document.getElementById('logbook-view');
         const navBtn = document.getElementById('nav-logbook-btn');
-        
+
         if (logbook.classList.contains('hidden')) {
             // Show Logbook
             overview.classList.add('hidden');
@@ -62,7 +62,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             logbook.classList.remove('hidden');
             document.getElementById('search-students').parentElement.style.display = 'none';
             navBtn.querySelector('h3').innerText = "⬅ Zur Schüler-Übersicht";
-            
+
             // Initialize/Render Logbook
             Logbook.init();
             Logbook.renderStudents();
@@ -72,10 +72,10 @@ document.addEventListener('DOMContentLoaded', async () => {
             if (overviewTitle) overviewTitle.innerText = "Schüler-Übersicht";
             logbook.classList.add('hidden');
             document.getElementById('search-students').parentElement.style.display = 'flex';
-            navBtn.querySelector('h3').innerText = "📖 Pädagogisches Logbuch";
+            navBtn.querySelector('h3').innerText = "Pädagogisches Logbuch";
         }
     });
-    
+
     // Search functionality
     document.getElementById('search-students')?.addEventListener('input', (e) => {
         renderAdminList(e.target.value.toLowerCase());
@@ -130,7 +130,7 @@ async function fetchRewards() {
         const response = await fetch(`${API_URL}/rewards`);
         if (response.ok) {
             REWARDS = await response.json();
-            REWARDS.sort((a,b) => a.threshold - b.threshold);
+            REWARDS.sort((a, b) => a.threshold - b.threshold);
             renderRewardDashboard();
             updateStats();
         }
@@ -183,7 +183,7 @@ function updateStats() {
     const totalStudents = window.students.length;
     const totalStamps = window.students.reduce((sum, s) => sum + (s.stamps || 0), 0);
     const totalRewards = REWARDS.length;
-    
+
     let pendingRedemptions = 0;
     students.forEach(s => {
         if (s.redemptions) {
@@ -203,7 +203,7 @@ function renderRedemptionDashboard() {
     const db = document.getElementById('redemption-dashboard');
     if (!db) return;
     db.innerHTML = '';
-    
+
     let requests = [];
     window.students.forEach(s => {
         if (s.redemptions) {
@@ -262,31 +262,31 @@ function renderBirthdayDashboard() {
     const db = document.getElementById('birthday-dashboard');
     if (!db) return;
     db.innerHTML = '';
-    
+
     const today = new Date();
-    today.setHours(0,0,0,0);
+    today.setHours(0, 0, 0, 0);
     const twoWeeksLater = new Date(today);
     twoWeeksLater.setDate(today.getDate() + 14);
-    
+
     let upcoming = [];
     window.students.forEach(s => {
         if (!s.birthday) return;
         const [y, m, d] = s.birthday.split('-').map(Number);
         let bDate = new Date(today.getFullYear(), m - 1, d);
-        if (bDate < today) bDate = new Date(today.getFullYear() + 1, m-1, d);
-        
+        if (bDate < today) bDate = new Date(today.getFullYear() + 1, m - 1, d);
+
         if (bDate >= today && bDate <= twoWeeksLater) {
             upcoming.push({ name: s.name, date: bDate, original: `${d}.${m}.${y}`, age: bDate.getFullYear() - y });
         }
     });
-    
-    upcoming.sort((a,b) => a.date - b.date);
-    
+
+    upcoming.sort((a, b) => a.date - b.date);
+
     if (upcoming.length === 0) {
         db.innerHTML = '<i>Keine in Sicht.</i>';
         return;
     }
-    
+
     upcoming.forEach(u => {
         const diff = Math.ceil((u.date - today) / (1000 * 60 * 60 * 24));
         const relative = diff === 0 ? 'Heute!' : (diff === 1 ? 'Morgen' : `In ${diff} Tagen`);
@@ -298,7 +298,7 @@ function renderBirthdayDashboard() {
     });
 }
 
-let editingReward = null; 
+let editingReward = null;
 
 function renderRewardDashboard() {
     const list = document.getElementById('admin-reward-list');
@@ -308,7 +308,7 @@ function renderRewardDashboard() {
     REWARDS.forEach(reward => {
         const item = document.createElement('div');
         item.className = 'reward-admin-item';
-        
+
         if (editingReward && editingReward.oldThreshold === reward.threshold) {
             item.classList.add('editing');
             item.innerHTML = `
@@ -405,7 +405,7 @@ function adjustEditThreshold(delta) {
 
 async function saveEditReward() {
     if (!editingReward) return;
-    
+
     // Use the values from our local editingReward state which is kept in sync by adjustEditThreshold
     // but icon/title/desc need to be grabbed from DOM
     const newIcon = document.getElementById('edit-reward-icon').value;
@@ -453,7 +453,7 @@ async function saveRewardsAPI(arr) {
             renderRewardDashboard();
             updateStats();
         }
-    } catch (err) {}
+    } catch (err) { }
 }
 
 async function createNewReward() {
@@ -461,7 +461,7 @@ async function createNewReward() {
     const i = document.getElementById('new-reward-icon').value || "🎁";
     const title = document.getElementById('new-reward-title').value;
     const desc = document.getElementById('new-reward-desc').value;
-    
+
     if (!t || !title) {
         alert("Bitte Stempelanzahl und Titel eingeben.");
         return;
@@ -472,9 +472,9 @@ async function createNewReward() {
         return;
     }
 
-    const updated = [...REWARDS, {threshold:t, icon:i, title, desc, active: true}];
+    const updated = [...REWARDS, { threshold: t, icon: i, title, desc, active: true }];
     await saveRewardsAPI(updated);
-    
+
     // Clear inputs
     document.getElementById('new-reward-threshold').value = '';
     document.getElementById('new-reward-title').value = '';
@@ -505,14 +505,14 @@ function renderAdminList(filter = "") {
         let vipDayText = '';
         if (isVip && student.vip.grantedAt) {
             const grantedDate = new Date(student.vip.grantedAt);
-            grantedDate.setHours(0,0,0,0);
+            grantedDate.setHours(0, 0, 0, 0);
             const today = new Date();
-            today.setHours(0,0,0,0);
+            today.setHours(0, 0, 0, 0);
             const daysDiff = Math.floor((today - grantedDate) / (1000 * 60 * 60 * 24)) + 1;
             const vipDuration = window._vipDuration || 3;
             const daysLeft = vipDuration - daysDiff + 1;
-            vipDayText = daysLeft <= 1 
-                ? `⭐ VIP — <span style="color:#ff6b6b">Letzter Tag!</span>` 
+            vipDayText = daysLeft <= 1
+                ? `⭐ VIP — <span style="color:#ff6b6b">Letzter Tag!</span>`
                 : `⭐ VIP — <span style="color:gold">Tag ${daysDiff}/${vipDuration}</span>`;
         }
 
@@ -609,7 +609,7 @@ async function toggleStudentBadge(studentId, badgeId) {
     await assignBadgesToStudent(studentId, newBadges);
 }
 
-function formatDate(s) { const [y,m,d] = s.split('-'); return `${d}.${m}.${y}`; }
+function formatDate(s) { const [y, m, d] = s.split('-'); return `${d}.${m}.${y}`; }
 
 async function toggleVip(id, activate) {
     let reason = '';
@@ -645,8 +645,8 @@ async function createNewStudent() {
     if (!name) return;
     const response = await fetch(`${API_URL}/students`, {
         method: 'POST',
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({name, birthday: b})
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, birthday: b })
     });
     if (response.ok) {
         document.getElementById('new-student-name').value = '';
@@ -656,14 +656,14 @@ async function createNewStudent() {
 
 async function deleteStudent(id) {
     if (!confirm("Löschen?")) return;
-    await fetch(`${API_URL}/students/${id}`, {method:'DELETE'});
+    await fetch(`${API_URL}/students/${id}`, { method: 'DELETE' });
     fetchStudents();
 }
 
 async function updateStamps(id, c) {
     await fetch(`${API_URL}/students/${id}`, {
         method: 'PATCH',
-        headers: {'Content-Type':'application/json'},
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
             stamps: parseInt(c),
             reason: "Admin-Korrektur"
@@ -697,7 +697,7 @@ async function loadSettings() {
             updateField('setting-community-visible', settings.communityGoalVisible !== false, true);
             updateField('setting-community-title', settings.communityTitle || "Pizza-Party");
             updateField('setting-community-target', settings.communityTarget || 500);
-            
+
             if (settings.activities) {
                 const text = settings.activities.map(a => `${a.emoji} ${a.label}`).join('\n');
                 updateField('setting-activities', text);
@@ -706,7 +706,7 @@ async function loadSettings() {
             if (settings.groupReward) {
                 updateField('setting-group-title', settings.groupReward.title || "Filmtag");
                 document.getElementById('setting-group-target').value = settings.groupReward?.target || 8;
-                
+
                 // Static displays
                 const titleDisp = document.getElementById('group-reward-title-display');
                 if (titleDisp) {
@@ -714,7 +714,7 @@ async function loadSettings() {
                     document.getElementById('group-reward-status').innerText = `${settings.groupReward.current} / ${settings.groupReward.target} Stempel`;
                     const progress = Math.min(100, (settings.groupReward.current / settings.groupReward.target) * 100);
                     document.getElementById('group-reward-bar').style.width = `${progress}%`;
-                    
+
                     const isGoalReached = settings.groupReward.current >= settings.groupReward.target;
                     const isApproved = settings.groupReward.isApproved;
 
@@ -739,14 +739,14 @@ async function loadSettings() {
 
             renderSotwCurrent();
         }
-    } catch (err) {}
+    } catch (err) { }
 }
 
 async function saveSettings() {
     const communityVisible = document.getElementById('setting-community-visible').checked;
     const communityTitle = document.getElementById('setting-community-title').value || "Pizza-Party";
     const target = parseInt(document.getElementById('setting-community-target').value);
-    
+
     const activitiesText = document.getElementById('setting-activities').value;
     const dailyNotes = document.getElementById('setting-daily-notes')?.value || "";
     const currentProjects = document.getElementById('setting-current-projects')?.value || "";
@@ -755,7 +755,7 @@ async function saveSettings() {
     const groupTitle = document.getElementById('setting-group-title').value;
     const groupTarget = parseInt(document.getElementById('setting-group-target').value);
     const vipDuration = parseInt(document.getElementById('setting-vip-duration')?.value) || 3;
-    
+
     if (isNaN(target) || target <= 0) {
         alert("Bitte ein gültiges Ziel eingeben.");
         return;
@@ -769,10 +769,10 @@ async function saveSettings() {
             const segmenter = new Intl.Segmenter('en', { granularity: 'grapheme' });
             const segments = Array.from(segmenter.segment(line));
             const firstSegment = segments[0]?.segment || "";
-            
+
             // Check if first segment is an emoji (rough check: non-ASCII and not punctuation)
             const isEmoji = /\p{Extended_Pictographic}/u.test(firstSegment);
-            
+
             if (isEmoji) {
                 const label = line.substring(firstSegment.length).trim();
                 return { emoji: firstSegment, label: label || "Aktivität" };
@@ -783,7 +783,7 @@ async function saveSettings() {
             if (firstSpace === -1) {
                 return { emoji: "✨", label: line };
             }
-            
+
             return {
                 emoji: line.substring(0, firstSpace).trim(),
                 label: line.substring(firstSpace).trim()
@@ -793,7 +793,7 @@ async function saveSettings() {
     try {
         // Use our cached currentSettings to preserve server-only values (like reward progress)
         // while updating with the new values from the form.
-        const payload = { 
+        const payload = {
             ...(currentSettings || {}),
             communityTarget: target,
             communityTitle: communityTitle,
@@ -817,7 +817,7 @@ async function saveSettings() {
             body: JSON.stringify(payload)
         });
         if (response.ok) {
-            lastLoadedValues = {}; 
+            lastLoadedValues = {};
             alert("Einstellungen gespeichert!");
             loadSettings();
         }
@@ -925,7 +925,7 @@ function populateSotwDropdown() {
     if (!sel) return;
     const current = sel.value;
     sel.innerHTML = '<option value="">-- Schüler auswählen --</option>';
-    [...students].sort((a,b) => a.name.localeCompare(b.name)).forEach(s => {
+    [...students].sort((a, b) => a.name.localeCompare(b.name)).forEach(s => {
         sel.innerHTML += `<option value="${s.id}" ${s.id === current ? 'selected' : ''}>${s.name}</option>`;
     });
 }
