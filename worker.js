@@ -61,7 +61,15 @@ export default {
                     currentProjects: "",
                     upcomingProjects: "",
                     todayPlan: "",
-                    studentOfWeek: null
+                    studentOfWeek: null,
+                    tamagotchi: {
+                        status: "egg",
+                        name: "Pixelino",
+                        hatchDate: null,
+                        lastUpdate: Date.now(),
+                        stats: { hunger: 100, thirst: 100, love: 100, energy: 100 },
+                        stage: "egg"
+                    }
                 };
                 return new Response(JSON.stringify(settings), {
                     headers: { ...corsHeaders, "Content-Type": "application/json" }
@@ -269,15 +277,18 @@ export default {
                 if (idx === -1) return new Response("Not Found", { status: 404, headers: corsHeaders });
 
                 const prevBadges = students[idx].badges || [];
-                const newlyAdded = (badges || []).filter(id => !prevBadges.includes(id));
+                const currentBadges = badges || [];
+                const newlyAdded = currentBadges.filter(id => !prevBadges.includes(id));
+                const newlyRemoved = prevBadges.filter(id => !currentBadges.includes(id));
 
-                // Load badge definitions to get names for history entries
+                const badgesRaw = await env.DATABASE.get("badges");
+                const allBadges = JSON.parse(badgesRaw || "[]");
+                const today = new Date().toISOString().split("T")[0];
+
+                if (!students[idx].history) students[idx].history = [];
+
+                // Handle additions
                 if (newlyAdded.length > 0) {
-                    const badgesRaw = await env.DATABASE.get("badges");
-                    const allBadges = JSON.parse(badgesRaw || "[]");
-                    const today = new Date().toISOString().split("T")[0];
-
-                    if (!students[idx].history) students[idx].history = [];
                     newlyAdded.forEach(badgeId => {
                         const badgeDef = allBadges.find(b => String(b.id) === String(badgeId));
                         const label = badgeDef ? `${badgeDef.emoji} Abzeichen "${badgeDef.name}" erhalten!` : "🏅 Abzeichen erhalten!";
@@ -285,7 +296,18 @@ export default {
                     });
                 }
 
-                students[idx].badges = badges || [];
+                // Handle removals
+                if (newlyRemoved.length > 0) {
+                    newlyRemoved.forEach(badgeId => {
+                        const badgeDef = allBadges.find(b => String(b.id) === String(badgeId));
+                        if (badgeDef) {
+                            const labelDetail = `Abzeichen "${badgeDef.name}" erhalten!`;
+                            students[idx].history = students[idx].history.filter(h => !h.reason.includes(labelDetail));
+                        }
+                    });
+                }
+
+                students[idx].badges = currentBadges;
                 await env.DATABASE.put("students", JSON.stringify(students));
                 return new Response(JSON.stringify(students[idx]), {
                     headers: { ...corsHeaders, "Content-Type": "application/json" }
@@ -381,7 +403,36 @@ export default {
                         students[index].stamps = stamps;
                     }
                     if (avatar !== undefined) students[index].avatar = avatar;
-                    if (badges !== undefined) students[index].badges = badges;
+                    if (badges !== undefined) {
+                        const prevB = students[index].badges || [];
+                        const currentB = badges || [];
+                        const added = currentB.filter(id => !prevB.includes(id));
+                        const removed = prevB.filter(id => !currentB.includes(id));
+
+                        if (added.length > 0 || removed.length > 0) {
+                            const badgesRaw = await env.DATABASE.get("badges");
+                            const allBadges = JSON.parse(badgesRaw || "[]");
+                            const today = new Date().toISOString().split("T")[0];
+
+                            if (added.length > 0) {
+                                added.forEach(bid => {
+                                    const bDef = allBadges.find(b => String(b.id) === String(bid));
+                                    const label = bDef ? `${bDef.emoji} Abzeichen "${bDef.name}" erhalten!` : "🏅 Abzeichen erhalten!";
+                                    students[index].history.push({ date: today, reason: label, emoji: bDef?.emoji || "🏅" });
+                                });
+                            }
+                            if (removed.length > 0) {
+                                removed.forEach(bid => {
+                                    const bDef = allBadges.find(b => String(b.id) === String(bid));
+                                    if (bDef) {
+                                        const pattern = `Abzeichen "${bDef.name}" erhalten!`;
+                                        students[index].history = students[index].history.filter(h => !h.reason.includes(pattern));
+                                    }
+                                });
+                            }
+                        }
+                        students[index].badges = currentB;
+                    }
 
                     await env.DATABASE.put("students", JSON.stringify(students));
                     return new Response(JSON.stringify(students[index]), {
@@ -587,6 +638,69 @@ export default {
                 return new Response("Schüler nicht gefunden", { status: 404, headers: corsHeaders });
             }
 
+            // POST /api/tamagotchi/care — Deduct 1 stamp and care for the pet
+            if (path === "/api/tamagotchi/care" && method === "POST") {
+                const { studentId, action } = await request.json();
+                const studentsRaw = await env.DATABASE.get("students");
+                let students = JSON.parse(studentsRaw || "[]");
+                const idx = students.findIndex(s => String(s.id) === String(studentId));
+                if (idx === -1) return new Response("Student not found", { status: 404, headers: corsHeaders });
+
+                const student = students[idx];
+                const freeStamps = (student.stamps || 0) - (student.usedStamps || 0);
+                if (freeStamps < 1) return new Response("Zu wenig Stempel!", { status: 400, headers: corsHeaders });
+
+                const settingsRaw = await env.DATABASE.get("settings");
+                let settings = JSON.parse(settingsRaw || "{}");
+                if (!settings.tamagotchi || settings.tamagotchi.status !== "hatched") {
+                    return new Response("Tamagotchi schläft noch oder existiert nicht.", { status: 400, headers: corsHeaders });
+                }
+
+                // Deduct stamp
+                student.usedStamps = (student.usedStamps || 0) + 1;
+                if (!student.history) student.history = [];
+                const today = new Date().toISOString().split('T')[0];
+                
+                let logMsg = "";
+                if (action === "feed") { settings.tamagotchi.stats.hunger = Math.min(100, settings.tamagotchi.stats.hunger + 20); logMsg = "Tamagotchi gefüttert 🍎"; }
+                else if (action === "water") { settings.tamagotchi.stats.thirst = Math.min(100, settings.tamagotchi.stats.thirst + 25); logMsg = "Tamagotchi getränkt 💧"; }
+                else if (action === "play") { settings.tamagotchi.stats.energy = Math.min(100, settings.tamagotchi.stats.energy + 15); settings.tamagotchi.stats.love = Math.min(100, settings.tamagotchi.stats.love + 5); logMsg = "Mit Tamagotchi gespielt 🧶"; }
+                else if (action === "love") { settings.tamagotchi.stats.love = Math.min(100, settings.tamagotchi.stats.love + 30); logMsg = "Tamagotchi gestreichelt ❤️"; }
+                
+                student.history.push({ date: today, reason: logMsg, emoji: "🐣" });
+                settings.tamagotchi.lastUpdate = Date.now();
+
+                await Promise.all([
+                    env.DATABASE.put("students", JSON.stringify(students)),
+                    env.DATABASE.put("settings", JSON.stringify(settings))
+                ]);
+
+                return new Response(JSON.stringify({ student, tamagotchi: settings.tamagotchi }), {
+                    headers: { ...corsHeaders, "Content-Type": "application/json" }
+                });
+            }
+
+            // POST /api/tamagotchi/hatch — Start the pet lifecycle
+            if (path === "/api/tamagotchi/hatch" && method === "POST") {
+                const { name } = await request.json();
+                const settingsRaw = await env.DATABASE.get("settings");
+                let settings = JSON.parse(settingsRaw || "{}");
+                
+                settings.tamagotchi = {
+                    status: "hatched",
+                    name: name || "Pixelino",
+                    hatchDate: new Date().toISOString().split('T')[0],
+                    lastUpdate: Date.now(),
+                    stats: { hunger: 80, thirst: 80, love: 50, energy: 100 },
+                    stage: "baby"
+                };
+
+                await env.DATABASE.put("settings", JSON.stringify(settings));
+                return new Response(JSON.stringify(settings.tamagotchi), {
+                    headers: { ...corsHeaders, "Content-Type": "application/json" }
+                });
+            }
+
             if (path.startsWith("/api/students/") && method === "DELETE") {
                 const id = path.split("/").pop();
                 const studentsRaw = await env.DATABASE.get("students");
@@ -699,6 +813,23 @@ export default {
                 if (result.success) {
                     // Cache the result
                     await env.DATABASE.put(cacheKey, result.text);
+
+                    // Automatisch an Telegram senden (Logbuch-Kanal)
+                    if (env.TELEGRAM_LOGBUCH_TOKEN) {
+                        try {
+                            const telegramChatId = env.TELEGRAM_LOGBUCH_CHAT_ID || env.TELEGRAM_CHAT_ID;
+                            if (telegramChatId) {
+                                await sendTelegramMessage(
+                                    env, 
+                                    `📝 KI-Tageszusammenfassung (${date}):\n\n${result.text}`,
+                                    env.TELEGRAM_LOGBUCH_TOKEN,
+                                    telegramChatId
+                                );
+                            }
+                        } catch (te) {
+                            console.error("Auto-Telegram summary error:", te);
+                        }
+                    }
 
                     return new Response(JSON.stringify({ text: result.text, model: result.model }), {
                         headers: { ...corsHeaders, "Content-Type": "application/json" }
@@ -1146,14 +1277,17 @@ function buildFallbackMessage(events) {
     return msg;
 }
 
-async function sendTelegramMessage(env, text) {
-    if (!env.TELEGRAM_TOKEN || !env.TELEGRAM_CHAT_ID) return false;
+async function sendTelegramMessage(env, text, token = null, chatId = null) {
+    const t = token || env.TELEGRAM_TOKEN;
+    const cid = chatId || env.TELEGRAM_CHAT_ID;
+    
+    if (!t || !cid) return false;
     try {
-        const response = await fetch(`https://api.telegram.org/bot${env.TELEGRAM_TOKEN}/sendMessage`, {
+        const response = await fetch(`https://api.telegram.org/bot${t}/sendMessage`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-                chat_id: env.TELEGRAM_CHAT_ID,
+                chat_id: cid,
                 text: text
             })
         });

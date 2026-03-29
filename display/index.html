@@ -440,6 +440,14 @@
             overflow: hidden;
         }
 
+        /* CSS for hiding & auto-expanding when Filmtag is inactive */
+        .center-col.filmtag-hidden .filmtag-card {
+            display: none !important;
+        }
+        .center-col.filmtag-hidden #main-focus-row {
+            flex: 2.8 !important; /* Bigger expansion when filmtag is hidden */
+        }
+
         /* Filmtag */
         .card.filmtag-card { border-color: rgba(59,130,246,0.25); }
         .card.filmtag-card .card-title { color: var(--primary-light); }
@@ -1011,6 +1019,16 @@
             100% { box-shadow: 0 0 20px rgba(139, 92, 246, 0.6); transform: scale(1.05); }
         }
 
+        @keyframes tamaFloat {
+            0%, 100% { transform: translateY(0) rotate(0); }
+            50% { transform: translateY(-8px) rotate(5deg); }
+        }
+        
+        @keyframes tamaEat {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.2); }
+        }
+
         .celebration-title { font-size: 5rem; font-weight: 900; background: linear-gradient(to right, #fff, #60a5fa); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; margin: 0; line-height: 1.1; }
         .celebration-text { font-size: 2.5rem; color: rgba(255,255,255,0.9); margin-top: 20px; font-weight: 700; }
     </style>
@@ -1082,9 +1100,9 @@
         </div>
 
         <!-- Center -->
-        <div class="center-col">
+        <div class="center-col" id="center-column">
             <!-- Filmtag (Kompakter) -->
-            <div class="card filmtag-card" style="padding: 12px 22px; gap: 8px;">
+            <div class="card filmtag-card" id="filmtag-card" style="padding: 12px 22px; gap: 8px;">
                 <div class="card-header" style="gap: 8px;">
                     <div class="card-title" id="filmtag-title">Filmtag Stand</div>
                 </div>
@@ -1102,7 +1120,7 @@
             </div>
 
             <!-- Side-by-Side row (Hauptfokus) -->
-            <div style="display: flex; gap: 18px; flex: 1.8;">
+            <div id="main-focus-row" style="display: flex; gap: 18px; flex: 1.8;">
                 <!-- Tagesplan (Static) -->
                 <div class="card tagesplan-card" style="flex:1;">
                     <div class="card-header">
@@ -1144,7 +1162,7 @@
             </div>
         </div>
 
-        <!-- Right: VIP & Daily Notes -->
+        <!-- Right: VIP & Daily Notes & Tamagotchi -->
         <div class="right-col">
             <div class="card vip-card">
                 <div class="card-header">
@@ -1164,6 +1182,38 @@
                 <div class="card-content daily-notes-content" id="daily-notes-list">
                     Lade Notizen...
                 </div>
+            </div>
+
+            <!-- Tamagotchi Widget -->
+            <div class="card tamagotchi-card" id="tamagotchi-card" style="display:none; flex-shrink:0; background: rgba(0,0,0,0.2); border-color: rgba(255,255,255,0.1);">
+                <div class="card-header" style="background: rgba(255,255,255,0.03); margin: -22px -22px 10px -22px; padding: 10px 22px; border-bottom: 1px solid rgba(255,255,255,0.05);">
+                    <div class="card-icon" style="font-size: 1.2rem;">🐣</div>
+                    <div class="card-title" id="tama-name" style="font-size: 0.9rem; color: white;">Pixel-Pet</div>
+                </div>
+                <div class="tama-container" style="display: flex; align-items: center; gap: 15px;">
+                    <div id="tama-avatar" style="font-size: 3.5rem; filter: drop-shadow(0 0 10px rgba(255,255,255,0.3)); animation: tamaFloat 3s ease-in-out infinite;">🥚</div>
+                    <div class="tama-stats" style="flex: 1; display: flex; flex-direction: column; gap: 6px;">
+                        <div class="stat-row" style="display: flex; align-items: center; gap: 8px;">
+                            <span style="font-size: 0.7rem;">🍎</span>
+                            <div style="flex: 1; height: 6px; background: rgba(255,255,255,0.1); border-radius: 3px; overflow: hidden;">
+                                <div id="tama-hunger" style="height: 100%; background: #ef4444; width: 50%; transition: width 0.5s;"></div>
+                            </div>
+                        </div>
+                        <div class="stat-row" style="display: flex; align-items: center; gap: 8px;">
+                            <span style="font-size: 0.7rem;">💧</span>
+                            <div style="flex: 1; height: 6px; background: rgba(255,255,255,0.1); border-radius: 3px; overflow: hidden;">
+                                <div id="tama-thirst" style="height: 100%; background: #3b82f6; width: 50%; transition: width 0.5s;"></div>
+                            </div>
+                        </div>
+                        <div class="stat-row" style="display: flex; align-items: center; gap: 8px;">
+                            <span style="font-size: 0.7rem;">❤️</span>
+                            <div style="flex: 1; height: 6px; background: rgba(255,255,255,0.1); border-radius: 3px; overflow: hidden;">
+                                <div id="tama-love" style="height: 100%; background: #ec4899; width: 50%; transition: width 0.5s;"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div id="tama-status-text" style="font-size: 0.65rem; font-weight: 700; color: rgba(255,255,255,0.4); text-align: right; margin-top: 5px; text-transform: uppercase; letter-spacing: 0.05em;">Schläft...</div>
             </div>
         </div>
 

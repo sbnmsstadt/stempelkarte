@@ -272,7 +272,6 @@ function showDetail(student) {
                 });
         }
     }
-
     // Birthday Surprise
     if (student.birthday) {
         const today = new Date();
@@ -286,6 +285,30 @@ function showDetail(student) {
                 setTimeout(() => alert(`🎉 Alles Gute zum Geburtstag, ${student.name}! 🎂`), 500);
             }
         }
+    }
+
+    // Tamagotchi Section
+    const tamaSection = document.getElementById('tamagotchi-section');
+    const tamaName = document.getElementById('tama-ui-name');
+    const tamaAvatar = document.getElementById('tama-ui-avatar');
+
+    if (tamaSection && SETTINGS.tamagotchi && SETTINGS.tamagotchi.status === "hatched") {
+        tamaSection.classList.remove('hidden');
+        if (tamaName) tamaName.innerText = SETTINGS.tamagotchi.name || "Pixelino";
+        
+        let avatar = "🐣";
+        const stage = SETTINGS.tamagotchi.stage;
+        if (stage === "baby") avatar = "🐣";
+        else if (stage === "child") avatar = "🐥";
+        else if (stage === "teen") avatar = "🐦";
+        else if (stage === "adult") avatar = "🦉";
+        
+        if (SETTINGS.tamagotchi.stats.hunger < 20 || SETTINGS.tamagotchi.stats.thirst < 20) avatar = "🤒";
+        else if (SETTINGS.tamagotchi.stats.love < 30) avatar = "😢";
+        
+        if (tamaAvatar) tamaAvatar.innerText = avatar;
+    } else if (tamaSection) {
+        tamaSection.classList.add('hidden');
     }
 }
 
@@ -1065,4 +1088,48 @@ async function openBadgeInfo() {
 
 function closeBadgeInfoOverlay() {
     document.getElementById('badge-info-overlay').classList.remove('active');
+}
+async function careForTama(action) {
+    if (!currentStudent) return;
+    
+    // Check if student has at least 1 stamp
+    const freeStamps = (currentStudent.stamps || 0) - (currentStudent.usedStamps || 0);
+    if (freeStamps < 1) {
+        alert("Du brauchst mindestens 1 freien Stempelpoint um dich um das Klassentier zu kümmern!");
+        return;
+    }
+
+    try {
+        const response = await fetch(`${API_URL}/tamagotchi/care`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ studentId: currentStudent.id, action: action })
+        });
+
+        if (response.ok) {
+            const data = await response.json();
+            currentStudent = data.student;
+            SETTINGS.tamagotchi = data.tamagotchi;
+            
+            // Visual feedback
+            const avatar = document.getElementById('tama-ui-avatar');
+            if (avatar) {
+                avatar.style.transform = "scale(1.5)";
+                setTimeout(() => avatar.style.transform = "scale(1)", 300);
+            }
+
+            updateStampDisplay(currentStudent);
+            renderRewards(currentStudent);
+            renderHistory(currentStudent.history || []);
+            
+            // Optional: silent sync to update UI
+            silentSync();
+        } else {
+            const msg = await response.text();
+            alert("Fehler: " + msg);
+        }
+    } catch (err) {
+        console.error("Care error:", err);
+        alert("Netzwerkfehler beim Pflegen des Klassentiers.");
+    }
 }

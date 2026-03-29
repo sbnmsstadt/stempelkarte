@@ -160,6 +160,87 @@ async function fetchStudents() {
     }
 }
 
+async function clearStudentOfWeek() {
+    if (!confirm('SOTW wirklich löschen?')) return;
+    try {
+        const res = await fetch(`${API_URL}/students/student-of-the-week`, {
+            method: 'DELETE'
+        });
+        if (res.ok) {
+            loadSettings();
+        }
+    } catch (err) { }
+}
+
+// ── TAMAGOTCHI ADMIN ─────────────────────────────
+function updateTamagotchiAdmin(tama) {
+    if (!tama) return;
+    const statusEl = document.getElementById('tama-admin-status');
+    const hatchControls = document.getElementById('tama-hatch-controls');
+    const activeControls = document.getElementById('tama-active-controls');
+
+    if (tama.status === "egg") {
+        if (statusEl) statusEl.innerHTML = "Ei 🥚";
+        if (hatchControls) hatchControls.classList.remove('hidden');
+        if (activeControls) activeControls.classList.add('hidden');
+    } else {
+        if (statusEl) statusEl.innerHTML = `${tama.name} 🐣 (${tama.stage})`;
+        if (hatchControls) hatchControls.classList.add('hidden');
+        if (activeControls) activeControls.classList.remove('hidden');
+        
+        const hunger = document.getElementById('tama-admin-hunger');
+        const thirst = document.getElementById('tama-admin-thirst');
+        const love = document.getElementById('tama-admin-love');
+
+        if (hunger) hunger.innerText = `${tama.stats.hunger}%`;
+        if (thirst) thirst.innerText = `${tama.stats.thirst}%`;
+        if (love) love.innerText = `${tama.stats.love}%`;
+    }
+}
+
+async function hatchTamagotchi() {
+    const nameInput = document.getElementById('tama-new-name');
+    const name = nameInput ? nameInput.value : "Pixelino";
+    try {
+        const res = await fetch(`${API_URL}/tamagotchi/hatch`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ name })
+        });
+        if (res.ok) {
+            alert(`${name} ist geschlüpft! 🎉`);
+            loadSettings();
+        }
+    } catch (err) { alert("Fehler beim Schlüpfen."); }
+}
+
+async function resetTamagotchi() {
+    if (!confirm("Tierchen wirklich zurücksetzen? Alle Fortschritte gehen verloren.")) return;
+    
+    // We update settings manually to reset
+    const newSettings = { ...currentSettings };
+    newSettings.tamagotchi = {
+        status: "egg",
+        name: "Pixelino",
+        hatchDate: null,
+        lastUpdate: Date.now(),
+        stats: { hunger: 100, thirst: 100, love: 100, energy: 100 },
+        stage: "egg"
+    };
+    
+    try {
+        const res = await fetch(`${API_URL}/settings`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(newSettings)
+        });
+        if (res.ok) {
+            alert("Tierchen zurückgesetzt.");
+            loadSettings();
+        }
+    } catch (err) { alert("Fehler beim Zurücksetzen."); }
+}
+
 async function fetchStudentsSilent() {
     if (document.hidden) return;
     try {
@@ -738,6 +819,7 @@ async function loadSettings() {
             updateField('setting-today-plan', settings.todayPlan || "");
 
             renderSotwCurrent();
+            updateTamagotchiAdmin(settings.tamagotchi);
         }
     } catch (err) { }
 }

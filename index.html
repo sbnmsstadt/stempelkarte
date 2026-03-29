@@ -163,6 +163,32 @@
                 </div>
             </div>
 
+            <!-- Tamagotchi Care (Student View) -->
+            <div id="tamagotchi-section" class="glass-card mb-4 p-4 hidden" style="margin-top: 2rem; border-color: rgba(255,255,255,0.1); background: rgba(0,0,0,0.1);">
+                <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 20px;">
+                    <div id="tama-ui-avatar" style="font-size: 2.2rem;">🐣</div>
+                    <div>
+                        <h3 style="font-size: 0.85rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; margin: 0; color: white;">Klassentier Pflege</h3>
+                        <p id="tama-ui-name" style="font-size: 0.65rem; color: rgba(255,255,255,0.4); margin-top: 4px; text-transform: uppercase; font-weight: 900;">Pixelino</p>
+                    </div>
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                    <button onclick="careForTama('feed')" class="add-stamp-btn" style="padding: 12px; font-size: 0.7rem; background: rgba(255,255,255,0.05); flex-direction: column; height: auto;">
+                        <span style="font-size: 1.5rem; display: block; margin-bottom: 4px;">🍎</span> Füttern
+                    </button>
+                    <button onclick="careForTama('water')" class="add-stamp-btn" style="padding: 12px; font-size: 0.7rem; background: rgba(255,255,255,0.05); flex-direction: column; height: auto;">
+                        <span style="font-size: 1.5rem; display: block; margin-bottom: 4px;">💧</span> Tränken
+                    </button>
+                    <button onclick="careForTama('play')" class="add-stamp-btn" style="padding: 12px; font-size: 0.7rem; background: rgba(255,255,255,0.05); flex-direction: column; height: auto;">
+                        <span style="font-size: 1.5rem; display: block; margin-bottom: 4px;">🧶</span> Spielen
+                    </button>
+                    <button onclick="careForTama('love')" class="add-stamp-btn" style="padding: 12px; font-size: 0.7rem; background: rgba(255,255,255,0.05); flex-direction: column; height: auto;">
+                        <span style="font-size: 1.5rem; display: block; margin-bottom: 4px;">❤️</span> Liebe
+                    </button>
+                </div>
+                <p style="font-size: 0.55rem; text-align: center; margin-top: 14px; color: rgba(255,255,255,0.25); font-weight: 700; font-style: italic;">Jede Aktion kostet 1 Stempelpoint</p>
+            </div>
+
             <div class="reward-section" style="margin-top: 2.5rem;">
                 <h3>🎁 Deine Belohnungen</h3>
                 <div id="reward-list" class="reward-list"></div>

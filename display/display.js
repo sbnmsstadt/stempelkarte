@@ -117,6 +117,7 @@ function renderAll() {
     renderTicker();
     renderStudentOfWeek();
     renderBadgeGalerie();
+    renderTamagotchi(); // NEW: Digital Pet logic
     checkBirthdayMode();
     checkCelebrationMode(); // NEW: Check for group milestone celebrations
 }
@@ -404,15 +405,30 @@ function renderCountdown() {
 // ── FILMTAG ────────────────────────────────────
 function renderFilmtag() {
     const gr = settings.groupReward;
-    if (!gr) {
-        document.getElementById('filmtag-status').textContent = 'Kein Gruppen-Ziel aktiv.';
+    const centerCol = document.getElementById('center-column');
+
+    // Hide if no reward or progress is 0 (and not yet approved)
+    if (!gr || (gr.current === 0 && !gr.isApproved)) {
+        if (centerCol) centerCol.classList.add('filmtag-hidden');
         return;
     }
-    document.getElementById('filmtag-title').textContent = `${gr.icon || '🎬'} ${gr.title || 'Filmtag'}`;
-    document.getElementById('filmtag-current').textContent = gr.current || 0;
-    document.getElementById('filmtag-target').textContent = gr.target || '?';
+
+    // Show and update
+    if (centerCol) centerCol.classList.remove('filmtag-hidden');
+
+    const titleEl = document.getElementById('filmtag-title');
+    const currentEl = document.getElementById('filmtag-current');
+    const targetEl = document.getElementById('filmtag-target');
+    const barEl = document.getElementById('filmtag-bar');
+    const statusEl = document.getElementById('filmtag-status');
+
+    if (titleEl) titleEl.textContent = `${gr.icon || '🎬'} ${gr.title || 'Filmtag'}`;
+    if (currentEl) currentEl.textContent = gr.current || 0;
+    if (targetEl) targetEl.textContent = gr.target || '?';
+    
     const pct = Math.min(100, ((gr.current || 0) / (gr.target || 1)) * 100);
-    document.getElementById('filmtag-bar').style.width = `${pct}%`;
+    if (barEl) barEl.style.width = `${pct}%`;
+    
     const left = (gr.target || 0) - (gr.current || 0);
 
     let statusHtml = '';
@@ -424,7 +440,7 @@ function renderFilmtag() {
         statusHtml = `Noch <strong>${left}</strong> Stempel bis zum Ziel 🎯`;
     }
 
-    document.getElementById('filmtag-status').innerHTML = statusHtml;
+    if (statusEl) statusEl.innerHTML = statusHtml;
 }
 
 function showGoalCelebration(title = "Filmtag") {
@@ -686,6 +702,68 @@ setInterval(fetchFilmtagLive, 5000);
 window.addEventListener('resize', () => {
     if (students.length) renderKids();
 });
+
+// ── TAMAGOTCHI ─────────────────────────────────
+function renderTamagotchi() {
+    const card = document.getElementById('tamagotchi-card');
+    const tama = settings.tamagotchi;
+    if (!tama || !card) return;
+
+    if (tama.status === "egg") {
+        card.style.display = 'block';
+        const nameEl = document.getElementById('tama-name');
+        const avatarEl = document.getElementById('tama-avatar');
+        const statusEl = document.getElementById('tama-status-text');
+
+        if (nameEl) nameEl.textContent = "Geheimnisvolles Ei";
+        if (avatarEl) avatarEl.textContent = "🥚";
+        if (statusEl) statusEl.textContent = "Wartet auf September...";
+        return;
+    }
+
+    if (tama.status === "hatched") {
+        card.style.display = 'block';
+        const nameEl = document.getElementById('tama-name');
+        const hungerEl = document.getElementById('tama-hunger');
+        const thirstEl = document.getElementById('tama-thirst');
+        const loveEl = document.getElementById('tama-love');
+        const statusEl = document.getElementById('tama-status-text');
+        const avatarEl = document.getElementById('tama-avatar');
+
+        if (nameEl) nameEl.textContent = tama.name || "Pixel-Pet";
+        
+        // Stats
+        if (hungerEl) hungerEl.style.width = `${tama.stats.hunger}%`;
+        if (thirstEl) thirstEl.style.width = `${tama.stats.thirst}%`;
+        if (loveEl) loveEl.style.width = `${tama.stats.love}%`;
+
+        // Avatar based on stage and mood
+        let avatar = "🐣";
+        if (tama.stage === "baby") avatar = "🐣";
+        else if (tama.stage === "child") avatar = "🐥";
+        else if (tama.stage === "teen") avatar = "🐦";
+        else if (tama.stage === "adult") avatar = "🦉";
+
+        if (tama.stats.hunger < 20 || tama.stats.thirst < 20) avatar = "🤒";
+        else if (tama.stats.love < 30) avatar = "😢";
+        
+        if (avatarEl && avatarEl.textContent !== avatar) {
+            avatarEl.style.animation = 'tamaEat 0.5s ease-in-out';
+            setTimeout(() => {
+                avatarEl.textContent = avatar;
+                avatarEl.style.animation = 'tamaFloat 3s ease-in-out infinite';
+            }, 500);
+        }
+
+        // Status text
+        let status = "Glücklich ✨";
+        if (tama.stats.hunger < 30) status = "Hungrig! 🍏";
+        else if (tama.stats.thirst < 30) status = "Durstig! 💧";
+        else if (tama.stats.love < 50) status = "Braucht Liebe ❤️";
+        
+        if (statusEl) statusEl.textContent = status;
+    }
+}
 
 
 
