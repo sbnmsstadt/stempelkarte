@@ -799,9 +799,65 @@ const PET_FRAMES = {
             "...WWWWWW...",
             "....WWWW....",
             "............"
+        ],
+        bored: [
+            "............",
+            "..P......P..",
+            ".PPP....PPP.",
+            ".BBBBBBBBBB.",
+            "BBBBBBBBBBBB",
+            "BBEEBBBBEEBB",
+            "BBEEBBBBEEBB",
+            "BBBBBBBBBBBB",
+            "DBBBBBBBBBBD.",
+            "DDBBBMMBBBD.",
+            ".DDDDDDDDDD.",
+            "..BB....BB.."
         ]
     }
 };
+
+// ── TAMAGOTCHI INTERACTION HELPERS ────────────────
+let _isInteractionActive = false;
+let _zzzInterval = null;
+
+function spawnZzz() {
+    const container = document.getElementById('tama-zzz-container');
+    if (!container) return;
+    const z = document.createElement('div');
+    z.className = 'zzz-particle';
+    z.textContent = 'Z';
+    // Offset from head
+    z.style.left = (Math.random() * 20 + 45) + '%';
+    z.style.bottom = '90px';
+    container.appendChild(z);
+    setTimeout(() => z.remove(), 3000);
+}
+
+function triggerPlayAnimation() {
+    if (_isInteractionActive) return;
+    _isInteractionActive = true;
+    
+    const itemContainer = document.getElementById('tama-item-container');
+    const gridEl = document.getElementById('tama-pixel-grid');
+    if (!itemContainer || !gridEl) return;
+
+    // Add Ball
+    const items = ['⚽', '🧶', '🎾'];
+    const item = document.createElement('div');
+    item.className = 'tama-play-item';
+    item.textContent = items[Math.floor(Math.random() * items.length)];
+    itemContainer.appendChild(item);
+
+    // Start Chase
+    gridEl.classList.add('chasing');
+
+    setTimeout(() => {
+        item.remove();
+        gridEl.classList.remove('chasing');
+        _isInteractionActive = false;
+    }, 8000); // Play for 8 seconds
+}
 
 function renderTamagotchi() {
     const card = document.getElementById('tamagotchi-card');
@@ -836,6 +892,7 @@ function renderTamagotchi() {
     if (tama.status === "hatched") {
         if (tama.isSleeping) mood = "sleep";
         else if (tama.stats.hunger < 30 || tama.stats.thirst < 30 || tama.stats.love < 30) mood = "sad";
+        else if (tama.stats.fun < 30) mood = "bored";
         else if (_isBlinking) mood = "blink";
     }
 
@@ -859,7 +916,7 @@ function renderTamagotchi() {
                 if (char === 'N') cls = "px-white"; // Nose/Mouth detail
                 
                 const targetCls = `pixel ${cls}`;
-                if (pixels[idx].className !== targetCls) {
+                if (pixels[idx] && pixels[idx].className !== targetCls) {
                     pixels[idx].className = targetCls;
                 }
             }
@@ -874,32 +931,66 @@ function renderTamagotchi() {
         gridEl.style.animation = 'tamaEggWiggle 3s ease-in-out infinite';
     } else {
         card.style.display = 'block';
-        gridEl.style.animation = 'pixelFloat 3.5s ease-in-out infinite, pixelGlow 2s ease-in-out infinite';
         
+        // Handle Interactions (Play)
+        if (tama.lastAction === 'play' && !_isInteractionActive) {
+            // Only trigger if action is recent (within last 30s)
+            const actionTime = new Date(tama.lastActionTime).getTime();
+            if (Date.now() - actionTime < 30000) {
+                triggerPlayAnimation();
+            }
+        }
+
+        // Handle Sleep (No float, Zzz)
+        if (tama.isSleeping) {
+            gridEl.classList.add('no-float');
+            if (!_zzzInterval) {
+                _zzzInterval = setInterval(spawnZzz, 2000);
+            }
+        } else {
+            gridEl.classList.remove('no-float');
+            if (_zzzInterval) {
+                clearInterval(_zzzInterval);
+                _zzzInterval = null;
+            }
+        }
+
+        if (!gridEl.classList.contains('no-float') && !gridEl.classList.contains('chasing')) {
+            gridEl.style.animation = 'pixelFloat 3.5s ease-in-out infinite, pixelGlow 2s ease-in-out infinite';
+        } else if (gridEl.classList.contains('no-float')) {
+            gridEl.style.animation = 'pixelGlow 2s ease-in-out infinite';
+        }
+
         const hungerEl = document.getElementById('tama-hunger');
         const thirstEl = document.getElementById('tama-thirst');
         const loveEl = document.getElementById('tama-love');
+        const funEl = document.getElementById('tama-fun');
         const hungerVal = document.getElementById('tama-hunger-val');
         const thirstVal = document.getElementById('tama-thirst-val');
         const loveVal = document.getElementById('tama-love-val');
+        const funVal = document.getElementById('tama-fun-val');
 
         if (nameEl) nameEl.textContent = (tama.name || "PIXEL-PET").toUpperCase();
         
-        if (hungerEl) hungerEl.style.width = `${tama.stats.hunger}%`;
-        if (thirstEl) thirstEl.style.width = `${tama.stats.thirst}%`;
-        if (loveEl) loveEl.style.width = `${tama.stats.love}%`;
+        const stats = tama.stats || { hunger: 50, thirst: 50, love: 50, fun: 50 };
+        if (hungerEl) hungerEl.style.width = `${stats.hunger}%`;
+        if (thirstEl) thirstEl.style.width = `${stats.thirst}%`;
+        if (loveEl) loveEl.style.width = `${stats.love}%`;
+        if (funEl) funEl.style.width = `${stats.fun || 0}%`;
 
-        if (hungerVal) hungerVal.textContent = `${tama.stats.hunger}%`;
-        if (thirstVal) thirstVal.textContent = `${tama.stats.thirst}%`;
-        if (loveVal) loveVal.textContent = `${tama.stats.love}%`;
+        if (hungerVal) hungerVal.textContent = `${stats.hunger}%`;
+        if (thirstVal) thirstVal.textContent = `${stats.thirst}%`;
+        if (loveVal) loveVal.textContent = `${stats.love}%`;
+        if (funVal) funVal.textContent = `${stats.fun || 0}%`;
 
-        let status = "Glücklich ✨";
-        if (tama.isSleeping) status = "Schläft... 💤";
-        else if (tama.stats.hunger < 30) status = "Hungrig! 🍏";
-        else if (tama.stats.thirst < 30) status = "Durstig! 💧";
-        else if (tama.stats.love < 50) status = "Braucht Liebe ❤️";
+        let statusText = "Glücklich ✨";
+        if (tama.isSleeping) statusText = "Schläft... 💤";
+        else if (stats.hunger < 30) statusText = "Hungrig! 🍏";
+        else if (stats.thirst < 30) statusText = "Durstig! 💧";
+        else if (stats.fun < 30) statusText = "Langweilig... 🥱";
+        else if (stats.love < 50) statusText = "Braucht Liebe ❤️";
         
-        if (statusEl) statusEl.textContent = status;
+        if (statusEl) statusEl.textContent = statusText;
     }
 }
 

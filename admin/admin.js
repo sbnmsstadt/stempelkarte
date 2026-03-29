@@ -191,10 +191,12 @@ function updateTamagotchiAdmin(tama) {
         const hunger = document.getElementById('tama-admin-hunger');
         const thirst = document.getElementById('tama-admin-thirst');
         const love = document.getElementById('tama-admin-love');
+        const fun = document.getElementById('tama-admin-fun');
 
         if (hunger) hunger.innerText = `${tama.stats.hunger}%`;
         if (thirst) thirst.innerText = `${tama.stats.thirst}%`;
         if (love) love.innerText = `${tama.stats.love}%`;
+        if (fun) fun.innerText = `${tama.stats.fun || 0}%`;
     }
 }
 
@@ -243,11 +245,16 @@ async function resetTamagotchi() {
 }
 
 // ── TAMAGOTCHI TEST CONSOLE ──────────────────────
-async function testTamaStats(h, t, l) {
+async function testTamaStats(h, t, l, f) {
     if (!currentSettings) return;
-    const newSettings = { ...currentSettings };
+    const newSettings = JSON.parse(JSON.stringify(currentSettings));
     if (!newSettings.tamagotchi) return;
-    newSettings.tamagotchi.stats = { hunger: h, thirst: t, love: l };
+    newSettings.tamagotchi.stats = { 
+        hunger: h, 
+        thirst: t, 
+        love: l,
+        fun: f || 100
+    };
     
     try {
         await fetch(`${API_URL}/settings`, {
@@ -256,6 +263,35 @@ async function testTamaStats(h, t, l) {
             body: JSON.stringify(newSettings)
         });
         loadSettings();
+    } catch (err) { }
+}
+
+async function simulateTamaAction(action) {
+    if (!currentSettings) return;
+    // Deep clone to avoid mutation side effects
+    const newSettings = JSON.parse(JSON.stringify(currentSettings));
+    if (!newSettings.tamagotchi) return;
+    
+    newSettings.tamagotchi.lastAction = action;
+    newSettings.tamagotchi.lastActionTime = new Date().toISOString();
+    
+    // Immediate stat boost for the simulation
+    if (action === 'play') {
+        newSettings.tamagotchi.stats.fun = Math.min(100, (newSettings.tamagotchi.stats.fun || 0) + 15);
+    } else if (action === 'feed') {
+        newSettings.tamagotchi.stats.hunger = Math.min(100, (newSettings.tamagotchi.stats.hunger || 0) + 15);
+    }
+    
+    try {
+        const res = await fetch(`${API_URL}/settings`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(newSettings)
+        });
+        if (res.ok) {
+            console.log(`Action ${action} simulated.`);
+            loadSettings();
+        }
     } catch (err) { }
 }
 

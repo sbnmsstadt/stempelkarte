@@ -1120,22 +1120,6 @@
             right: 15px;
             z-index: 10;
             display: flex;
-            flex-direction: column;
-            gap: 8px;
-            background: rgba(0,0,0,0.4);
-            padding: 12px;
-            border-radius: 10px;
-            border: 1px solid rgba(255,255,255,0.05);
-            backdrop-filter: blur(4px);
-        }
-
-        .tama-stats-overlay {
-            position: absolute;
-            top: 15px;
-            left: 15px;
-            right: 15px;
-            z-index: 10;
-            display: flex;
             flex-direction: row; /* Horizontal */
             justify-content: space-between;
             gap: 15px;
@@ -1143,6 +1127,53 @@
             background: rgba(0,0,0,0.5); /* Solid Dark background (Pixel Style) */
             border: 2px solid #444; /* Pixel Border */
             box-shadow: 4px 4px 0 rgba(0,0,0,0.3);
+        }
+
+        @keyframes zzz-float {
+            0% { transform: translate(0, 0) scale(0.5); opacity: 0; }
+            20% { opacity: 1; }
+            80% { opacity: 0.8; }
+            100% { transform: translate(15px, -30px) scale(1.2); opacity: 0; }
+        }
+
+        .zzz-particle {
+            position: absolute;
+            color: #fff;
+            font-family: 'Press Start 2P', cursive;
+            font-size: 0.6rem;
+            pointer-events: none;
+            z-index: 15;
+            animation: zzz-float 3s ease-out forwards;
+        }
+
+        @keyframes item-bounce {
+            0%, 100% { transform: translateY(0) rotate(0deg); }
+            50% { transform: translateY(-30px) rotate(180deg); }
+        }
+
+        .tama-play-item {
+            position: absolute;
+            font-size: 1.5rem;
+            z-index: 12;
+            pointer-events: none;
+            left: 50%;
+            bottom: 60px;
+            transform: translateX(-50%);
+            animation: item-bounce 1s ease-in-out infinite;
+        }
+
+        @keyframes tama-chase {
+            0%, 100% { transform: translate(-80%, 0); }
+            50% { transform: translate(-20%, 0); }
+        }
+
+        .tama-pixel-grid.chasing {
+            animation: tama-chase 2s ease-in-out infinite, pixelGlow 2s ease-in-out infinite !important;
+        }
+
+        .tama-pixel-grid.no-float {
+            animation: pixelGlow 2s ease-in-out infinite !important;
+            transform: translate(-50%, 15px) !important; /* Sits lower when sleeping */
         }
 
         .stat-row { 
@@ -1346,23 +1377,30 @@
                         <div class="stat-row">
                             <span class="stat-icon">🍏</span>
                             <div class="stat-bar-outer">
-                                <div id="tama-hunger" class="stat-bar-inner" style="background: linear-gradient(90deg, #ef4444, #f87171); color: #ef4444; width: 50%;"></div>
+                                <div id="tama-hunger" class="stat-bar-inner" style="background: #22c55e;"></div>
                             </div>
-                            <span id="tama-hunger-val" class="stat-val" style="color: #fca5a5;">50%</span>
+                            <span id="tama-hunger-val" class="stat-val">?%</span>
                         </div>
                         <div class="stat-row">
                             <span class="stat-icon">💧</span>
                             <div class="stat-bar-outer">
-                                <div id="tama-thirst" class="stat-bar-inner" style="background: linear-gradient(90deg, #3b82f6, #60a5fa); color: #3b82f6; width: 50%;"></div>
+                                <div id="tama-thirst" class="stat-bar-inner" style="background: #3b82f6;"></div>
                             </div>
-                            <span id="tama-thirst-val" class="stat-val" style="color: #93c5fd;">50%</span>
+                            <span id="tama-thirst-val" class="stat-val">?%</span>
                         </div>
                         <div class="stat-row">
                             <span class="stat-icon">❤️</span>
                             <div class="stat-bar-outer">
-                                <div id="tama-love" class="stat-bar-inner" style="background: linear-gradient(90deg, #ec4899, #f472b6); color: #ec4899; width: 50%;"></div>
+                                <div id="tama-love" class="stat-bar-inner" style="background: #ec4899;"></div>
                             </div>
-                            <span id="tama-love-val" class="stat-val" style="color: #f9a8d4;">50%</span>
+                            <span id="tama-love-val" class="stat-val">?%</span>
+                        </div>
+                        <div class="stat-row">
+                            <span class="stat-icon">🎮</span>
+                            <div class="stat-bar-outer">
+                                <div id="tama-fun" class="stat-bar-inner" style="background: #fde047;"></div>
+                            </div>
+                            <span id="tama-fun-val" class="stat-val">?%</span>
                         </div>
                     </div>
 
@@ -1371,15 +1409,15 @@
                     
                     <div class="tama-scanline-move" style="position: absolute; top: 0; left: 0; width: 100%; height: 2px; background: rgba(255, 255, 255, 0.1); animation: scanline 4s linear infinite; pointer-events: none; z-index: 6;"></div>
                     
-                    <!-- NEW: Pure Code Pixel Pet Grid (12x12) -->
-                    <div id="tama-pixel-grid" class="tama-pixel-grid"></div>
+                    <!-- Interaction & Effect Layers -->
+                    <div id="tama-zzz-container" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 15;"></div>
+                    <div id="tama-item-container" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 12;"></div>
 
-                    <img id="tama-sprite-img" src="" class="tama-sprite" alt="pet sprite" style="display: none !important;">
-                    <div id="tama-avatar-emoji" style="display:none; position:absolute; bottom:40px; left:50%; transform:translateX(-50%); font-size: 4rem;">🥚</div>
+                    <!-- Pure Code Pixel Pet Grid (12x12) -->
+                    <div id="tama-pixel-grid" class="tama-pixel-grid"></div>
                 </div>
 
-                <div id="tama-status-text" style="font-family: 'Press Start 2P', cursive; font-size: 0.55rem; color: #facc15; text-align: center; margin-top: 5px; letter-spacing: 1px; text-shadow: 0 0 10px rgba(250, 204, 21, 0.4);">SCHLÄFT...</div>
-            </div>
+                <div id="tama-status-text" style="font-family: 'Press Start 2P', cursive; font-size: 0.55rem; color: #facc15; text-align: center; margin-top: 5px; letter-spacing: 1px; text-shadow: 0 0 10px rgba(250, 204, 21, 0.4);">Lädt...</div>
             </div>
         </div>
 

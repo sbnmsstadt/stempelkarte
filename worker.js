@@ -72,8 +72,11 @@ export default {
                         name: "Pixelino",
                         hatchDate: null,
                         lastUpdate: Date.now(),
-                        stats: { hunger: 100, thirst: 100, love: 100, energy: 100 },
-                        stage: "egg"
+                        stats: { hunger: 100, thirst: 100, love: 100, fun: 100 },
+                        stage: "egg",
+                        isSleeping: false,
+                        lastAction: null,
+                        lastActionTime: null
                     };
                 }
 
@@ -82,10 +85,17 @@ export default {
                     const last = settings.tamagotchi.lastUpdate || now;
                     const hoursPassed = (now - last) / (1000 * 3600);
                     if (hoursPassed >= 1 && settings.tamagotchi.status === "hatched") {
-                        // Decay stats: Hunger -4/h, Thirst -6/h, Love -2/h
+                        // Decay stats: Hunger -4/h, Thirst -6/h, Love -2/h, Fun -5/h
                         settings.tamagotchi.stats.hunger = Math.max(0, settings.tamagotchi.stats.hunger - Math.floor(hoursPassed * 4));
                         settings.tamagotchi.stats.thirst = Math.max(0, settings.tamagotchi.stats.thirst - Math.floor(hoursPassed * 6));
                         settings.tamagotchi.stats.love = Math.max(0, settings.tamagotchi.stats.love - Math.floor(hoursPassed * 2));
+                        settings.tamagotchi.stats.fun = Math.max(0, (settings.tamagotchi.stats.fun || 100) - Math.floor(hoursPassed * 5));
+                        
+                        // Auto-Sleep if Fun is critically low
+                        if (settings.tamagotchi.stats.fun < 15 && !settings.tamagotchi.isSleeping) {
+                            settings.tamagotchi.isSleeping = true;
+                        }
+
                         settings.tamagotchi.lastUpdate = now;
                         await env.DATABASE.put("settings", JSON.stringify(settings));
                     }
@@ -682,10 +692,31 @@ export default {
                 const today = new Date().toISOString().split('T')[0];
                 
                 let logMsg = "";
-                if (action === "feed") { settings.tamagotchi.stats.hunger = Math.min(100, settings.tamagotchi.stats.hunger + 20); logMsg = "Tamagotchi gefüttert 🍎"; }
-                else if (action === "water") { settings.tamagotchi.stats.thirst = Math.min(100, settings.tamagotchi.stats.thirst + 25); logMsg = "Tamagotchi getränkt 💧"; }
-                else if (action === "play") { settings.tamagotchi.stats.energy = Math.min(100, settings.tamagotchi.stats.energy + 15); settings.tamagotchi.stats.love = Math.min(100, settings.tamagotchi.stats.love + 5); logMsg = "Mit Tamagotchi gespielt 🧶"; }
-                else if (action === "love") { settings.tamagotchi.stats.love = Math.min(100, settings.tamagotchi.stats.love + 30); logMsg = "Tamagotchi gestreichelt ❤️"; }
+                if (action === "feed") { 
+                    settings.tamagotchi.stats.hunger = Math.min(100, settings.tamagotchi.stats.hunger + 20); 
+                    settings.tamagotchi.lastAction = 'feed';
+                    settings.tamagotchi.lastActionTime = new Date().toISOString();
+                    logMsg = "Tamagotchi gefüttert 🍎"; 
+                }
+                else if (action === "water") { 
+                    settings.tamagotchi.stats.thirst = Math.min(100, settings.tamagotchi.stats.thirst + 25); 
+                    settings.tamagotchi.lastAction = 'water';
+                    settings.tamagotchi.lastActionTime = new Date().toISOString();
+                    logMsg = "Tamagotchi getränkt 💧"; 
+                }
+                else if (action === "play") { 
+                    settings.tamagotchi.stats.fun = Math.min(100, (settings.tamagotchi.stats.fun || 0) + 25); 
+                    settings.tamagotchi.stats.love = Math.min(100, settings.tamagotchi.stats.love + 5); 
+                    settings.tamagotchi.lastAction = 'play';
+                    settings.tamagotchi.lastActionTime = new Date().toISOString();
+                    logMsg = "Mit Tamagotchi gespielt 🧶"; 
+                }
+                else if (action === "love") { 
+                    settings.tamagotchi.stats.love = Math.min(100, settings.tamagotchi.stats.love + 30); 
+                    settings.tamagotchi.lastAction = 'love';
+                    settings.tamagotchi.lastActionTime = new Date().toISOString();
+                    logMsg = "Tamagotchi gestreichelt ❤️"; 
+                }
                 
                 student.history.push({ date: today, reason: logMsg, emoji: "🐣" });
                 settings.tamagotchi.lastUpdate = Date.now();
@@ -711,8 +742,9 @@ export default {
                     name: name || "Pixelino",
                     hatchDate: new Date().toISOString().split('T')[0],
                     lastUpdate: Date.now(),
-                    stats: { hunger: 80, thirst: 80, love: 50, energy: 100 },
-                    stage: "baby"
+                    stats: { hunger: 80, thirst: 80, love: 50, fun: 80 },
+                    stage: "baby",
+                    isSleeping: false
                 };
 
                 await env.DATABASE.put("settings", JSON.stringify(settings));

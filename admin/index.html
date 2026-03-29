@@ -166,17 +166,19 @@
 
                     <div id="tama-active-controls" class="hidden" style="display:flex; flex-direction:column; gap:10px;">
                         <div style="background: rgba(255,255,255,0.05); padding: 10px; border-radius: 10px; font-size: 0.8rem;">
-                            <div style="display:flex; justify-content:space-between; margin-bottom:4px;"><span>Hunger:</span> <span id="tama-admin-hunger">100%</span></div>
-                            <div style="display:flex; justify-content:space-between; margin-bottom:4px;"><span>Durst:</span> <span id="tama-admin-thirst">100%</span></div>
-                            <div style="display:flex; justify-content:space-between;"><span>Liebe:</span> <span id="tama-admin-love">100%</span></div>
+                            <div style="display:flex; justify-content:space-between; margin-bottom:4px;"><span>Hunger:</span> <span id="tama-admin-hunger">?%</span></div>
+                            <div style="display:flex; justify-content:space-between; margin-bottom:4px;"><span>Durst:</span> <span id="tama-admin-thirst">?%</span></div>
+                            <div style="display:flex; justify-content:space-between; margin-bottom:4px;"><span>Liebe:</span> <span id="tama-admin-love">?%</span></div>
+                            <div style="display:flex; justify-content:space-between;"><span>Spaß:</span> <span id="tama-admin-fun">?%</span></div>
                         </div>
 
                         <!-- TEST CONSOLE -->
                         <div id="tama-test-panel" style="margin-top: 5px; padding-top: 10px; border-top: 1px solid rgba(255,255,255,0.1);">
                             <p style="font-size: 0.65rem; color: #60a5fa; font-weight: 800; margin-bottom: 8px; letter-spacing: 1px;">🧪 TEST-KONSOLE</p>
                             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px;">
-                                <button onclick="testTamaStats(20, 20, 20)" class="icon-btn-small" style="font-size: 0.6rem; padding: 5px;">Sim. Hunger 😩</button>
-                                <button onclick="testTamaStats(100, 100, 100)" class="icon-btn-small" style="font-size: 0.6rem; padding: 5px;">Full Stats ✨</button>
+                                <button onclick="testTamaStats(20, 20, 20, 20)" class="icon-btn-small" style="font-size: 0.6rem; padding: 5px;">Hunger/Langeweile 😩</button>
+                                <button onclick="testTamaStats(100, 100, 100, 100)" class="icon-btn-small" style="font-size: 0.6rem; padding: 5px;">Full Stats ✨</button>
+                                <button onclick="simulateTamaAction('play')" class="icon-btn-small" style="font-size: 0.6rem; padding: 5px;">Spielen simulieren ⚽</button>
                                 <button onclick="toggleTamaSleep(true)" class="icon-btn-small" style="font-size: 0.6rem; padding: 5px;">Schlafen 💤</button>
                                 <button onclick="toggleTamaSleep(false)" class="icon-btn-small" style="font-size: 0.6rem; padding: 5px;">Aufwachen ☀️</button>
                             </div>
