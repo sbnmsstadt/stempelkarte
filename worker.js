@@ -677,8 +677,18 @@ export default {
                 if (idx === -1) return new Response("Student not found", { status: 404, headers: corsHeaders });
 
                 const student = students[idx];
-                const freeStamps = (student.stamps || 0) - (student.usedStamps || 0);
-                if (freeStamps < 1) return new Response("Zu wenig Stempel!", { status: 400, headers: corsHeaders });
+                const today = new Date().toISOString().split('T')[0];
+
+                // --- Daily Limit Logic (2 actions per student) ---
+                if (!student.tamaActions) student.tamaActions = { count: 0, date: "" };
+                if (student.tamaActions.date !== today) {
+                    student.tamaActions.count = 0;
+                    student.tamaActions.date = today;
+                }
+
+                if (student.tamaActions.count >= 2) {
+                    return new Response("Du hast dich heute schon 2x um das Tier gekümmert!", { status: 403, headers: corsHeaders });
+                }
 
                 const settingsRaw = await env.DATABASE.get("settings");
                 let settings = JSON.parse(settingsRaw || "{}");
@@ -686,33 +696,33 @@ export default {
                     return new Response("Tamagotchi schläft noch oder existiert nicht.", { status: 400, headers: corsHeaders });
                 }
 
-                // Deduct stamp
-                student.usedStamps = (student.usedStamps || 0) + 1;
+                // Increment action count (Free interaction)
+                student.tamaActions.count++;
+                
                 if (!student.history) student.history = [];
-                const today = new Date().toISOString().split('T')[0];
                 
                 let logMsg = "";
                 if (action === "feed") { 
-                    settings.tamagotchi.stats.hunger = Math.min(100, settings.tamagotchi.stats.hunger + 20); 
+                    settings.tamagotchi.stats.hunger = Math.min(100, settings.tamagotchi.stats.hunger + 5); 
                     settings.tamagotchi.lastAction = 'feed';
                     settings.tamagotchi.lastActionTime = new Date().toISOString();
                     logMsg = "Tamagotchi gefüttert 🍎"; 
                 }
                 else if (action === "water") { 
-                    settings.tamagotchi.stats.thirst = Math.min(100, settings.tamagotchi.stats.thirst + 25); 
+                    settings.tamagotchi.stats.thirst = Math.min(100, settings.tamagotchi.stats.thirst + 5); 
                     settings.tamagotchi.lastAction = 'water';
                     settings.tamagotchi.lastActionTime = new Date().toISOString();
                     logMsg = "Tamagotchi getränkt 💧"; 
                 }
                 else if (action === "play") { 
-                    settings.tamagotchi.stats.fun = Math.min(100, (settings.tamagotchi.stats.fun || 0) + 25); 
-                    settings.tamagotchi.stats.love = Math.min(100, settings.tamagotchi.stats.love + 5); 
+                    settings.tamagotchi.stats.fun = Math.min(100, (settings.tamagotchi.stats.fun || 0) + 5); 
+                    settings.tamagotchi.stats.love = Math.min(100, settings.tamagotchi.stats.love + 2); 
                     settings.tamagotchi.lastAction = 'play';
                     settings.tamagotchi.lastActionTime = new Date().toISOString();
                     logMsg = "Mit Tamagotchi gespielt 🧶"; 
                 }
                 else if (action === "love") { 
-                    settings.tamagotchi.stats.love = Math.min(100, settings.tamagotchi.stats.love + 30); 
+                    settings.tamagotchi.stats.love = Math.min(100, settings.tamagotchi.stats.love + 10); 
                     settings.tamagotchi.lastAction = 'love';
                     settings.tamagotchi.lastActionTime = new Date().toISOString();
                     logMsg = "Tamagotchi gestreichelt ❤️"; 

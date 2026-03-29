@@ -1092,12 +1092,7 @@ function closeBadgeInfoOverlay() {
 async function careForTama(action) {
     if (!currentStudent) return;
     
-    // Check if student has at least 1 stamp
-    const freeStamps = (currentStudent.stamps || 0) - (currentStudent.usedStamps || 0);
-    if (freeStamps < 1) {
-        alert("Du brauchst mindestens 1 freien Stempelpoint um dich um das Klassentier zu kümmern!");
-        return;
-    }
+    // Interactions are now FREE (Daily limit of 2)
 
     try {
         const response = await fetch(`${API_URL}/tamagotchi/care`, {
@@ -1111,18 +1106,12 @@ async function careForTama(action) {
             currentStudent = data.student;
             SETTINGS.tamagotchi = data.tamagotchi;
             
-            // Visual feedback - More prominent for student
             const avatar = document.getElementById('tama-ui-avatar');
-            const section = document.getElementById('tamagotchi-section');
-            if (section) {
-                section.style.boxShadow = "0 0 30px rgba(16, 185, 129, 0.4)";
-                setTimeout(() => section.style.boxShadow = "", 1000);
-            }
             if (avatar) {
                 const originalText = avatar.innerText;
                 avatar.innerText = "✨✔️"; 
                 avatar.style.transform = "scale(1.5) translateY(-5px)";
-                avatar.classList.add('tama-interact-pulse'); // Add specific class
+                avatar.classList.add('tama-interact-pulse'); 
                 setTimeout(() => {
                     avatar.innerText = originalText;
                     avatar.style.transform = "scale(1)";
@@ -1133,7 +1122,7 @@ async function careForTama(action) {
             // --- Show a toast notification ---
             const toast = document.createElement('div');
             toast.className = 'tama-toast';
-            toast.textContent = "Tamagotchi sagt Danke! ❤️ (-1 Stempel)";
+            toast.textContent = "Tamagotchi freut sich! ❤️ (Kostenlos)";
             document.body.appendChild(toast);
             setTimeout(() => toast.remove(), 2500);
 
