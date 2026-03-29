@@ -1671,11 +1671,8 @@ function handleTamaActionDetection(tama) {
             triggerWaterAnimation();
             showSpeechBubble(`Erfrischend! 💧`);
         } else if (tama.lastAction === 'clean') {
-            showSpeechBubble(`Danke fürs Putzen! 🧼`);
-        } else if (tama.lastAction === 'train') {
-            showSpeechBubble(`Ich bin jetzt schlauer! 📚`);
-        } else if (tama.lastAction === 'style') {
-            showSpeechBubble(`Steht mir das? 🎩`);
+            triggerShowerAnimation();
+            showSpeechBubble(`Das tat gut! 🧼🚿`);
         } else if (tama.lastAction === 'handwash') {
             triggerHandWashAnimation();
             showSpeechBubble(`Hände sind sauber! Vorbildlich, ${tama.lastActionStudentName || 'Abenteurer'}! 🧼✨`);
@@ -1683,32 +1680,49 @@ function handleTamaActionDetection(tama) {
     }
 }
 function triggerHandWashAnimation() {
-    // Spawn bubbles across the full screen width/height for maximum effect
-    for (let i = 0; i < 40; i++) {
+    triggerBubbleEffect(30, false); 
+}
+
+function triggerShowerAnimation() {
+    triggerBubbleEffect(50, true); // More bubbles for shower
+}
+
+function triggerBubbleEffect(count, isShower) {
+    const gridEl = document.getElementById('tama-pixel-grid');
+    if (!gridEl) return;
+    
+    const rect = gridEl.getBoundingClientRect();
+    const centerX = rect.left + rect.width / 2;
+    const width = rect.width * 1.5;
+
+    for (let i = 0; i < count; i++) {
         setTimeout(() => {
             const bubble = document.createElement('div');
             bubble.style.position = 'fixed';
-            bubble.style.left = Math.random() * 100 + 'vw';
-            bubble.style.bottom = '-10vh';
-            bubble.style.fontSize = (Math.random() * 2 + 1) + 'rem';
+            // Spawn around the Tamagotchi
+            const randomX = (centerX - width/2) + Math.random() * width;
+            bubble.style.left = randomX + 'px';
+            bubble.style.bottom = (window.innerHeight - rect.bottom - 20) + 'px';
+            bubble.style.fontSize = (Math.random() * 1.5 + 0.8) + 'rem';
             bubble.style.zIndex = '1000';
             bubble.style.pointerEvents = 'none';
-            bubble.innerText = '🫧';
-            bubble.className = 'bubble-particle'; // For CSS if needed, but styling via JS for now
+            bubble.innerText = isShower ? (Math.random() > 0.5 ? '🫧' : '🧼') : '🫧';
             
             // Random horizontal drift
-            const drift = (Math.random() - 0.5) * 200;
+            const drift = (Math.random() - 0.5) * 60;
+            const height = 150 + Math.random() * 100;
+
             bubble.animate([
-                { transform: 'translateY(0) translateX(0) scale(0)', opacity: 0 },
-                { transform: `translateY(-110vh) translateX(${drift}px) scale(1.5)`, opacity: 0.8 },
-                { transform: `translateY(-130vh) translateX(${drift * 1.5}px) scale(2)`, opacity: 0 }
+                { transform: 'translateY(0) scale(0)', opacity: 0 },
+                { transform: `translateY(-${height/2}px) translateX(${drift/2}px) scale(1.2)`, opacity: 0.8 },
+                { transform: `translateY(-${height}px) translateX(${drift}px) scale(0)`, opacity: 0 }
             ], {
-                duration: 2000 + Math.random() * 1500,
+                duration: 1500 + Math.random() * 1000,
                 easing: 'ease-out'
             });
             
             document.body.appendChild(bubble);
-            setTimeout(() => bubble.remove(), 4000);
-        }, i * 50);
+            setTimeout(() => bubble.remove(), 3000);
+        }, i * (isShower ? 40 : 60));
     }
 }
