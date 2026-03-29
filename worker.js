@@ -430,7 +430,7 @@ export default {
                     badges: [],
                     history: [],
                     redemptions: {},
-                    attendance: { mon: false, tue: false, wed: false, thu: false, fri: false }
+                    attendance: { mon: false, tue: false, wed: false, thu: false, fri: false, sat: false, sun: false }
                 };
                 students.push(newStudent);
                 await env.DATABASE.put("students", JSON.stringify(students));
@@ -460,7 +460,7 @@ export default {
                     if (students[index].badges === undefined) students[index].badges = [];
                     if (students[index].history === undefined) students[index].history = [];
                     if (students[index].attendance === undefined) {
-                        students[index].attendance = { mon: false, tue: false, wed: false, thu: false, fri: false };
+                        students[index].attendance = { mon: false, tue: false, wed: false, thu: false, fri: false, sat: false, sun: false };
                     }
 
                     if (stamps !== undefined) {

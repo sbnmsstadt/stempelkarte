@@ -728,10 +728,10 @@ function renderAdminList(filter = "") {
                 </div>
                 <!-- Compact Attendance Chips -->
                 <div class="attendance-chips-container">
-                    ${['mon', 'tue', 'wed', 'thu', 'fri'].map(day => {
+                    ${['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'].map(day => {
                         const active = student.attendance && student.attendance[day];
-                        const char = day === 'mon' ? 'M' : day === 'tue' ? 'D' : day === 'wed' ? 'M' : day === 'thu' ? 'D' : 'F';
-                        return `<div class="attendance-chip ${active ? 'active' : ''}" onclick="event.stopPropagation(); toggleAttendance('${student.id}', '${day}', ${active})" title="${day.toUpperCase()}">${char}</div>`;
+                        const chars = { mon:'M', tue:'D', wed:'M', thu:'D', fri:'F', sat:'S', sun:'S' };
+                        return `<div class="attendance-chip ${active ? 'active' : ''}" onclick="event.stopPropagation(); toggleAttendance('${student.id}', '${day}', ${active})" title="${day.toUpperCase()}">${chars[day]}</div>`;
                     }).join('')}
                 </div>
             </div>
@@ -838,16 +838,13 @@ async function updateStamps(id, c) {
 async function toggleAttendance(id, day, currentVal) {
     const newVal = !currentVal;
     
-    // Find el in DOM to show instant feedback
-    // The renderAdminList call will also update it eventually
     const container = document.getElementById('admin-student-list');
     const studentCard = Array.from(container.children).find(el => el.innerHTML.includes(id));
     if (studentCard) {
         const chips = studentCard.querySelectorAll('.attendance-chip');
-        const dayIdx = ['mon', 'tue', 'wed', 'thu', 'fri'].indexOf(day);
+        const dayIdx = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'].indexOf(day);
         if (chips[dayIdx]) {
             chips[dayIdx].classList.toggle('active', newVal);
-            // Also need to update the onclick to the NEW newVal
             chips[dayIdx].setAttribute('onclick', `event.stopPropagation(); toggleAttendance('${id}', '${day}', ${newVal})`);
         }
     }

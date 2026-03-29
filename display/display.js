@@ -208,11 +208,13 @@ function renderAttendance() {
     const todayIndex = new Date().getDay();
     const todayKey = days[todayIndex];
 
-    // Only filter for school days
+    // Temporarily disabled for testing (Weekend support)
+    /*
     if (todayIndex === 0 || todayIndex === 6) {
         smoothUpdate(list, `<div class="empty-state">Wochenende! 🍿</div>`);
         return;
     }
+    */
 
     const presentStudents = students.filter(s => s.attendance && s.attendance[todayKey]);
 
