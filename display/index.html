@@ -1036,29 +1036,29 @@
         }
 
         @keyframes pixelFloat {
-            0%, 100% { transform: translate(-50%, 0); }
-            50% { transform: translate(-50%, -12px); }
+            0%, 100% { transform: translateX(calc(-50% + var(--tama-x, 0px))) translateY(var(--tama-y, 0px)) scale(var(--tama-scale, 1)); }
+            50% { transform: translateX(calc(-50% + var(--tama-x, 0px))) translateY(calc(var(--tama-y, 0px) - 12px)) scale(var(--tama-scale, 1)); }
         }
 
         @keyframes tamaWalkCycle {
-            0%, 100% { transform: rotate(-3deg) translateY(0); }
-            50% { transform: rotate(3deg) translateY(-4px); }
+            0%, 100% { transform: translateX(calc(-50% + var(--tama-x, 0px))) translateY(var(--tama-y, 0px)) scale(var(--tama-scale, 1)) rotate(-3deg); }
+            50% { transform: translateX(calc(-50% + var(--tama-x, 0px))) translateY(calc(var(--tama-y, 0px) - 4px)) scale(var(--tama-scale, 1)) rotate(3deg); }
         }
 
         @keyframes tamaFlip {
-            0% { transform: rotate(0deg) translateY(0); }
-            40% { transform: rotate(180deg) translateY(-50px); }
-            100% { transform: rotate(360deg) translateY(0); }
+            0% { transform: translateX(calc(-50% + var(--tama-x, 0px))) translateY(var(--tama-y, 0px)) scale(var(--tama-scale, 1)) rotate(0deg); }
+            40% { transform: translateX(calc(-50% + var(--tama-x, 0px))) translateY(calc(var(--tama-y, 0px) - 80px)) scale(var(--tama-scale, 1)) rotate(180deg); }
+            100% { transform: translateX(calc(-50% + var(--tama-x, 0px))) translateY(var(--tama-y, 0px)) scale(var(--tama-scale, 1)) rotate(360deg); }
         }
 
         @keyframes tamaRoll {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
+            0% { transform: translateX(calc(-50% + var(--tama-x, 0px))) translateY(var(--tama-y, 0px)) scale(var(--tama-scale, 1)) rotate(0deg); }
+            100% { transform: translateX(calc(-50% + var(--tama-x, 0px))) translateY(var(--tama-y, 0px)) scale(var(--tama-scale, 1)) rotate(360deg); }
         }
 
         @keyframes tamaHop {
-            0%, 100% { transform: translateY(0); }
-            50% { transform: translateY(-20px); }
+            0%, 100% { transform: translateX(calc(-50% + var(--tama-x, 0px))) translateY(var(--tama-y, 0px)) scale(var(--tama-scale, 1)); }
+            50% { transform: translateX(calc(-50% + var(--tama-x, 0px))) translateY(calc(var(--tama-y, 0px) - 30px)) scale(var(--tama-scale, 1)); }
         }
 
         @keyframes pixelGlow {
@@ -1070,7 +1070,10 @@
             position: absolute;
             bottom: 40px;
             left: 50%;
-            transform: translateX(-50%);
+            --tama-x: 0px;
+            --tama-y: 0px;
+            --tama-scale: 1;
+            transform: translateX(calc(-50% + var(--tama-x))) translateY(var(--tama-y)) scale(var(--tama-scale));
             display: grid;
             grid-template-columns: repeat(12, 12px);
             grid-template-rows: repeat(12, 12px);

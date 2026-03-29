@@ -1680,7 +1680,10 @@ function handleTamaIdleBehavior(tama, inactiveSeconds, gridEl, statusEl) {
         // Screen height is 320px. Bottom 1/3 is ~106px. Base is 40px. 
         // We move up by max ~60px to stay safe.
         const verticalShift = (1 - _idleTargetPos.scale) * -150; 
-        gridEl.style.transform = `translateX(calc(-50% + ${_idleTargetPos.x}px)) translateY(${verticalShift}px) scale(${_idleTargetPos.scale})`;
+        
+        gridEl.style.setProperty('--tama-x', `${_idleTargetPos.x}px`);
+        gridEl.style.setProperty('--tama-y', `${verticalShift}px`);
+        gridEl.style.setProperty('--tama-scale', _idleTargetPos.scale);
         return;
     }
 
@@ -1720,9 +1723,13 @@ function handleTamaIdleBehavior(tama, inactiveSeconds, gridEl, statusEl) {
         // Apply visual transformation for movement
         if (_currentIdleAction !== 'chill') {
             const verticalShift = (1 - _idleTargetPos.scale) * -150;
-            gridEl.style.transform = `translateX(calc(-50% + ${_idleTargetPos.x}px)) translateY(${verticalShift}px) scale(${_idleTargetPos.scale})`;
+            gridEl.style.setProperty('--tama-x', `${_idleTargetPos.x}px`);
+            gridEl.style.setProperty('--tama-y', `${verticalShift}px`);
+            gridEl.style.setProperty('--tama-scale', _idleTargetPos.scale);
         } else {
-            gridEl.style.transform = 'translateX(-50%)';
+            gridEl.style.setProperty('--tama-x', '0px');
+            gridEl.style.setProperty('--tama-y', '0px');
+            gridEl.style.setProperty('--tama-scale', '1');
         }
     } else {
         // Only reset if truly active (interaction within last 10s)
@@ -1737,6 +1744,9 @@ function handleTamaIdleBehavior(tama, inactiveSeconds, gridEl, statusEl) {
 function clearIdleState(gridEl) {
     if (!gridEl) return;
     gridEl.classList.remove('strolling', 'tama-walking', 'tama-flipping', 'tama-rolling', 'tama-hopping');
+    gridEl.style.setProperty('--tama-x', '0px');
+    gridEl.style.setProperty('--tama-y', '0px');
+    gridEl.style.setProperty('--tama-scale', '1');
 }
 
 // Dedicated helper to detect and trigger action animations
