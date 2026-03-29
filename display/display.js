@@ -716,7 +716,10 @@ function renderTamagotchi() {
         const statusEl = document.getElementById('tama-status-text');
 
         if (nameEl) nameEl.textContent = "Geheimnisvolles Ei";
-        if (avatarEl) avatarEl.textContent = "🥚";
+        if (avatarEl) {
+            avatarEl.textContent = "🥚";
+            avatarEl.style.animation = 'tamaEggWiggle 3s ease-in-out infinite';
+        }
         if (statusEl) statusEl.textContent = "Wartet auf September...";
         return;
     }
