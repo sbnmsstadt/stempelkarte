@@ -1297,11 +1297,26 @@ function triggerFeedAnimation(foodEmoji = '🍎') {
 
 function triggerBrushAnimation() {
     const gridEl = document.getElementById('tama-pixel-grid');
+    const screen = document.querySelector('.tama-screen');
+    const container = document.getElementById('tama-item-container');
+    if (!gridEl || !screen || !container) return;
+
+    // 1. Show Brush Emoji to the side
     const b = document.createElement('div');
     b.className = 'brush-fx';
-    b.innerHTML = '🪥✨';
-    gridEl.appendChild(b);
-    setTimeout(() => b.remove(), 2000);
+    b.textContent = '🪥';
+    
+    const rect = gridEl.getBoundingClientRect();
+    const screenRect = screen.getBoundingClientRect();
+    const relativeX = (rect.left - screenRect.left) + (rect.width / 2);
+    
+    // Position to the side
+    b.style.left = `calc(50% + ${relativeX - (screenRect.width/2) - 40}px)`;
+    container.appendChild(b);
+    setTimeout(() => b.remove(), 2500);
+
+    // 2. Trigger "Foam" bubbles on the pet
+    triggerBubbleEffect(30, false, relativeX); // Regular bubbles serve as "foam"
 }
 
 function triggerRecycleAnimation() {

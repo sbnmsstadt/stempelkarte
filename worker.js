@@ -868,46 +868,46 @@ export default {
 
                     settings.tamagotchi.needsBrushing = true;
                     settings.tamagotchi.lastAction = 'feed';
-                    settings.tamagotchi.lastActionTime = new Date().toISOString();
+                    settings.tamagotchi.lastActionTime = Date.now();
                 }
                 else if (action === "brush") {
                     settings.tamagotchi.needsBrushing = false;
                     settings.tamagotchi.stats.hygiene = Math.min(100, (settings.tamagotchi.stats.hygiene || 0) + 30);
                     settings.tamagotchi.lastAction = 'brush';
-                    settings.tamagotchi.lastActionTime = new Date().toISOString();
+                    settings.tamagotchi.lastActionTime = Date.now();
                     logMsg = "Zähne blitzblank geputzt! 🪥";
                 }
                 else if (action === "recycle") {
                     settings.tamagotchi.trashCount = 0;
                     settings.tamagotchi.stats.xp = (settings.tamagotchi.stats.xp || 0) + 20;
                     settings.tamagotchi.lastAction = 'recycle';
-                    settings.tamagotchi.lastActionTime = new Date().toISOString();
+                    settings.tamagotchi.lastActionTime = Date.now();
                     logMsg = "Müll gesammelt und getrennt! 🌍";
                 }
                 else if (action === "water") { 
                     settings.tamagotchi.stats.thirst = Math.min(100, (settings.tamagotchi.stats.thirst || 0) + 25); 
                     settings.tamagotchi.lastAction = 'water';
-                    settings.tamagotchi.lastActionTime = new Date().toISOString();
+                    settings.tamagotchi.lastActionTime = Date.now();
                     logMsg = "Tamagotchi getränkt 💧"; 
                 }
                 else if (action === "play") { 
                     settings.tamagotchi.stats.fun = Math.min(100, (settings.tamagotchi.stats.fun || 0) + 25); 
                     settings.tamagotchi.stats.love = Math.min(100, (settings.tamagotchi.stats.love || 0) + 5); 
                     settings.tamagotchi.lastAction = 'play';
-                    settings.tamagotchi.lastActionTime = new Date().toISOString();
+                    settings.tamagotchi.lastActionTime = Date.now();
                     logMsg = "Mit Tamagotchi gespielt 🧶"; 
                 }
                 else if (action === "love") { 
                     settings.tamagotchi.stats.love = Math.min(100, (settings.tamagotchi.stats.love || 0) + 25); 
                     settings.tamagotchi.lastAction = 'love';
-                    settings.tamagotchi.lastActionTime = new Date().toISOString();
+                    settings.tamagotchi.lastActionTime = Date.now();
                     logMsg = "Tamagotchi gestreichelt ❤️"; 
                 }
                 else if (action === "clean") {
                     settings.tamagotchi.stats.hygiene = Math.min(100, (settings.tamagotchi.stats.hygiene || 0) + 40);
                     settings.tamagotchi.poopCount = 0;
                     settings.tamagotchi.lastAction = 'clean';
-                    settings.tamagotchi.lastActionTime = new Date().toISOString();
+                    settings.tamagotchi.lastActionTime = Date.now();
                     logMsg = "Tamagotchi Display geputzt 🧼";
                 }
                 else if (action === "train") {
@@ -922,13 +922,13 @@ export default {
                     }
 
                     settings.tamagotchi.lastAction = 'train';
-                    settings.tamagotchi.lastActionTime = new Date().toISOString();
+                    settings.tamagotchi.lastActionTime = Date.now();
                     logMsg = "Mit Tamagotchi gelernt 📚";
                 }
                 else if (action === "poop") {
                     settings.tamagotchi.poopCount = Math.min(20, (settings.tamagotchi.poopCount || 0) + 1);
                     settings.tamagotchi.lastAction = 'poop';
-                    settings.tamagotchi.lastActionTime = new Date().toISOString();
+                    settings.tamagotchi.lastActionTime = Date.now();
                     logMsg = "Häufchen gemacht 💩";
                 }
                 else if (action === "style") {
@@ -941,13 +941,13 @@ export default {
                     settings.tamagotchi.currentHat = hats[Math.floor(Math.random() * hats.length)];
                     settings.tamagotchi.hatExpires = Date.now() + 24 * 60 * 60 * 1000; // 24 Hours
                     settings.tamagotchi.lastAction = 'style';
-                    settings.tamagotchi.lastActionTime = new Date().toISOString();
+                    settings.tamagotchi.lastActionTime = Date.now();
                     logMsg = "Tamagotchi neu gestylt 🎩";
                 }
                 else if (action === "handwash") {
                     student.lastHandWash = Date.now();
                     settings.tamagotchi.lastAction = 'handwash';
-                    settings.tamagotchi.lastActionTime = new Date().toISOString();
+                    settings.tamagotchi.lastActionTime = Date.now();
                     logMsg = "Hände gewaschen 🧼";
                 }
                 
