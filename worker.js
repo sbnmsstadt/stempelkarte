@@ -37,14 +37,19 @@ export default {
                 const lovePenaltyFactor = 1 + (poopCount * 0.5);
                 const loveDecay = baseDecay * lovePenaltyFactor;
 
-                settings.tamagotchi.stats.hunger = Math.max(0, Math.round(settings.tamagotchi.stats.hunger - baseDecay));
-                settings.tamagotchi.stats.thirst = Math.max(0, Math.round(settings.tamagotchi.stats.thirst - baseDecay));
-                settings.tamagotchi.stats.love = Math.max(0, Math.round(settings.tamagotchi.stats.love - loveDecay));
-                settings.tamagotchi.stats.fun = Math.max(0, Math.round((settings.tamagotchi.stats.fun || 100) - baseDecay));
+                settings.tamagotchi.stats.hunger = Math.max(0, settings.tamagotchi.stats.hunger - baseDecay);
+                settings.tamagotchi.stats.thirst = Math.max(0, settings.tamagotchi.stats.thirst - baseDecay);
+                settings.tamagotchi.stats.love = Math.max(0, settings.tamagotchi.stats.love - loveDecay);
+                settings.tamagotchi.stats.fun = Math.max(0, (settings.tamagotchi.stats.fun || 100) - baseDecay);
                 
                 // Hygiene: decay faster if brushing is needed
                 const hygieneDecay = settings.tamagotchi.needsBrushing ? (baseDecay * 1.5) : (baseDecay * 0.5);
-                settings.tamagotchi.stats.hygiene = Math.max(0, Math.round((settings.tamagotchi.stats.hygiene || 100) - hygieneDecay));
+                settings.tamagotchi.stats.hygiene = Math.max(0, (settings.tamagotchi.stats.hygiene || 100) - hygieneDecay);
+
+                // --- Death Logic: If hunger AND thirst reach 0, pet dies ---
+                if (settings.tamagotchi.stats.hunger <= 0 && settings.tamagotchi.stats.thirst <= 0) {
+                    settings.tamagotchi.status = "dead";
+                }
 
                 // --- Sugar Crash Logic (Donut effect) ---
                 if (settings.tamagotchi.sugarCrashTime && now > settings.tamagotchi.sugarCrashTime) {
@@ -821,8 +826,12 @@ export default {
 
                 const settingsRaw = await getKV("settings");
                 let settings = JSON.parse(settingsRaw || "{}");
-                if (!settings.tamagotchi || settings.tamagotchi.status !== "hatched") {
+                if (!settings.tamagotchi || (settings.tamagotchi.status !== "hatched" && settings.tamagotchi.status !== "dead")) {
                     return new Response("Tamagotchi schläft noch oder existiert nicht.", { status: 400, headers: corsHeaders });
+                }
+
+                if (settings.tamagotchi.status === "dead") {
+                    return new Response("Dein Tamagotchi ist verstorben... 👻 Melde dich beim Admin.", { status: 403, headers: corsHeaders });
                 }
 
                 // Increment action count (Free interaction)

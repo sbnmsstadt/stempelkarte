@@ -810,20 +810,6 @@ const PET_FRAMES = {
             ".DDDDDDDDDD.",
             "..BB....BB.."
         ],
-        happy: [
-            "............",
-            "............",
-            "..PP....PP..",
-            ".PPPP..PPPP.",
-            ".BBBBBBBBBB.",
-            "BBBBBBBBBBBB",
-            "BEEEBBBBEEEB",
-            "BBBBBBBBBBBB",
-            "BBMMMMMMMMBB",
-            "BBBBMMMMBBBB",
-            ".DDDDDDDDDD.",
-            "..BB....BB.."
-        ],
         blink: [
             "............",
             "............",
@@ -875,6 +861,20 @@ const PET_FRAMES = {
             "BBBBBBBBBBBB",
             "BBEEBBBBEEBB",
             "BBBBBBBBBBBB",
+            "DBBBBBBBBBBD",
+            "DDBBMMMMBBDD",
+            ".DDDDDDDDDD.",
+            "..BB....BB.."
+        ],
+        dead: [
+            "............",
+            "............",
+            "..PP....PP..",
+            ".PPPP..PPPP.",
+            ".BBBBBBBBBB.",
+            "BBBBBBBBBBBB",
+            "BDEBDBBDEBDB", // X eyes (using dark pixels)
+            "BBDBBBBBDBBB",
             "DBBBBBBBBBBD",
             "DDBBMMMMBBDD",
             ".DDDDDDDDDD.",
@@ -932,6 +932,20 @@ const PET_FRAMES = {
             "BBBBBBBBBBBB",
             "BBDDBBBBDDBB", // Symmetrical blinking
             "BBBBBBBBBBBB",
+            "BBBBMMMMBBBB",
+            "BBBBBBBBBBBB",
+            "DBBBBBBBBBBD",
+            "DDBBBBBBBBDD",
+            ".DDDDDDDDDD."
+        ],
+        dead: [
+            "....PPPP....",
+            "...PPPPPP...",
+            "..PPPPPPPP..",
+            ".BBBBBBBBBB.",
+            "BBBBBBBBBBBB",
+            "BDEBDBBDEBDB", // X eyes
+            "BBDBBBBBDBBB",
             "BBBBMMMMBBBB",
             "BBBBBBBBBBBB",
             "DBBBBBBBBBBD",
@@ -1641,12 +1655,17 @@ function renderTamagotchi() {
         if (funVal) funVal.textContent = `${Math.round(stats.fun || 0)}%`;
         if (levelVal) levelVal.textContent = `Lvl ${stats.level}`;
 
-        let statusText = "Glücklich ✨";
-        if (tama.isSleeping) statusText = "Schläft... 💤";
-        else if (stats.hunger < 30) statusText = "Hungrig! 🍏";
-        else if (stats.thirst < 30) statusText = "Durstig! 💧";
-        else if (stats.fun < 30) statusText = "Langweilig... 🥱";
-        else if (stats.love < 50) statusText = "Braucht Liebe ❤️";
+        if (tama.status === "dead") {
+            statusText = "GEIST 👻";
+            gridEl.classList.add('tama-dead');
+        } else {
+            gridEl.classList.remove('tama-dead');
+            if (tama.isSleeping) statusText = "Schläft... 💤";
+            else if (stats.hunger < 30) statusText = "Hungrig! 🍏";
+            else if (stats.thirst < 30) statusText = "Durstig! 💧";
+            else if (stats.fun < 30) statusText = "Langweilig... 🥱";
+            else if (stats.love < 50) statusText = "Braucht Liebe ❤️";
+        }
         const now = Date.now();
         // Calc inactivity relative ONLY to last interaction
         const actionTime = tama.lastActionTime ? new Date(tama.lastActionTime).getTime() : (tama.born || tama.hatchDate || now);

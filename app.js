@@ -1099,12 +1099,19 @@ function renderTamagotchiUI(tama, student) {
     const section = document.getElementById('tamagotchi-section');
     if (!section) return;
     
-    if (!tama || tama.status !== "hatched") {
+    if (!tama || (tama.status !== "hatched" && tama.status !== "dead")) {
         section.classList.add('hidden');
         return;
     }
     
     section.classList.remove('hidden');
+    
+    const isDead = tama.status === "dead";
+    const careGrid = document.querySelector('.tama-care-grid');
+    if (careGrid) {
+        if (isDead) careGrid.style.display = 'none';
+        else careGrid.style.display = 'grid';
+    }
     
     const nameEl = document.getElementById('tama-ui-name');
     const avatarEl = document.getElementById('tama-ui-avatar');
@@ -1114,15 +1121,21 @@ function renderTamagotchiUI(tama, student) {
     
     if (nameEl) nameEl.textContent = tama.name || "Pixelino";
     if (avatarEl) {
-        let base = (tama.stats.level >= 10) ? "🦖" : "🐣";
-        if (tama.isSleeping) base = "😴";
-        else if (tama.stats.love < 20) base = "😭";
-        else if (tama.stats.hunger < 30 || tama.stats.thirst < 30) base = "😵‍💫";
-        else if (tama.stats.hunger > 80 && tama.stats.love > 80) base = (tama.stats.level >= 10) ? "🐲" : "🐥";
-        
-        avatarEl.textContent = base;
+        if (isDead) {
+            avatarEl.textContent = "👻";
+        } else {
+            let base = (tama.stats.level >= 10) ? "🦖" : "🐣";
+            if (tama.isSleeping) base = "😴";
+            else if (tama.stats.love < 20) base = "😭";
+            else if (tama.stats.hunger < 30 || tama.stats.thirst < 30) base = "😵‍💫";
+            else if (tama.stats.hunger > 80 && tama.stats.love > 80) base = (tama.stats.level >= 10) ? "🐲" : "🐥";
+            avatarEl.textContent = base;
+        }
     }
-    if (levelEl) levelEl.textContent = `LVL ${tama.stats.level || 1}`;
+    if (levelEl) {
+        if (isDead) levelEl.textContent = "VERSTORBEN 👻";
+        else levelEl.textContent = `LVL ${tama.stats.level || 1}`;
+    }
     
     if (xpBarEl) {
         const nextLevelXp = (tama.stats.level || 1) * 100;
