@@ -709,11 +709,11 @@ function renderTamagotchi() {
     const tama = settings.tamagotchi;
     if (!tama || !card) return;
 
-    // Asset Paths (Generated)
+    // Asset Paths (PROPER RELATIVE PATHS)
     const ASSETS = {
-        bg: 'C:\\Users\\Limitless\\.gemini\\antigravity\\brain\\35fc07bf-0648-4a49-8a26-c87d6b2af5f7\\tama_pixel_bg_1774779784524.png',
-        egg: 'C:\\Users\\Limitless\\.gemini\\antigravity\\brain\\35fc07bf-0648-4a49-8a26-c87d6b2af5f7\\tama_egg_sprite_1774779799968.png',
-        baby: 'C:\\Users\\Limitless\\.gemini\\antigravity\\brain\\35fc07bf-0648-4a49-8a26-c87d6b2af5f7\\tama_baby_sprite_1774779814661.png'
+        bg: 'assets/tama_bg.png',
+        egg: 'assets/tama_egg.png',
+        baby: 'assets/tama_baby.png'
     };
 
     const bgImg = document.getElementById('tama-bg-img');
