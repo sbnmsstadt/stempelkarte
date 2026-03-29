@@ -1601,34 +1601,73 @@ function renderTamagotchi() {
         // --- Interaction Protection ---
         handleTamaActionDetection(tama);
         
-        // Walk away after 20s of silence
-        if (inactiveSeconds > 20 && !tama.isSleeping && !gridEl.classList.contains('chasing') && !gridEl.classList.contains('hopping-back')) {
-            if (!gridEl.classList.contains('walking-away')) {
-                // Initialize random walk direction and distance once
-                // X: random left/right (+/- 100px)
-                // Y: random vertical distance (0 to -40px to stay in bottom third)
-                // Scale: random depth (0.5 to 0.75)
-                _awayOffset.x = (Math.random() - 0.5) * 200; 
-                _awayOffset.y = -(Math.random() * 40); 
-                _awayOffset.scale = 0.5 + (Math.random() * 0.25);
-                gridEl.classList.add('walking-away');
-            }
-            gridEl.style.transform = `translateX(calc(-50% + ${_awayOffset.x}px)) translateY(${_awayOffset.y}px) scale(${_awayOffset.scale})`;
-        } else if (inactiveSeconds < 5) {
-            // Ensure we are not stuck "far away" if an action happened
-            if (gridEl.classList.contains('walking-away')) {
-                gridEl.classList.remove('walking-away');
-                gridEl.style.transform = 'translateX(-50%)'; // Reset
-            }
-        }
-        
-        // Clear transform if not walking away (unless chasing which handles itself)
-        if (!gridEl.classList.contains('walking-away') && !gridEl.classList.contains('chasing') && !gridEl.classList.contains('hopping-back')) {
-            gridEl.style.transform = 'translateX(-50%)';
-        }
+        // --- Idle State Machine (Self-Entertainment) ---
+        handleTamaIdleBehavior(tama, inactiveSeconds, gridEl, statusEl);
         
         if (statusEl) statusEl.textContent = statusText;
     }
+}
+
+let _idleActionStartTime = 0;
+let _currentIdleAction = null;
+let _idleTargetPos = { x: 0, scale: 1 };
+
+function handleTamaIdleBehavior(tama, inactiveSeconds, gridEl, statusEl) {
+    if (tama.isSleeping) {
+        clearIdleState(gridEl);
+        return;
+    }
+
+    // Threshold: 10 minutes of inactivity (600s)
+    if (inactiveSeconds > 600) {
+        const now = Date.now();
+        
+        // Every 2 minutes (120s), pick a new action
+        if (!_currentIdleAction || (now - _idleActionStartTime > 120000)) {
+            _idleActionStartTime = now;
+            const actions = ['walk', 'flip', 'roll', 'hop', 'chill'];
+            _currentIdleAction = actions[Math.floor(Math.random() * actions.length)];
+            
+            // Pick a random spot on the grass
+            _idleTargetPos.x = (Math.random() - 0.5) * 600; // Large range
+            _idleTargetPos.scale = 0.6 + Math.random() * 0.4; // Depth
+
+            clearIdleState(gridEl);
+            
+            if (_currentIdleAction === 'walk') {
+                gridEl.classList.add('tama-walking');
+                showSpeechBubble("Ich geh mal die Wiese erkunden... 🚶‍♂️");
+            } else if (_currentIdleAction === 'flip') {
+                gridEl.classList.add('tama-flipping');
+                showSpeechBubble("SIUUU! Schau mal! 🤸‍♂️");
+            } else if (_currentIdleAction === 'roll') {
+                gridEl.classList.add('tama-rolling');
+                showSpeechBubble("Wiiiiieeee! 🌀");
+            } else if (_currentIdleAction === 'hop') {
+                gridEl.classList.add('tama-hopping');
+                showSpeechBubble("Ich bin ein Gummibär! 🍬");
+            } else {
+                showSpeechBubble("Macher-Modus! 🔥");
+            }
+        }
+
+        // Apply visual transformation for movement
+        if (_currentIdleAction !== 'chill') {
+            gridEl.style.transform = `translateX(calc(-50% + ${_idleTargetPos.x}px)) scale(${_idleTargetPos.scale})`;
+        } else {
+            gridEl.style.transform = 'translateX(-50%)';
+        }
+    } else {
+        // Reset if activity happened recently
+        if (inactiveSeconds < 5) {
+            clearIdleState(gridEl);
+            gridEl.style.transform = 'translateX(-50%)';
+        }
+    }
+}
+
+function clearIdleState(gridEl) {
+    gridEl.classList.remove('walking-away', 'tama-walking', 'tama-flipping', 'tama-rolling', 'tama-hopping');
 }
 
 // Dedicated helper to detect and trigger action animations
@@ -1650,12 +1689,11 @@ function handleTamaActionDetection(tama) {
 
         console.log("TAMAGOTCHI ACTION DETECTED:", tama.lastAction);
 
-        // 1. Hop back if away
-        if (gridEl.classList.contains('walking-away')) {
-            gridEl.classList.remove('walking-away');
-            gridEl.classList.add('hopping-back');
-            setTimeout(() => gridEl.classList.remove('hopping-back'), 1200);
-        }
+        // 1. Reset any idle/walking states if away
+        clearIdleState(gridEl);
+        _currentIdleAction = null; // Kill the idle cycle
+        gridEl.classList.add('hopping-back');
+        setTimeout(() => gridEl.classList.remove('hopping-back'), 1200);
 
         // 2. Trigger Specific Animation
         if (tama.lastAction === 'play') {

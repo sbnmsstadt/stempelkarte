@@ -872,3 +872,29 @@ input[type="number"] {
     50% { transform: translateY(-15px) scale(1.2); opacity: 0.5; }
     100% { transform: translateY(-30px) scale(1.5); opacity: 0; }
 }
+/* Tamagotchi Idle Animations */
+@keyframes pixelWalk {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-8px); }
+}
+
+@keyframes pixelFlip {
+    0% { transform: translateY(0) rotate(0deg); }
+    50% { transform: translateY(-50px) rotate(180deg); }
+    100% { transform: translateY(0) rotate(360deg); }
+}
+
+@keyframes pixelRoll {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+@keyframes pixelHopHorizontal {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-30px); }
+}
+
+.tama-walking { animation: pixelWalk 0.6s ease-in-out infinite !important; }
+.tama-flipping { animation: pixelFlip 0.8s ease-in-out !important; }
+.tama-rolling { animation: pixelRoll 0.5s linear infinite !important; }
+.tama-hopping { animation: pixelHopHorizontal 0.7s ease-in-out infinite !important; }
