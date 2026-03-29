@@ -1357,15 +1357,32 @@
             text-shadow: 0 0 10px rgba(255, 77, 77, 0.5);
         }
 
-        .tama-play-item, .tama-feed-item, .tama-water-item {
+        .tama-feed-item, .tama-water-item, .pixel-food, .brush-fx, .recycle-fx {
             position: absolute;
-            font-size: 2.5rem;
+            font-size: 2.22rem;
             bottom: 60px;
             left: 50%;
             transform: translateX(-50%);
             z-index: 12;
             pointer-events: none;
             filter: drop-shadow(0 4px 8px rgba(0,0,0,0.3));
+        }
+
+        .pixel-food, .brush-fx, .recycle-fx {
+            animation: tama-item-appear 2s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        }
+
+        .trash-item {
+            position: absolute;
+            z-index: 3;
+            pointer-events: none;
+            filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5));
+            animation: trashWobble 4s ease-in-out infinite alternate;
+        }
+
+        @keyframes trashWobble {
+            0% { transform: rotate(-5deg); }
+            100% { transform: rotate(5deg); }
         }
 
         .tama-feed-item, .tama-water-item {
@@ -1623,6 +1640,7 @@
                     
                     <div id="tama-bubble" class="tama-speech-bubble">Danke!</div>
                     <div id="poop-container" class="poop-container"></div>
+                    <div id="trash-container" class="poop-container"></div>
                     
                     <!-- Interaction & Effect Layers -->
                     <div id="tama-zzz-container" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 15;"></div>

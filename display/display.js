@@ -1285,6 +1285,34 @@ function showSpeechBubble(text) {
     setTimeout(() => bubble.classList.remove('active'), 4000);
 }
 
+function triggerFeedAnimation(foodEmoji = '🍎') {
+    const gridEl = document.getElementById('tama-pixel-grid');
+    const food = document.createElement('div');
+    food.className = 'pixel-food';
+    food.textContent = foodEmoji;
+    gridEl.appendChild(food);
+    
+    setTimeout(() => food.remove(), 1500);
+}
+
+function triggerBrushAnimation() {
+    const gridEl = document.getElementById('tama-pixel-grid');
+    const b = document.createElement('div');
+    b.className = 'brush-fx';
+    b.innerHTML = '🪥✨';
+    gridEl.appendChild(b);
+    setTimeout(() => b.remove(), 2000);
+}
+
+function triggerRecycleAnimation() {
+    const gridEl = document.getElementById('tama-pixel-grid');
+    const r = document.createElement('div');
+    r.className = 'recycle-fx';
+    r.innerHTML = '🌍♻️';
+    gridEl.appendChild(r);
+    setTimeout(() => r.remove(), 2000);
+}
+
 function spawnZzz() {
     const container = document.getElementById('tama-zzz-container');
     if (!container) return;
@@ -1321,25 +1349,6 @@ function triggerPlayAnimation() {
         gridEl.classList.remove('chasing');
         _isInteractionActive = false;
     }, 12000); // Play for 12 seconds
-}
-
-function triggerFeedAnimation() {
-    if (_isInteractionActive) return;
-    _isInteractionActive = true;
-
-    const container = document.getElementById('tama-item-container');
-    if (!container) return;
-
-    const foods = ['🍎', '🍌', '🍔', '🍕', '🍰'];
-    const item = document.createElement('div');
-    item.className = 'tama-feed-item';
-    item.textContent = foods[Math.floor(Math.random() * foods.length)];
-    container.appendChild(item);
-
-    setTimeout(() => {
-        item.remove();
-        _isInteractionActive = false;
-    }, 3000);
 }
 
 function triggerWaterAnimation() {
@@ -1505,7 +1514,30 @@ function renderTamagotchi() {
         }
     }
 
-    // 3.6 Update Weather
+    // 3.6 Render Trash (Recycling task)
+    const trashContainer = document.getElementById('trash-container');
+    if (trashContainer) {
+        const targetTrashCount = tama.trashCount || 0;
+        if (trashContainer.children.length !== targetTrashCount) {
+            trashContainer.innerHTML = '';
+            for (let i = 0; i < targetTrashCount; i++) {
+                const tr = document.createElement('div');
+                tr.className = 'trash-item';
+                // Deterministic positions
+                const rx = ((i * 157.3) % 90) + 5;
+                const ry = ((i * 113.1) % 80) + 10;
+                tr.style.left = `${rx}%`;
+                tr.style.bottom = `${ry}px`;
+                tr.style.position = 'absolute';
+                tr.style.fontSize = '1.1rem';
+                // Alternate between paper and can
+                tr.textContent = (i % 2 === 0) ? '📄' : '🥫';
+                trashContainer.appendChild(tr);
+            }
+        }
+    }
+
+    // 3.7 Update Weather
     updateWeatherView();
 
     // 4. Update UI Text & Bars

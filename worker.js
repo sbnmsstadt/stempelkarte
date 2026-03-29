@@ -1,11 +1,94 @@
 export default {
     async fetch(request, env) {
         // ── WEATHER SYNC HELPER (Hallein: 47.68, 13.17) ──────────────────
+        // ── STORAGE HELPERS (Migrating from KV to D1) ─────────────────
+        async function getKV(key) {
+            // Try D1 first
+            const res = await env.DB.prepare("SELECT value FROM kv_data WHERE id = ?").bind(key).first("value");
+            if (res) return res;
+            
+            // Fallback to KV for migration (if it exists and is not 429'd for reads)
+            if (env.DATABASE) {
+                try {
+                    return await env.DATABASE.get(key);
+                } catch (e) { console.error("KV read failed:", e); }
+            }
+            return null;
+        }
+
+        async function putKV(key, value) {
+            await env.DB.prepare("INSERT OR REPLACE INTO kv_data (id, value) VALUES (?, ?)").bind(key, value).run();
+        }
+
+        // ── TAMAGOTCHI DECAY HELPER ──────────────────────────────────
+        function applyTamagotchiDecay(settings, now) {
+            if (!settings.tamagotchi || settings.tamagotchi.status !== "hatched") return false;
+
+            const last = settings.tamagotchi.lastUpdate || now;
+            const ignoreFreeze = settings.tamagotchi.ignoreWeekendFreeze || false;
+            const activeHours = calculateActiveHours(last, now, ignoreFreeze);
+
+            if (activeHours > 0) {
+                // Base decay: 20% per 30 mins = 40% per hour
+                const baseDecay = activeHours * 40;
+                
+                // Poop penalty: each poop increases LOVE decay by 50%
+                const poopCount = settings.tamagotchi.poopCount || 0;
+                const lovePenaltyFactor = 1 + (poopCount * 0.5);
+                const loveDecay = baseDecay * lovePenaltyFactor;
+
+                settings.tamagotchi.stats.hunger = Math.max(0, Math.round(settings.tamagotchi.stats.hunger - baseDecay));
+                settings.tamagotchi.stats.thirst = Math.max(0, Math.round(settings.tamagotchi.stats.thirst - baseDecay));
+                settings.tamagotchi.stats.love = Math.max(0, Math.round(settings.tamagotchi.stats.love - loveDecay));
+                settings.tamagotchi.stats.fun = Math.max(0, Math.round((settings.tamagotchi.stats.fun || 100) - baseDecay));
+                
+                // Hygiene: decay faster if brushing is needed
+                const hygieneDecay = settings.tamagotchi.needsBrushing ? (baseDecay * 1.5) : (baseDecay * 0.5);
+                settings.tamagotchi.stats.hygiene = Math.max(0, Math.round((settings.tamagotchi.stats.hygiene || 100) - hygieneDecay));
+
+                // --- Sugar Crash Logic (Donut effect) ---
+                if (settings.tamagotchi.sugarCrashTime && now > settings.tamagotchi.sugarCrashTime) {
+                    settings.tamagotchi.stats.hunger = Math.max(0, settings.tamagotchi.stats.hunger - 30);
+                    settings.tamagotchi.stats.fun = Math.max(0, settings.tamagotchi.stats.fun - 30);
+                    settings.tamagotchi.sugarCrashTime = null; // Reset crash
+                }
+
+                // Auto-Sleep if Fun is critically low
+                if (settings.tamagotchi.stats.fun < 15 && !settings.tamagotchi.isSleeping) {
+                    // Check if an interaction just happened (within last 10 seconds)
+                    const lastAction = settings.tamagotchi.lastActionTime ? new Date(settings.tamagotchi.lastActionTime).getTime() : 0;
+                    if (Date.now() - lastAction > 10000) {
+                        settings.tamagotchi.isSleeping = true;
+                    }
+                }
+
+                // Poop & Trash Chance: 52% per active hour
+                if (Math.random() < 0.52 * activeHours) {
+                    const type = Math.random();
+                    if (type < 0.6) {
+                        settings.tamagotchi.poopCount = Math.min(20, (settings.tamagotchi.poopCount || 0) + 1);
+                    } else {
+                        settings.tamagotchi.trashCount = Math.min(20, (settings.tamagotchi.trashCount || 0) + 1);
+                    }
+                }
+
+                // --- Hat Expiration ---
+                if (settings.tamagotchi.currentHat && settings.tamagotchi.hatExpires) {
+                    if (now > settings.tamagotchi.hatExpires) {
+                        settings.tamagotchi.currentHat = null;
+                        settings.tamagotchi.hatExpires = null;
+                    }
+                }
+
+                settings.tamagotchi.lastUpdate = now;
+                return true; // Something changed
+            }
+            return false;
+        }
+
         async function updateWeather(settings, env) {
             const now = Date.now();
             const lastSync = settings.weather?.lastSync || 0;
-            
-            // Sync every 30 minutes
             if (now - lastSync < 30 * 60 * 1000) return settings.weather;
 
             try {
@@ -17,14 +100,14 @@ export default {
                         temp: data.current.temperature_2m,
                         lastSync: now
                     };
-                    await env.DATABASE.put("settings", JSON.stringify(settings));
+                    await putKV("settings", JSON.stringify(settings));
                 }
             } catch (e) { console.error("Weather fetch failed", e); }
             return settings.weather;
         }
 
         const url = new URL(request.url);
-        const path = url.pathname.replace(/\/$/, ""); // Normalize path (remove trailing slash)
+        const path = url.pathname.replace(/\/$/, ""); 
         const method = request.method;
 
         const corsHeaders = {
@@ -37,8 +120,8 @@ export default {
             return new Response(null, { headers: corsHeaders });
         }
 
-        if (!env.DATABASE) {
-            return new Response("KV Namespace 'DATABASE' is not bound. Please check your Cloudflare settings.", {
+        if (!env.DB) {
+            return new Response("D1 Datenbank-Bindung 'DB' fehlt. Bitte im Dashboard nachholen!", {
                 status: 500,
                 headers: corsHeaders
             });
@@ -54,6 +137,21 @@ export default {
                     { threshold: 60, icon: "👑", title: "Level 3: VIP Woche", desc: "Entscheide über die Spiele!" }
                 ];
 
+            // ── MIGRATION ENDPOINT ───────────────────────────────────────
+            if (path === "/api/migrate-kv-to-d1" && method === "GET") {
+                if (!env.DATABASE) return new Response("KV nicht gefunden", { status: 404, headers: corsHeaders });
+                const keys = ["settings", "students", "rewards", "projects", "badges"];
+                let count = 0;
+                for (const k of keys) {
+                    const val = await env.DATABASE.get(k);
+                    if (val) {
+                        await putKV(k, val);
+                        count++;
+                    }
+                }
+                return new Response(`Migration abgeschlossen! ${count} Keys von KV nach D1 kopiert. 🎉`, { headers: corsHeaders });
+            }
+
             // DEBUG: Test Telegram
             if (path === "/api/debug/test-telegram") {
                 const success = await sendTelegramMessage(env, "Test-Nachricht vom Stempelkarten-System! ✅\n\nDein Bot ist richtig konfiguriert.");
@@ -63,7 +161,7 @@ export default {
             }
 
             if (path === "/api/settings" && method === "GET") {
-                const settingsRaw = await env.DATABASE.get("settings");
+                const settingsRaw = await getKV("settings");
                 const defaultActivities = [
                     { label: "Sport-AG", emoji: "🏀" },
                     { label: "Hausaufgaben", emoji: "📝" },
@@ -88,67 +186,27 @@ export default {
                     studentOfWeek: null
                 };
 
-                // Trigger Weather Update
                 await updateWeather(settings, env);
 
-                // CRITICAL: Ensure tamagotchi exists for existing users
                 if (!settings.tamagotchi) {
                     settings.tamagotchi = {
                         status: "egg",
                         name: "Pixelino",
                         hatchDate: null,
                         lastUpdate: Date.now(),
-                        stats: { hunger: 100, thirst: 100, love: 100, fun: 100 },
+                        stats: { hunger: 100, thirst: 100, love: 100, fun: 100, hygiene: 100 },
                         stage: "egg",
+                        poopCount: 0,
+                        trashCount: 0,
+                        needsBrushing: false,
                         isSleeping: false,
                         lastAction: null,
                         lastActionTime: null
                     };
                 }
 
-                if (settings.tamagotchi) {
-                    // --- Tamagotchi Stat Decay & Aging ---
-                    const now = Date.now();
-                    const last = settings.tamagotchi.lastUpdate || now;
-                    const ignoreFreeze = settings.tamagotchi.ignoreWeekendFreeze || false;
-                    const activeHours = calculateActiveHours(last, now, ignoreFreeze);
-
-                    if (activeHours > 0 && settings.tamagotchi.status === "hatched") {
-                        // Base decay: 20% per 30 mins = 40% per hour
-                        const baseDecay = activeHours * 40;
-                        
-                        // Poop penalty: each poop increases LOVE decay by 50%
-                        const poopCount = settings.tamagotchi.poopCount || 0;
-                        const lovePenaltyFactor = 1 + (poopCount * 0.5);
-                        const loveDecay = baseDecay * lovePenaltyFactor;
-
-                        settings.tamagotchi.stats.hunger = Math.max(0, Math.round(settings.tamagotchi.stats.hunger - baseDecay));
-                        settings.tamagotchi.stats.thirst = Math.max(0, Math.round(settings.tamagotchi.stats.thirst - baseDecay));
-                        settings.tamagotchi.stats.love = Math.max(0, Math.round(settings.tamagotchi.stats.love - loveDecay));
-                        settings.tamagotchi.stats.fun = Math.max(0, Math.round((settings.tamagotchi.stats.fun || 100) - baseDecay));
-                        
-                        // Auto-Sleep if Fun is critically low
-                        if (settings.tamagotchi.stats.fun < 15 && !settings.tamagotchi.isSleeping) {
-                            settings.tamagotchi.isSleeping = true;
-                        }
-
-                        // Poop Chance: 52% per active hour (MAX 100 poops)
-                        if (Math.random() < 0.52 * activeHours) {
-                            settings.tamagotchi.poopCount = Math.min(100, (settings.tamagotchi.poopCount || 0) + 1);
-                        }
-
-                        // --- Hat Expiration ---
-                        if (settings.tamagotchi.currentHat && settings.tamagotchi.hatExpires) {
-                            if (now > settings.tamagotchi.hatExpires) {
-                                settings.tamagotchi.currentHat = null;
-                                settings.tamagotchi.hatExpires = null;
-                            }
-                        }
-
-                        settings.tamagotchi.lastUpdate = now;
-                        await env.DATABASE.put("settings", JSON.stringify(settings));
-                    }
-                }
+                // Calculate decay but DON'T save to D1 right now (to save writes)
+                applyTamagotchiDecay(settings, Date.now());
                 
                 return new Response(JSON.stringify(settings), {
                     headers: { ...corsHeaders, "Content-Type": "application/json" }
@@ -157,14 +215,14 @@ export default {
 
             if (path === "/api/settings" && method === "PUT") {
                 const settings = await request.json();
-                await env.DATABASE.put("settings", JSON.stringify(settings));
+                await putKV("settings", JSON.stringify(settings));
                 return new Response(JSON.stringify(settings), {
                     headers: { ...corsHeaders, "Content-Type": "application/json" }
                 });
             }
 
             if (path === "/api/settings/group-approve" && method === "POST") {
-                const settingsRaw = await env.DATABASE.get("settings");
+                const settingsRaw = await getKV("settings");
                 let settings = JSON.parse(settingsRaw || "{}");
                 
                 if (settings.groupReward) {
@@ -178,11 +236,11 @@ export default {
                         active: true
                     };
 
-                    await env.DATABASE.put("settings", JSON.stringify(settings));
+                    await putKV("settings", JSON.stringify(settings));
                 }
 
                 // Update all donors (Milestone achieved!)
-                const studentsRaw = await env.DATABASE.get("students");
+                const studentsRaw = await getKV("students");
                 let students = JSON.parse(studentsRaw || "[]");
                 const today = new Date().toISOString().split('T')[0];
                 let changed = false;
@@ -197,7 +255,7 @@ export default {
                 });
 
                 if (changed) {
-                    await env.DATABASE.put("students", JSON.stringify(students));
+                    await putKV("students", JSON.stringify(students));
                 }
 
                 return new Response(JSON.stringify({ settings }), {
@@ -206,7 +264,7 @@ export default {
             }
 
             if (path === "/api/settings/group-reset" && method === "POST") {
-                const settingsRaw = await env.DATABASE.get("settings");
+                const settingsRaw = await getKV("settings");
                 let settings = JSON.parse(settingsRaw || "{}");
                 
                 if (settings.groupReward) {
@@ -219,7 +277,7 @@ export default {
                         settings.celebration.active = false;
                     }
                     
-                    await env.DATABASE.put("settings", JSON.stringify(settings));
+                    await putKV("settings", JSON.stringify(settings));
                 }
                 
                 return new Response(JSON.stringify({ settings }), {
@@ -228,7 +286,7 @@ export default {
             }
 
             if (path === "/api/rewards" && method === "GET") {
-                const rewardsRaw = await env.DATABASE.get("rewards");
+                const rewardsRaw = await getKV("rewards");
                 const rewards = rewardsRaw ? JSON.parse(rewardsRaw) : DEFAULT_REWARDS;
                 return new Response(JSON.stringify(rewards), {
                     headers: { ...corsHeaders, "Content-Type": "application/json" }
@@ -239,7 +297,7 @@ export default {
                 const rewards = await request.json();
                 // Sort by threshold automatically
                 rewards.sort((a, b) => a.threshold - b.threshold);
-                await env.DATABASE.put("rewards", JSON.stringify(rewards));
+                await putKV("rewards", JSON.stringify(rewards));
                 return new Response(JSON.stringify(rewards), {
                     headers: { ...corsHeaders, "Content-Type": "application/json" }
                 });
@@ -247,7 +305,7 @@ export default {
 
             // --- Projects (Content Calendar) ---
             if (path === "/api/projects" && method === "GET") {
-                const projectsRaw = await env.DATABASE.get("projects");
+                const projectsRaw = await getKV("projects");
                 const projects = projectsRaw ? JSON.parse(projectsRaw) : [];
                 return new Response(JSON.stringify(projects), {
                     headers: { ...corsHeaders, "Content-Type": "application/json" }
@@ -256,7 +314,7 @@ export default {
 
             if (path === "/api/projects" && method === "POST") {
                 const body = await request.json();
-                const projectsRaw = await env.DATABASE.get("projects");
+                const projectsRaw = await getKV("projects");
                 let projects = projectsRaw ? JSON.parse(projectsRaw) : [];
                 
                 const newProject = {
@@ -271,7 +329,7 @@ export default {
                 
                 projects.push(newProject);
                 
-                await env.DATABASE.put("projects", JSON.stringify(projects));
+                await putKV("projects", JSON.stringify(projects));
                 return new Response(JSON.stringify(newProject), {
                     status: 201,
                     headers: { ...corsHeaders, "Content-Type": "application/json" }
@@ -282,13 +340,13 @@ export default {
                 const parts = path.split("/").filter(Boolean);
                 const id = parts[parts.length - 1];
                 const updateData = await request.json();
-                const projectsRaw = await env.DATABASE.get("projects");
+                const projectsRaw = await getKV("projects");
                 let projects = JSON.parse(projectsRaw || "[]");
 
                 const idx = projects.findIndex(p => String(p.id) === String(id));
                 if (idx !== -1) {
                     projects[idx] = { ...projects[idx], ...updateData };
-                    await env.DATABASE.put("projects", JSON.stringify(projects));
+                    await putKV("projects", JSON.stringify(projects));
                     return new Response(JSON.stringify(projects[idx]), {
                         headers: { ...corsHeaders, "Content-Type": "application/json" }
                     });
@@ -299,17 +357,17 @@ export default {
             if (path.startsWith("/api/projects/") && method === "DELETE") {
                 const parts = path.split("/").filter(Boolean);
                 const id = parts[parts.length - 1];
-                const projectsRaw = await env.DATABASE.get("projects");
+                const projectsRaw = await getKV("projects");
                 let projects = JSON.parse(projectsRaw || "[]");
 
                 projects = projects.filter(p => String(p.id) !== String(id));
-                await env.DATABASE.put("projects", JSON.stringify(projects));
+                await putKV("projects", JSON.stringify(projects));
                 return new Response(null, { status: 204, headers: corsHeaders });
             }
 
             // --- Badges ---
             if (path === "/api/badges" && method === "GET") {
-                const badgesRaw = await env.DATABASE.get("badges");
+                const badgesRaw = await getKV("badges");
                 const badges = badgesRaw ? JSON.parse(badgesRaw) : [];
                 return new Response(JSON.stringify(badges), {
                     headers: { ...corsHeaders, "Content-Type": "application/json" }
@@ -318,7 +376,7 @@ export default {
 
             if (path === "/api/badges" && method === "POST") {
                 const body = await request.json();
-                const badgesRaw = await env.DATABASE.get("badges");
+                const badgesRaw = await getKV("badges");
                 let badges = badgesRaw ? JSON.parse(badgesRaw) : [];
                 const newBadge = {
                     id: Date.now().toString(),
@@ -328,7 +386,7 @@ export default {
                     color: body.color || "#f59e0b"
                 };
                 badges.push(newBadge);
-                await env.DATABASE.put("badges", JSON.stringify(badges));
+                await putKV("badges", JSON.stringify(badges));
                 return new Response(JSON.stringify(newBadge), {
                     status: 201,
                     headers: { ...corsHeaders, "Content-Type": "application/json" }
@@ -338,10 +396,10 @@ export default {
             if (path.startsWith("/api/badges/") && method === "DELETE") {
                 const parts = path.split("/").filter(Boolean);
                 const id = parts[parts.length - 1];
-                const badgesRaw = await env.DATABASE.get("badges");
+                const badgesRaw = await getKV("badges");
                 let badges = JSON.parse(badgesRaw || "[]");
                 badges = badges.filter(b => String(b.id) !== String(id));
-                await env.DATABASE.put("badges", JSON.stringify(badges));
+                await putKV("badges", JSON.stringify(badges));
                 return new Response(null, { status: 204, headers: corsHeaders });
             }
 
@@ -350,7 +408,7 @@ export default {
                 const parts = path.split("/").filter(Boolean);
                 const studentId = parts[2]; // ["api","students","luk","badges"] → index 2
                 const { badges } = await request.json(); // array of badge IDs
-                const studentsRaw = await env.DATABASE.get("students");
+                const studentsRaw = await getKV("students");
                 let students = JSON.parse(studentsRaw || "[]");
                 const idx = students.findIndex(s => String(s.id) === String(studentId));
                 if (idx === -1) return new Response("Not Found", { status: 404, headers: corsHeaders });
@@ -360,7 +418,7 @@ export default {
                 const newlyAdded = currentBadges.filter(id => !prevBadges.includes(id));
                 const newlyRemoved = prevBadges.filter(id => !currentBadges.includes(id));
 
-                const badgesRaw = await env.DATABASE.get("badges");
+                const badgesRaw = await getKV("badges");
                 const allBadges = JSON.parse(badgesRaw || "[]");
                 const today = new Date().toISOString().split("T")[0];
 
@@ -387,14 +445,14 @@ export default {
                 }
 
                 students[idx].badges = currentBadges;
-                await env.DATABASE.put("students", JSON.stringify(students));
+                await putKV("students", JSON.stringify(students));
                 return new Response(JSON.stringify(students[idx]), {
                     headers: { ...corsHeaders, "Content-Type": "application/json" }
                 });
             }
 
             if (path === "/api/students" && method === "GET") {
-                const studentsRaw = await env.DATABASE.get("students");
+                const studentsRaw = await getKV("students");
                 const students = studentsRaw ? JSON.parse(studentsRaw) : [];
                 return new Response(JSON.stringify(students), {
                     headers: { ...corsHeaders, "Content-Type": "application/json" }
@@ -404,7 +462,7 @@ export default {
             if (path.startsWith("/api/students/") && method === "GET") {
                 const parts = path.split("/").filter(Boolean);
                 const id = parts[parts.length - 1];
-                const studentsRaw = await env.DATABASE.get("students");
+                const studentsRaw = await getKV("students");
                 const students = JSON.parse(studentsRaw || "[]");
                 const student = students.find(s => String(s.id) === String(id));
 
@@ -416,7 +474,7 @@ export default {
 
             if (path === "/api/students" && method === "POST") {
                 const { name, birthday, attendance, pickupTime } = await request.json();
-                const studentsRaw = await env.DATABASE.get("students");
+                const studentsRaw = await getKV("students");
                 let students = studentsRaw ? JSON.parse(studentsRaw) : [];
 
                 // Generate 3-letter ID from name
@@ -445,7 +503,7 @@ export default {
                     pickupTime: pickupTime || "15:30"
                 };
                 students.push(newStudent);
-                await env.DATABASE.put("students", JSON.stringify(students));
+                await putKV("students", JSON.stringify(students));
 
                 return new Response(JSON.stringify(newStudent), {
                     status: 201,
@@ -461,7 +519,7 @@ export default {
                     const id = pathParts[3];
                     const body = await request.json();
                     const { stamps, avatar, badges, reason, attendance, pickupTime } = body;
-                    const studentsRaw = await env.DATABASE.get("students");
+                    const studentsRaw = await getKV("students");
                     let students = JSON.parse(studentsRaw || "[]");
 
                     const index = students.findIndex(s => String(s.id) === String(id));
@@ -504,7 +562,7 @@ export default {
                         const removed = prevB.filter(id => !currentB.includes(id));
 
                         if (added.length > 0 || removed.length > 0) {
-                            const badgesRaw = await env.DATABASE.get("badges");
+                            const badgesRaw = await getKV("badges");
                             const allBadges = JSON.parse(badgesRaw || "[]");
                             const today = new Date().toISOString().split("T")[0];
 
@@ -528,7 +586,7 @@ export default {
                         students[index].badges = currentB;
                     }
 
-                    await env.DATABASE.put("students", JSON.stringify(students));
+                    await putKV("students", JSON.stringify(students));
                     return new Response(JSON.stringify(students[index]), {
                         headers: { ...corsHeaders, "Content-Type": "application/json" }
                     });
@@ -540,7 +598,7 @@ export default {
                 const parts = path.split("/").filter(Boolean);
                 const id = parts[2];
                 const { type, text, date } = await request.json();
-                const studentsRaw = await env.DATABASE.get("students");
+                const studentsRaw = await getKV("students");
                 let students = JSON.parse(studentsRaw || "[]");
 
                 const index = students.findIndex(s => String(s.id) === String(id));
@@ -556,7 +614,7 @@ export default {
                     timestamp: new Date().toISOString()
                 });
 
-                await env.DATABASE.put("students", JSON.stringify(students));
+                await putKV("students", JSON.stringify(students));
                 return new Response(JSON.stringify(students[index]), {
                     headers: { ...corsHeaders, "Content-Type": "application/json" }
                 });
@@ -567,7 +625,7 @@ export default {
                 const pathParts = path.split("/");
                 const id = pathParts[3];
                 const { threshold, status } = await request.json();
-                const studentsRaw = await env.DATABASE.get("students");
+                const studentsRaw = await getKV("students");
                 let students = JSON.parse(studentsRaw || "[]");
 
                 const index = students.findIndex(s => String(s.id) === String(id));
@@ -597,7 +655,7 @@ export default {
                     students[index].redemptions[threshold] = "pending";
 
                     // TELEGRAM NOTIFICATION
-                    const rewardsRaw = await env.DATABASE.get("rewards");
+                    const rewardsRaw = await getKV("rewards");
                     const rewards = rewardsRaw ? JSON.parse(rewardsRaw) : DEFAULT_REWARDS;
                     const reward = rewards.find(r => r.threshold === parseInt(threshold));
                     const rewardName = reward ? reward.title : `Belohnung (${threshold} Stempel)`;
@@ -629,25 +687,25 @@ export default {
                     }
 
                     // --- NEW: If reward title is "Filmtag", activate/increment group progress ---
-                    const rewardsRaw = await env.DATABASE.get("rewards");
+                    const rewardsRaw = await getKV("rewards");
                     const rewards = rewardsRaw ? JSON.parse(rewardsRaw) : DEFAULT_REWARDS;
                     const reward = rewards.find(r => r.threshold === parseInt(threshold));
                     const rewardName = reward ? reward.title : `Belohnung (${threshold} Stempel)`;
 
                     if (rewardName.toLowerCase().includes("filmtag")) {
-                        const settingsRaw = await env.DATABASE.get("settings");
+                        const settingsRaw = await getKV("settings");
                         let settings = JSON.parse(settingsRaw || "{}");
                         if (settings.groupReward) {
                             settings.groupReward.current = 1; // Der Initiator zählt als erster Spender
                             settings.groupReward.active = true; // Spendenrunde starten
                             settings.groupReward.isApproved = false; // Reset approval state
                             students[index].contributedToCurrent = true; // Initiator als Spender markieren
-                            await env.DATABASE.put("settings", JSON.stringify(settings));
+                            await putKV("settings", JSON.stringify(settings));
                         }
                     }
                 }
 
-                await env.DATABASE.put("students", JSON.stringify(students));
+                await putKV("students", JSON.stringify(students));
                 return new Response(JSON.stringify(students[index]), {
                     headers: { ...corsHeaders, "Content-Type": "application/json" }
                 });
@@ -657,7 +715,7 @@ export default {
             if (path.includes("/group-contribute") && method === "POST") {
                 const pathParts = path.split("/");
                 const id = pathParts[3];
-                const studentsRaw = await env.DATABASE.get("students");
+                const studentsRaw = await getKV("students");
                 let students = JSON.parse(studentsRaw || "[]");
                 const index = students.findIndex(s => String(s.id) === String(id));
 
@@ -673,7 +731,7 @@ export default {
                     const freeStamps = student.stamps - usedStamps;
 
                     // NEW: Check if group reward is ACTIVE
-                    const settingsRaw = await env.DATABASE.get("settings");
+                    const settingsRaw = await getKV("settings");
                     let settings = JSON.parse(settingsRaw || "{}");
                     
                     if (!settings.groupReward || !settings.groupReward.active) {
@@ -720,8 +778,8 @@ export default {
                             });
                         }
                         
-                        await env.DATABASE.put("students", JSON.stringify(students));
-                        await env.DATABASE.put("settings", JSON.stringify(settings));
+                        await putKV("students", JSON.stringify(students));
+                        await putKV("settings", JSON.stringify(settings));
                         
                         return new Response(JSON.stringify(student), {
                             headers: { ...corsHeaders, "Content-Type": "application/json" }
@@ -735,7 +793,7 @@ export default {
             // POST /api/tamagotchi/care — Deduct 1 stamp and care for the pet
             if (path === "/api/tamagotchi/care" && method === "POST") {
                 const { studentId, action } = await request.json();
-                const studentsRaw = await env.DATABASE.get("students");
+                const studentsRaw = await getKV("students");
                 let students = JSON.parse(studentsRaw || "[]");
                 const idx = students.findIndex(s => String(s.id) === String(studentId));
                 if (idx === -1) return new Response("Student not found", { status: 404, headers: corsHeaders });
@@ -754,7 +812,7 @@ export default {
                     return new Response("Du hast dich heute schon 5x um das Tier gekümmert!", { status: 403, headers: corsHeaders });
                 }
 
-                const settingsRaw = await env.DATABASE.get("settings");
+                const settingsRaw = await getKV("settings");
                 let settings = JSON.parse(settingsRaw || "{}");
                 if (!settings.tamagotchi || settings.tamagotchi.status !== "hatched") {
                     return new Response("Tamagotchi schläft noch oder existiert nicht.", { status: 400, headers: corsHeaders });
@@ -765,23 +823,56 @@ export default {
                 
                 if (!student.history) student.history = [];
                 
+                // Apply decay before interaction to ensure boosts are applied to current state
+                applyTamagotchiDecay(settings, Date.now());
+
+                // Interaction wakes up the Tamagotchi AND gives a fun boost to keep it awake
+                settings.tamagotchi.isSleeping = false;
+                settings.tamagotchi.stats.fun = Math.max(settings.tamagotchi.stats.fun || 0, 20); // Force out of low-fun zone
+
                 // Record Student Name for Greeting
                 settings.tamagotchi.lastActionStudentName = student.name;
 
                 let logMsg = "";
                 if (action === "feed") { 
+                    const subAction = student.lastSubAction || 'apple'; // Use student-stored preference or default
+                    
                     // Check for Hand Wash (must be within last 60 seconds)
                     const now = Date.now();
                     const lastWash = student.lastHandWash || 0;
                     if (now - lastWash > 60000) {
-                        // Return special error message for the frontend to handle
                         return new Response(`${student.name}, vor dem Essen erst Hände Waschen! 🧼`, { status: 403, headers: corsHeaders });
                     }
 
-                    settings.tamagotchi.stats.hunger = Math.min(100, (settings.tamagotchi.stats.hunger || 0) + 25); 
+                    if (subAction === 'donut') {
+                        settings.tamagotchi.stats.hunger = Math.min(100, (settings.tamagotchi.stats.hunger || 0) + 15);
+                        settings.tamagotchi.stats.fun = Math.min(100, (settings.tamagotchi.stats.fun || 0) + 40);
+                        settings.tamagotchi.sugarCrashTime = Date.now() + 5 * 60000; // Crash after 5 mins
+                        logMsg = "Donut gegessen! 🍩 (Zuckerschub!)";
+                    } else {
+                        // Healthy Apple
+                        settings.tamagotchi.stats.hunger = Math.min(100, (settings.tamagotchi.stats.hunger || 0) + 30);
+                        settings.tamagotchi.stats.fun = Math.min(100, (settings.tamagotchi.stats.fun || 0) + 10);
+                        logMsg = "Gesunden Apfel gegessen! 🍎";
+                    }
+
+                    settings.tamagotchi.needsBrushing = true;
                     settings.tamagotchi.lastAction = 'feed';
                     settings.tamagotchi.lastActionTime = new Date().toISOString();
-                    logMsg = "Tamagotchi gefüttert 🍎"; 
+                }
+                else if (action === "brush") {
+                    settings.tamagotchi.needsBrushing = false;
+                    settings.tamagotchi.stats.hygiene = Math.min(100, (settings.tamagotchi.stats.hygiene || 0) + 30);
+                    settings.tamagotchi.lastAction = 'brush';
+                    settings.tamagotchi.lastActionTime = new Date().toISOString();
+                    logMsg = "Zähne blitzblank geputzt! 🪥";
+                }
+                else if (action === "recycle") {
+                    settings.tamagotchi.trashCount = 0;
+                    settings.tamagotchi.stats.xp = (settings.tamagotchi.stats.xp || 0) + 20;
+                    settings.tamagotchi.lastAction = 'recycle';
+                    settings.tamagotchi.lastActionTime = new Date().toISOString();
+                    logMsg = "Müll gesammelt und getrennt! 🌍";
                 }
                 else if (action === "water") { 
                     settings.tamagotchi.stats.thirst = Math.min(100, (settings.tamagotchi.stats.thirst || 0) + 25); 
@@ -854,8 +945,8 @@ export default {
                 settings.tamagotchi.lastUpdate = Date.now();
 
                 await Promise.all([
-                    env.DATABASE.put("students", JSON.stringify(students)),
-                    env.DATABASE.put("settings", JSON.stringify(settings))
+                    putKV("students", JSON.stringify(students)),
+                    putKV("settings", JSON.stringify(settings))
                 ]);
 
                 return new Response(JSON.stringify({ student, tamagotchi: settings.tamagotchi }), {
@@ -866,7 +957,7 @@ export default {
             // POST /api/tamagotchi/hatch — Start the pet lifecycle
             if (path === "/api/tamagotchi/hatch" && method === "POST") {
                 const { name } = await request.json();
-                const settingsRaw = await env.DATABASE.get("settings");
+                const settingsRaw = await getKV("settings");
                 let settings = JSON.parse(settingsRaw || "{}");
                 
                 settings.tamagotchi = {
@@ -881,7 +972,7 @@ export default {
                     currentHat: null
                 };
 
-                await env.DATABASE.put("settings", JSON.stringify(settings));
+                await putKV("settings", JSON.stringify(settings));
                 return new Response(JSON.stringify(settings.tamagotchi), {
                     headers: { ...corsHeaders, "Content-Type": "application/json" }
                 });
@@ -889,11 +980,11 @@ export default {
 
             if (path.startsWith("/api/students/") && method === "DELETE") {
                 const id = path.split("/").pop();
-                const studentsRaw = await env.DATABASE.get("students");
+                const studentsRaw = await getKV("students");
                 let students = JSON.parse(studentsRaw || "[]");
 
                 students = students.filter(s => String(s.id) !== String(id));
-                await env.DATABASE.put("students", JSON.stringify(students));
+                await putKV("students", JSON.stringify(students));
                 return new Response(null, { status: 204, headers: corsHeaders });
             }
 
@@ -901,7 +992,7 @@ export default {
             if (path.includes("/vip") && method === "PATCH") {
                 const id = path.split("/")[3];
                 const { active, reason } = await request.json();
-                const studentsRaw = await env.DATABASE.get("students");
+                const studentsRaw = await getKV("students");
                 let students = JSON.parse(studentsRaw || "[]");
                 const index = students.findIndex(s => String(s.id) === String(id));
                 if (index === -1) return new Response("Not Found", { status: 404, headers: corsHeaders });
@@ -918,7 +1009,7 @@ export default {
                     reason: active ? `⭐ VIP-Status erhalten${reason ? ': ' + reason : ''}` : "VIP-Status entfernt"
                 });
 
-                await env.DATABASE.put("students", JSON.stringify(students));
+                await putKV("students", JSON.stringify(students));
                 return new Response(JSON.stringify(students[index]), {
                     headers: { ...corsHeaders, "Content-Type": "application/json" }
                 });
@@ -957,15 +1048,15 @@ export default {
                 // --- KV Server-Side Cache Check ---
                 if (!force) {
                     // Check older archive format first for backwards compatibility
-                    const archived = await env.DATABASE.get(`archived_summary_${date}`);
+                    const archived = await getKV(`archived_summary_${date}`);
                     if (archived) return new Response(JSON.stringify({ text: archived, isArchived: true }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
 
                     // Check new fast cache
-                    const cached = await env.DATABASE.get(cacheKey);
+                    const cached = await getKV(cacheKey);
                     if (cached) return new Response(JSON.stringify({ text: cached, isCached: true }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
                 }
 
-                const studentsRaw = await env.DATABASE.get("students");
+                const studentsRaw = await getKV("students");
                 const students = JSON.parse(studentsRaw || "[]");
 
                 let dayLogs = [];
@@ -998,7 +1089,7 @@ export default {
                 
                 if (result.success) {
                     // Cache the result
-                    await env.DATABASE.put(cacheKey, result.text);
+                    await putKV(cacheKey, result.text);
 
                     // Automatisch an Telegram senden (Logbuch-Kanal)
                     if (env.TELEGRAM_LOGBUCH_TOKEN) {
@@ -1034,7 +1125,7 @@ export default {
             if (path === "/api/ai/day-summary/archive" && method === "POST") {
                 const body = await request.json();
                 if (!body.date || !body.text) return new Response("Missing date or text", { status: 400, headers: corsHeaders });
-                await env.DATABASE.put(`archived_summary_${body.date}`, body.text);
+                await putKV(`archived_summary_${body.date}`, body.text);
                 return new Response(JSON.stringify({ success: true }), {
                     headers: { ...corsHeaders, "Content-Type": "application/json" }
                 });
@@ -1056,9 +1147,9 @@ export default {
                 if (!studentId) return new Response("Missing student id", { status: 400, headers: corsHeaders });
 
                 const [studentsRaw, settingsRaw, badgesRaw] = await Promise.all([
-                    env.DATABASE.get("students"),
-                    env.DATABASE.get("settings"),
-                    env.DATABASE.get("badges")
+                    getKV("students"),
+                    getKV("settings"),
+                    getKV("badges")
                 ]);
 
                 const students = studentsRaw ? JSON.parse(studentsRaw) : [];
@@ -1074,7 +1165,7 @@ export default {
 
                 // --- KV Server-Side Cache Check ---
                 if (!force) {
-                    const cached = await env.DATABASE.get(cacheKey);
+                    const cached = await getKV(cacheKey);
                     if (cached) {
                         console.log("Serving motivation from KV cache for:", student.id);
                         return new Response(JSON.stringify({ text: cached, isCached: true }), {
@@ -1116,7 +1207,7 @@ Deine Aufgabe: Schreibe eine kurze, energiegeladene Message (ca. 40-60 Wörter):
 
                 if (result.success) {
                     // --- Store in KV for 24 hours ---
-                    await env.DATABASE.put(cacheKey, result.text, { expirationTtl: 86400 });
+                    await putKV(cacheKey, result.text, { expirationTtl: 86400 });
                     
                     return new Response(JSON.stringify({ text: result.text, model: result.model }), {
                         headers: { ...corsHeaders, "Content-Type": "application/json" }
@@ -1222,11 +1313,11 @@ Deine Aufgabe: Schreibe eine ausführliche, begeisterte Nachricht für die Infot
         }
 
         try {
-            const studentsRaw = await env.DATABASE.get("students");
+            const studentsRaw = await getKV("students");
             if (!studentsRaw) return;
             let students = JSON.parse(studentsRaw);
 
-            const settingsRaw = await env.DATABASE.get("settings");
+            const settingsRaw = await getKV("settings");
             const settings = settingsRaw ? JSON.parse(settingsRaw) : {};
             const vipDuration = settings.vipDurationDays || 3;
 
@@ -1263,7 +1354,7 @@ Deine Aufgabe: Schreibe eine ausführliche, begeisterte Nachricht für die Infot
             }
 
             if (studentsChanged) {
-                await env.DATABASE.put("students", JSON.stringify(students));
+                await putKV("students", JSON.stringify(students));
             }
 
             // --- 2. Check Birthdays (this week) ---

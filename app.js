@@ -1137,16 +1137,39 @@ function renderTamagotchiUI(tama, student) {
         if (count >= 5) limitText.style.color = "#ef4444";
         else limitText.style.color = "rgba(255,255,255,0.3)";
     }
+
+    // --- Educational Action Butler ---
+    const btnBrush = document.getElementById('btn-brush');
+    const btnRecycle = document.getElementById('btn-recycle');
+    
+    if (btnBrush) {
+        if (tama.needsBrushing) btnBrush.classList.remove('hidden');
+        else btnBrush.classList.add('hidden');
+    }
+    
+    if (btnRecycle) {
+        if (tama.trashCount > 0) btnRecycle.classList.remove('hidden');
+        else btnRecycle.classList.add('hidden');
+    }
 }
 
-async function careForTama(action) {
+async function careForTama(action, subAction = null) {
     if (!currentStudent) return;
+    
+    // Store subAction temporarily for the request
+    if (action === 'feed' && subAction) {
+        currentStudent.lastSubAction = subAction;
+    }
     
     try {
         const response = await fetch(`${API_URL}/tamagotchi/care`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ studentId: currentStudent.id, action: action })
+            body: JSON.stringify({ 
+                studentId: currentStudent.id, 
+                action: action,
+                subAction: subAction // Pass subAction to worker
+            })
         });
 
         if (response.ok) {
@@ -1174,6 +1197,12 @@ async function careForTama(action) {
                 toast.textContent = "Neues Outfit am Start! 🔥 (24h)";
             } else if (action === "love") {
                 toast.textContent = "Tamagotchi liebt dich! ❤️";
+            } else if (action === "brush") {
+                toast.textContent = "Alles wieder blitzblank geputzt! 🪥✨";
+            } else if (action === "recycle") {
+                toast.textContent = "Super! Du bist ein Umwelt-Profi! 🌍♻️";
+            } else if (action === "feed") {
+                toast.textContent = (subAction === 'donut') ? "Yummy! Aber denk an deine Zähne! 🍩" : "Gesund und lecker! 🍎✨";
             } else if (action === "clean") {
                 toast.textContent = "Alles wieder blitzblank! 🚿";
             } else if (action === "handwash") {
