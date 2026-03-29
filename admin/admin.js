@@ -720,12 +720,19 @@ function renderAdminList(filter = "") {
         }
 
         item.innerHTML = `
-            <div class="student-info">
+            <div class="student-info" style="display:flex; align-items:center;">
                 <div class="avatar" style="${isVip ? 'box-shadow: 0 0 12px gold; border: 2px solid gold;' : ''}">${student.avatar || student.name.charAt(0)}</div>
                 <div style="flex:1">
                     <div style="font-weight:700; font-size:1.1rem">${student.name} ${isVip ? `<span style="font-size:0.7rem; font-weight:900; letter-spacing:0.05em;">${vipDayText}</span>` : ''}</div>
-                    <div class="subtitle" style="font-size:0.75rem">ID: ${student.id} · ${fullCards} volle Karte(n)</div>
-                    ${student.birthday ? `<div style="font-size:0.75rem">🎂 ${formatDate(student.birthday)}</div>` : ''}
+                    <div class="subtitle" style="font-size:0.75rem">ID: ${student.id} · ${fullCards} Karte(n)</div>
+                </div>
+                <!-- Compact Attendance Chips -->
+                <div class="attendance-chips-container">
+                    ${['mon', 'tue', 'wed', 'thu', 'fri'].map(day => {
+                        const active = student.attendance && student.attendance[day];
+                        const char = day === 'mon' ? 'M' : day === 'tue' ? 'D' : day === 'wed' ? 'M' : day === 'thu' ? 'D' : 'F';
+                        return `<div class="attendance-chip ${active ? 'active' : ''}" onclick="event.stopPropagation(); toggleAttendance('${student.id}', '${day}', ${active})" title="${day.toUpperCase()}">${char}</div>`;
+                    }).join('')}
                 </div>
             </div>
 
@@ -737,18 +744,6 @@ function renderAdminList(filter = "") {
                     <span class="subtitle" style="margin-left:8px">Stempel</span>
                 </div>
                 
-                <div class="admin-row-attendance" style="margin-top:12px; padding-top:10px; border-top:1px solid rgba(255,255,255,0.08); display:flex; align-items:center; gap:10px;">
-                    <span class="subtitle" style="font-size:0.65rem; font-weight:900; opacity:0.8;">ANWESENHEIT:</span>
-                    <div style="display:flex; gap:6px;">
-                        ${['mon', 'tue', 'wed', 'thu', 'fri'].map(day => `
-                            <label class="attendance-checkbox-label" style="display:flex; align-items:center; gap:4px; font-size:0.75rem; font-weight:700; cursor:pointer;">
-                                <input type="checkbox" onchange="updateAttendance('${student.id}', '${day}', this.checked)" ${student.attendance && student.attendance[day] ? 'checked' : ''} style="accent-color:var(--success);"> 
-                                ${day === 'mon' ? 'M' : day === 'tue' ? 'D' : day === 'wed' ? 'M' : day === 'thu' ? 'D' : 'F'}
-                            </label>
-                        `).join(' ')}
-                    </div>
-                </div>
-
                 <div class="admin-button-group" style="flex-wrap:wrap; justify-content:flex-end;">
                     ${vipEligible ? `<button onclick="toggleVip('${student.id}', ${!isVip})" class="icon-btn-small" style="padding:4px 8px; font-size:0.7rem; font-weight:800; ${isVip ? 'color:gold; border-color:gold;' : 'color:var(--text-muted);'}" title="${isVip ? 'VIP entziehen' : 'VIP vergeben'}">
                         ⭐ ${isVip ? 'VIP' : 'VIP?'}
@@ -840,6 +835,26 @@ async function updateStamps(id, c) {
     fetchStudents();
 }
 
+async function toggleAttendance(id, day, currentVal) {
+    const newVal = !currentVal;
+    
+    // Find el in DOM to show instant feedback
+    // The renderAdminList call will also update it eventually
+    const container = document.getElementById('admin-student-list');
+    const studentCard = Array.from(container.children).find(el => el.innerHTML.includes(id));
+    if (studentCard) {
+        const chips = studentCard.querySelectorAll('.attendance-chip');
+        const dayIdx = ['mon', 'tue', 'wed', 'thu', 'fri'].indexOf(day);
+        if (chips[dayIdx]) {
+            chips[dayIdx].classList.toggle('active', newVal);
+            // Also need to update the onclick to the NEW newVal
+            chips[dayIdx].setAttribute('onclick', `event.stopPropagation(); toggleAttendance('${id}', '${day}', ${newVal})`);
+        }
+    }
+
+    await updateAttendance(id, day, newVal);
+}
+
 async function updateAttendance(id, day, val) {
     const attObj = {};
     attObj[day] = val;
@@ -850,7 +865,8 @@ async function updateAttendance(id, day, val) {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ attendance: attObj })
         });
-        // Silent update current local state for faster feel, but no full re-render needed
+        
+        // Update local memory
         const s = window.students.find(x => x.id === id);
         if (s) {
             if (!s.attendance) s.attendance = {};
