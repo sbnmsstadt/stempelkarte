@@ -699,14 +699,12 @@ setInterval(fetchData, 15000); // alle 15 Sek.
 startTickerLoop();
 
 // ── FILMTAG LIVE POLL (every 5s) ───────────────
-// Only fetches /settings — lightweight, for near-realtime Filmtag updates.
 async function fetchFilmtagLive() {
     try {
         const res = await fetch(`${API_URL}/settings`);
         if (!res.ok) return;
         const newSettings = await res.json();
 
-        // Compare groupReward.current AND celebration.id to detect change
         const oldCurrent = settings?.groupReward?.current;
         const newCurrent = newSettings?.groupReward?.current;
         const oldCelebId = settings?.celebration?.id;
@@ -714,15 +712,14 @@ async function fetchFilmtagLive() {
 
         if (oldCurrent !== newCurrent || oldCelebId !== newCelebId) {
             settings = newSettings;
-            renderFilmtag(); // update progress bar
-            checkCelebrationMode(); // trigger popup if id is new
+            renderFilmtag();
+            checkCelebrationMode();
         }
     } catch (_) { /* silent fail */ }
 }
 
 setInterval(fetchFilmtagLive, 5000);
 
-// Re-layout kids on resize
 window.addEventListener('resize', () => {
     if (students.length) renderKids();
 });
@@ -733,14 +730,9 @@ function renderTamagotchi() {
     const tama = settings.tamagotchi;
     if (!tama || !card) return;
 
-    // Asset Paths (EXTENDED WITH EMOTIONS)
     const ASSETS = {
         bg: 'assets/tama_bg.png',
-        egg: 'assets/tama_egg.png',
-        baby_neutral: 'assets/tama_baby.png',
-        baby_happy: 'assets/tama_baby_happy.png',
-        baby_sad: 'assets/tama_baby_sad.png',
-        baby_blink: 'assets/tama_baby_blink.png'
+        egg: 'assets/tama_egg.png'
     };
 
     const bgImg = document.getElementById('tama-bg-img');
@@ -749,7 +741,6 @@ function renderTamagotchi() {
     const nameEl = document.getElementById('tama-name');
     const statusEl = document.getElementById('tama-status-text');
 
-    // Default BG
     if (bgImg) bgImg.src = ASSETS.bg;
 
     if (tama.status === "egg") {
@@ -777,7 +768,15 @@ function renderTamagotchi() {
 
         if (nameEl) nameEl.textContent = (tama.name || "PIXEL-PET").toUpperCase();
         
-        // Stats
+        if (hungerEl) hungerEl.style.width = `${tama.stats.hunger}%`;
+        if (thirstEl) thirstEl.style.width = `${tama.stats.thirst}%`;
+        if (loveEl) loveEl.style.width = `${tama.stats.love}%`;
+
+        if (hungerVal) hungerVal.textContent = `${tama.stats.hunger}%`;
+        if (thirstVal) thirstVal.textContent = `${tama.stats.thirst}%`;
+        if (loveVal) loveVal.textContent = `${tama.stats.love}%`;
+
+        let avatar = "🐣";
         if (tama.stage === "baby") avatar = "🐣";
         else if (tama.stage === "child") avatar = "🐥";
         else if (tama.stage === "teen") avatar = "🐦";
@@ -786,15 +785,19 @@ function renderTamagotchi() {
         if (tama.stats.hunger < 20 || tama.stats.thirst < 20) avatar = "🤒";
         else if (tama.stats.love < 30) avatar = "😢";
         
-        if (avatarEl && avatarEl.textContent !== avatar) {
-            avatarEl.style.animation = 'tamaEat 0.5s ease-in-out';
-            setTimeout(() => {
-                avatarEl.textContent = avatar;
-                avatarEl.style.animation = 'tamaFloat 3s ease-in-out infinite';
-            }, 500);
+        if (emojiFallback) {
+            emojiFallback.style.display = 'block';
+            if (emojiFallback.textContent !== avatar) {
+                emojiFallback.style.animation = 'tamaEat 0.5s ease-in-out';
+                setTimeout(() => {
+                    emojiFallback.textContent = avatar;
+                    emojiFallback.style.animation = 'tamaFloat 3s ease-in-out infinite';
+                }, 500);
+            }
         }
 
-        // Status text
+        if (spriteImg) spriteImg.style.display = 'none';
+
         let status = "Glücklich ✨";
         if (tama.stats.hunger < 30) status = "Hungrig! 🍏";
         else if (tama.stats.thirst < 30) status = "Durstig! 💧";
