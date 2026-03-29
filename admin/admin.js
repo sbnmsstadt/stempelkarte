@@ -278,15 +278,17 @@ async function simulateTamaAction(action) {
     newSettings.tamagotchi.lastAction = action;
     newSettings.tamagotchi.lastActionTime = new Date().toISOString();
     
-    // Immediate stat boost for the simulation
+    // Immediate stat boost for the simulation (matching new gameplay balance)
     if (action === 'play') {
-        newSettings.tamagotchi.stats.fun = Math.min(100, (newSettings.tamagotchi.stats.fun || 0) + 15);
+        newSettings.tamagotchi.stats.fun = Math.min(100, (newSettings.tamagotchi.stats.fun || 0) + 25);
     } else if (action === 'feed') {
-        newSettings.tamagotchi.stats.hunger = Math.min(100, (newSettings.tamagotchi.stats.hunger || 0) + 15);
+        newSettings.tamagotchi.stats.hunger = Math.min(100, (newSettings.tamagotchi.stats.hunger || 0) + 25);
     } else if (action === 'water') {
-        newSettings.tamagotchi.stats.thirst = Math.min(100, (newSettings.tamagotchi.stats.thirst || 0) + 15);
+        newSettings.tamagotchi.stats.thirst = Math.min(100, (newSettings.tamagotchi.stats.thirst || 0) + 25);
     } else if (action === 'love') {
-        newSettings.tamagotchi.stats.love = Math.min(100, (newSettings.tamagotchi.stats.love || 0) + 15);
+        newSettings.tamagotchi.stats.love = Math.min(100, (newSettings.tamagotchi.stats.love || 0) + 25);
+    } else if (action === 'poop') {
+        newSettings.tamagotchi.poopCount = Math.min(3, (newSettings.tamagotchi.poopCount || 0) + 1);
     }
     
     try {

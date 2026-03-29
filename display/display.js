@@ -1557,11 +1557,11 @@ function renderTamagotchi() {
         const xpPercent = Math.min(100, (stats.xp / nextLevelXp) * 100);
         if (xpEl) xpEl.style.width = `${xpPercent}%`;
 
-        if (hungerVal) hungerVal.textContent = `${stats.hunger}%`;
-        if (thirstVal) thirstVal.textContent = `${stats.thirst}%`;
-        if (hygieneVal) hygieneVal.textContent = `${stats.hygiene || 0}%`;
-        if (loveVal) loveVal.textContent = `${stats.love}%`;
-        if (funVal) funVal.textContent = `${stats.fun || 0}%`;
+        if (hungerVal) hungerVal.textContent = `${Math.round(stats.hunger)}%`;
+        if (thirstVal) thirstVal.textContent = `${Math.round(stats.thirst)}%`;
+        if (hygieneVal) hygieneVal.textContent = `${Math.round(stats.hygiene || 0)}%`;
+        if (loveVal) loveVal.textContent = `${Math.round(stats.love)}%`;
+        if (funVal) funVal.textContent = `${Math.round(stats.fun || 0)}%`;
         if (levelVal) levelVal.textContent = `Lvl ${stats.level}`;
 
         let statusText = "Glücklich ✨";
