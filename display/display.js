@@ -730,60 +730,74 @@ const PET_FRAMES = {
     baby: {
         neutral: [
             "............",
-            "............",
-            "....BBBB....",
-            "...BBBBBB...",
-            "..BBBBBBBB..",
-            "..BBEEBBEE..",
-            "..BBEEBBEE..",
-            "..BBBBBBBB..",
-            "..BBBMMBBB..",
-            "...BBBBBB...",
-            "....BBBB....",
-            "............"
+            "..P......P..",
+            ".PPP....PPP.",
+            ".BBBBBBBBBB.",
+            "BBBBBBBBBBBB",
+            "BBEEBBBBEEBB",
+            "BBEEBBBBEEBB",
+            "BBBBBBBBBBBB",
+            "DBBBBMNBBBD.",
+            "DDBBBMMBBBD.",
+            ".DDDDDDDDDD.",
+            "..BB....BB.."
         ],
         blink: [
             "............",
-            "............",
-            "....BBBB....",
-            "...BBBBBB...",
-            "..BBBBBBBB..",
-            "..BBBBBBBB..",
-            "..BBBBBBBB..",
-            "..BBBBBBBB..",
-            "..BBBMMBBB..",
-            "...BBBBBB...",
-            "....BBBB....",
-            "............"
+            "..P......P..",
+            ".PPP....PPP.",
+            ".BBBBBBBBBB.",
+            "BBBBBBBBBBBB",
+            "BBDDBBBBDDBB",
+            "BBDDBBBBDDBB",
+            "BBBBBBBBBBBB",
+            "DBBBBMNBBBD.",
+            "DDBBBMMBBBD.",
+            ".DDDDDDDDDD.",
+            "..BB....BB.."
         ],
         sad: [
             "............",
+            "..P......P..",
+            ".PPP....PPP.",
+            ".BBBBBBBBBB.",
+            "BBBBBBBBBBBB",
+            "BBEEBBBBEEBB",
+            "BBEEBBBBEEBB",
+            "BBBBBBBBBBBB",
+            "DBBMMMMMMBD.",
+            "DDBBMMMMBBD.",
+            ".DDDDDDDDDD.",
+            "..BB....BB.."
+        ],
+        sleep: [
             "............",
-            "....BBBB....",
-            "...BBBBBB...",
-            "..BBBBBBBB..",
-            "..BBEEBBEE..",
-            "..BBEEBBEE..",
-            "..BBBBBBBB..",
-            "..BBMMMMBB..",
-            "...BMBBMB...",
-            "....BBBB....",
-            "............"
+            "..P......P..",
+            ".PPP....PPP.",
+            ".BBBBBBBBBB.",
+            "BBBBBBBBBBBB",
+            "BBDDBBBBDDBB",
+            "BBDDBBBBDDBB",
+            "BBBBBBBBBBBB",
+            "DBBBBMNBBBD.",
+            "DDBBBBBBBBD.",
+            ".DDDDDDDDDD.",
+            "..BB....BB.."
         ]
     },
     egg: {
         neutral: [
             "............",
-            ".....WW.....",
             "....WWWW....",
             "...WWWWWW...",
             "..WWWWWWWW..",
             "..WWWWWWWW..",
             "..WWWWWWWW..",
             "..WWWWWWWW..",
+            "..WWWWWWWW..",
+            "..WWWWWWWW..",
             "...WWWWWW...",
             "....WWWW....",
-            ".....WW.....",
             "............"
         ]
     }
@@ -799,7 +813,11 @@ function renderTamagotchi() {
     const statusEl = document.getElementById('tama-status-text');
     const bgImg = document.getElementById('tama-bg-img');
 
-    if (bgImg && !bgImg.src) bgImg.src = 'assets/tama_bg.png';
+    // Ensure Background
+    if (bgImg && !bgImg.src.includes('assets/')) {
+        bgImg.src = 'assets/tama_bg.png';
+        bgImg.onerror = () => { bgImg.style.display = 'none'; };
+    }
 
     // 1. Initialize Grid if empty
     if (gridEl && gridEl.children.length === 0) {
@@ -816,8 +834,9 @@ function renderTamagotchi() {
     
     let mood = "neutral";
     if (tama.status === "hatched") {
-        if (tama.stats.hunger < 30 || tama.stats.thirst < 30 || tama.stats.love < 30) mood = "sad";
-        if (_isBlinking) mood = "blink";
+        if (tama.isSleeping) mood = "sleep";
+        else if (tama.stats.hunger < 30 || tama.stats.thirst < 30 || tama.stats.love < 30) mood = "sad";
+        else if (_isBlinking) mood = "blink";
     }
 
     const frame = (PET_FRAMES[stage] && PET_FRAMES[stage][mood]) || PET_FRAMES.baby.neutral;
@@ -831,19 +850,23 @@ function renderTamagotchi() {
                 const idx = r * TAMA_SIZE + c;
                 let cls = "px-transparent";
                 if (char === 'B') cls = "px-body";
+                if (char === 'D') cls = "px-body-dark";
                 if (char === 'E') cls = "px-eye";
                 if (char === 'M') cls = "px-mouth";
                 if (char === 'W') cls = "px-white";
                 if (char === 'R') cls = "px-red";
+                if (char === 'P') cls = "px-pink";
+                if (char === 'N') cls = "px-white"; // Nose/Mouth detail
                 
-                if (pixels[idx].className !== `pixel ${cls}`) {
-                    pixels[idx].className = `pixel ${cls}`;
+                const targetCls = `pixel ${cls}`;
+                if (pixels[idx].className !== targetCls) {
+                    pixels[idx].className = targetCls;
                 }
             }
         }
     }
 
-    // 4. Update UI Text
+    // 4. Update UI Text & Bars
     if (tama.status === "egg") {
         card.style.display = 'block';
         if (nameEl) nameEl.textContent = "MYSTERY EGG";
@@ -851,7 +874,7 @@ function renderTamagotchi() {
         gridEl.style.animation = 'tamaEggWiggle 3s ease-in-out infinite';
     } else {
         card.style.display = 'block';
-        gridEl.style.animation = 'pixelFloat 3s ease-in-out infinite';
+        gridEl.style.animation = 'pixelFloat 3.5s ease-in-out infinite, pixelGlow 2s ease-in-out infinite';
         
         const hungerEl = document.getElementById('tama-hunger');
         const thirstEl = document.getElementById('tama-thirst');
@@ -871,7 +894,8 @@ function renderTamagotchi() {
         if (loveVal) loveVal.textContent = `${tama.stats.love}%`;
 
         let status = "Glücklich ✨";
-        if (tama.stats.hunger < 30) status = "Hungrig! 🍏";
+        if (tama.isSleeping) status = "Schläft... 💤";
+        else if (tama.stats.hunger < 30) status = "Hungrig! 🍏";
         else if (tama.stats.thirst < 30) status = "Durstig! 💧";
         else if (tama.stats.love < 50) status = "Braucht Liebe ❤️";
         

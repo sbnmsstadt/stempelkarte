@@ -1037,37 +1037,44 @@
 
         @keyframes pixelFloat {
             0%, 100% { transform: translate(-50%, 0); }
-            50% { transform: translate(-50%, -10px); }
+            50% { transform: translate(-50%, -12px); }
+        }
+
+        @keyframes pixelGlow {
+            0%, 100% { filter: drop-shadow(0 0 4px rgba(96, 165, 250, 0.3)); }
+            50% { filter: drop-shadow(0 0 12px rgba(96, 165, 250, 0.6)); }
         }
 
         .tama-pixel-grid {
             position: absolute;
-            bottom: 40px;
+            bottom: 45px;
             left: 50%;
             transform: translateX(-50%);
             display: grid;
             grid-template-columns: repeat(12, 12px);
             grid-template-rows: repeat(12, 12px);
-            gap: 1.5px;
+            gap: 1.2px;
             z-index: 4;
-            animation: pixelFloat 3s ease-in-out infinite;
+            animation: pixelFloat 3.5s ease-in-out infinite, pixelGlow 2s ease-in-out infinite;
         }
 
         .pixel {
             width: 12px;
             height: 12px;
             border-radius: 2px;
-            transition: background 0.2s;
+            transition: all 0.3s ease;
         }
 
-        /* Pixel Colors */
+        /* Pixel Colors (Polished Palette) */
         .px-transparent { background: transparent; }
-        .px-body { background: #60a5fa; box-shadow: inset -2px -2px 0 rgba(0,0,0,0.2); }
-        .px-eye { background: #fff; box-shadow: 0 0 4px #fff; }
-        .px-eye-closed { background: #60a5fa; } /* Same as body color to hide */
-        .px-mouth { background: #1e293b; }
-        .px-red { background: #ef4444; }
-        .px-white { background: #fff; }
+        .px-body { background: #60a5fa; box-shadow: inset -2px -2px 0 rgba(0,0,0,0.2), inset 2px 2px 0 rgba(255,255,255,0.2); }
+        .px-body-dark { background: #3b82f6; box-shadow: inset -2px -2px 0 rgba(0,0,0,0.3); }
+        .px-eye { background: #fff; box-shadow: 0 0 6px #fff; }
+        .px-eye-closed { background: #3b82f6; } 
+        .px-mouth { background: #0f172a; }
+        .px-red { background: #f87171; box-shadow: 0 0 5px #ef4444; }
+        .px-white { background: #e2e8f0; }
+        .px-pink { background: #f472b6; }
 
         @keyframes scanline {
             0% { transform: translateY(-100%); }
@@ -1077,12 +1084,12 @@
         .tama-screen {
             position: relative;
             width: 100%;
-            height: 380px; /* Erweitert */
-            background: #222;
+            height: 380px; 
+            background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%);
             border-radius: 12px;
             overflow: hidden;
-            border: 4px solid rgba(0,0,0,0.4);
-            box-shadow: inset 0 0 20px rgba(0,0,0,0.8);
+            border: 4px solid rgba(0,0,0,0.5);
+            box-shadow: inset 0 0 40px rgba(0,0,0,0.8);
             margin-bottom: 12px;
             image-rendering: pixelated;
         }
@@ -1121,27 +1128,54 @@
             backdrop-filter: blur(4px);
         }
 
-        .tama-scanline-move {
+        .tama-stats-overlay {
             position: absolute;
-            top: 0; left: 0; width: 100%; height: 2px;
-            background: rgba(255, 255, 255, 0.1);
-            animation: scanline 4s linear infinite;
-            pointer-events: none;
-            z-index: 6;
+            top: 20px;
+            left: 20px;
+            right: 20px;
+            z-index: 10;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            background: rgba(0,0,0,0.3);
+            padding: 12px 18px;
+            border-radius: 14px;
+            border: 1px solid rgba(255,255,255,0.06);
+            backdrop-filter: blur(10px);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.4);
         }
 
-        .tama-sprite {
-            position: absolute;
-            bottom: 40px;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 96px;
-            height: 96px;
-            object-fit: contain;
-            image-rendering: pixelated;
-            z-index: 3;
-            filter: drop-shadow(0 0 5px rgba(255,255,255,0.2));
-            display: none !important; /* PNG Sprite hidden */
+        .stat-row { 
+            display: flex; 
+            align-items: center; 
+            gap: 12px;
+        }
+        
+        .stat-icon { font-size: 0.9rem; filter: drop-shadow(0 0 4px rgba(0,0,0,0.5)); }
+        
+        .stat-bar-outer {
+            flex: 1;
+            height: 6px;
+            background: rgba(255,255,255,0.05);
+            border-radius: 4px;
+            border: 1px solid rgba(0,0,0,0.3);
+            overflow: hidden;
+            position: relative;
+        }
+        
+        .stat-bar-inner {
+            height: 100%;
+            box-shadow: 0 0 8px currentColor;
+            transition: width 1s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .stat-val {
+            font-size: 0.6rem;
+            font-weight: 800;
+            font-variant-numeric: tabular-nums;
+            min-width: 30px;
+            text-align: right;
+            opacity: 0.8;
         }
 
         .celebration-title { font-size: 5rem; font-weight: 900; background: linear-gradient(to right, #fff, #60a5fa); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; margin: 0; line-height: 1.1; }
@@ -1307,39 +1341,40 @@
                 </div>
                 
                 <div class="tama-screen">
-                    <!-- Stats Overlay -->
+                    <!-- Stats Overlay (HUD STYLE) -->
                     <div class="tama-stats-overlay">
-                        <div class="stat-row" style="display: flex; align-items: center; gap: 10px;">
-                            <span style="font-size: 0.8rem; width: 18px;">🍎</span>
-                            <div style="flex: 1; height: 8px; background: rgba(255,255,255,0.1); border-radius: 4px; overflow: hidden; border: 1px solid rgba(0,0,0,0.3);">
-                                <div id="tama-hunger" style="height: 100%; background: linear-gradient(90deg, #ef4444, #f87171); width: 50%; transition: width 0.5s;"></div>
+                        <div class="stat-row">
+                            <span class="stat-icon">🍏</span>
+                            <div class="stat-bar-outer">
+                                <div id="tama-hunger" class="stat-bar-inner" style="background: linear-gradient(90deg, #ef4444, #f87171); color: #ef4444; width: 50%;"></div>
                             </div>
-                            <span id="tama-hunger-val" style="font-size: 0.6rem; color: #ef4444; font-weight: 800; min-width: 25px; text-align: right;">50%</span>
+                            <span id="tama-hunger-val" class="stat-val" style="color: #fca5a5;">50%</span>
                         </div>
-                        <div class="stat-row" style="display: flex; align-items: center; gap: 10px;">
-                            <span style="font-size: 0.8rem; width: 18px;">💧</span>
-                            <div style="flex: 1; height: 8px; background: rgba(255,255,255,0.1); border-radius: 4px; overflow: hidden; border: 1px solid rgba(0,0,0,0.3);">
-                                <div id="tama-thirst" style="height: 100%; background: linear-gradient(90deg, #3b82f6, #60a5fa); width: 50%; transition: width 0.5s;"></div>
+                        <div class="stat-row">
+                            <span class="stat-icon">💧</span>
+                            <div class="stat-bar-outer">
+                                <div id="tama-thirst" class="stat-bar-inner" style="background: linear-gradient(90deg, #3b82f6, #60a5fa); color: #3b82f6; width: 50%;"></div>
                             </div>
-                            <span id="tama-thirst-val" style="font-size: 0.6rem; color: #3b82f6; font-weight: 800; min-width: 25px; text-align: right;">50%</span>
+                            <span id="tama-thirst-val" class="stat-val" style="color: #93c5fd;">50%</span>
                         </div>
-                        <div class="stat-row" style="display: flex; align-items: center; gap: 10px;">
-                            <span style="font-size: 0.8rem; width: 18px;">❤️</span>
-                            <div style="flex: 1; height: 8px; background: rgba(255,255,255,0.1); border-radius: 4px; overflow: hidden; border: 1px solid rgba(0,0,0,0.3);">
-                                <div id="tama-love" style="height: 100%; background: linear-gradient(90deg, #ec4899, #f472b6); width: 50%; transition: width 0.5s;"></div>
+                        <div class="stat-row">
+                            <span class="stat-icon">❤️</span>
+                            <div class="stat-bar-outer">
+                                <div id="tama-love" class="stat-bar-inner" style="background: linear-gradient(90deg, #ec4899, #f472b6); color: #ec4899; width: 50%;"></div>
                             </div>
-                            <span id="tama-love-val" style="font-size: 0.6rem; color: #ec4899; font-weight: 800; min-width: 25px; text-align: right;">50%</span>
+                            <span id="tama-love-val" class="stat-val" style="color: #f9a8d4;">50%</span>
                         </div>
                     </div>
 
                     <img id="tama-bg-img" src="" class="tama-bg" alt="screen bg">
                     <div class="tama-scanlines"></div>
-                    <div class="tama-scanline-move"></div>
+                    
+                    <div class="tama-scanline-move" style="position: absolute; top: 0; left: 0; width: 100%; height: 2px; background: rgba(255, 255, 255, 0.1); animation: scanline 4s linear infinite; pointer-events: none; z-index: 6;"></div>
                     
                     <!-- NEW: Pure Code Pixel Pet Grid (12x12) -->
                     <div id="tama-pixel-grid" class="tama-pixel-grid"></div>
 
-                    <img id="tama-sprite-img" src="" class="tama-sprite" alt="pet sprite">
+                    <img id="tama-sprite-img" src="" class="tama-sprite" alt="pet sprite" style="display: none !important;">
                     <div id="tama-avatar-emoji" style="display:none; position:absolute; bottom:40px; left:50%; transform:translateX(-50%); font-size: 4rem;">🥚</div>
                 </div>
 
