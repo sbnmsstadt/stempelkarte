@@ -540,7 +540,7 @@ function updateStampDisplay(student) {
 
 // PIN Overlay
 function openPinOverlay(callback, title = "PIN") {
-    document.getElementById('pin-overlay').classList.add('active');
+    setOverlayState('pin-overlay', true);
     document.querySelector('#pin-overlay h3').innerText = title;
     enteredPin = "";
     pinCallback = callback;
@@ -591,7 +591,7 @@ function openStampPin(skipOverlay = false) {
 }
 
 function closePinOverlay() {
-    document.getElementById('pin-overlay').classList.remove('active');
+    setOverlayState('pin-overlay', false);
 }
 
 function addPin(num) {
@@ -808,11 +808,12 @@ function openAvatarPicker() {
         list.appendChild(btn);
     });
     
-    overlay.classList.add('active');
+    overlay.scrollTop = 0; // Reset scroll position
+    setOverlayState('avatar-overlay', true);
 }
 
 function closeAvatarOverlay() {
-    document.getElementById('avatar-overlay').classList.remove('active');
+    setOverlayState('avatar-overlay', false);
 }
 
 async function selectAvatar(emoji) {
@@ -928,7 +929,9 @@ function renderHistory(history) {
 
 // Activity Picker
 async function openActivityOverlay() {
-    document.getElementById('activity-overlay').classList.add('active');
+    setOverlayState('activity-overlay', true);
+    const overlay = document.getElementById('activity-overlay');
+    if (overlay) overlay.scrollTop = 0;
     document.getElementById('custom-activity').value = '';
     setStampCount(1); // Reset to 1 by default
     
@@ -965,7 +968,7 @@ function renderActivityPicker() {
 }
 
 function closeActivityOverlay() {
-    document.getElementById('activity-overlay').classList.remove('active');
+    setOverlayState('activity-overlay', false);
 }
 
 function selectActivity(reason, emoji, event) {
@@ -1026,12 +1029,13 @@ async function contributeGroupReward() {
 
 // Badge Info Modal
 async function openBadgeInfo() {
-    const overlay = document.getElementById('badge-info-overlay');
     const grid = document.getElementById('all-badges-grid');
-    if (!overlay || !grid) return;
+    if (!grid) return;
 
     grid.innerHTML = '<div style="text-align:center; padding: 20px; opacity:0.6;">Suche Abzeichen... ✨</div>';
-    overlay.classList.add('active');
+    setOverlayState('badge-info-overlay', true);
+    const overlay = document.getElementById('badge-info-overlay');
+    if (overlay) overlay.scrollTop = 0;
 
     try {
         const res = await fetch(`${API_URL}/badges`);
@@ -1064,5 +1068,24 @@ async function openBadgeInfo() {
 }
 
 function closeBadgeInfoOverlay() {
-    document.getElementById('badge-info-overlay').classList.remove('active');
+    setOverlayState('badge-info-overlay', false);
+}
+
+// Global Overlay Helper
+function setOverlayState(id, isActive) {
+    const overlay = document.getElementById(id);
+    if (!overlay) return;
+    
+    if (isActive) {
+        overlay.classList.add('active');
+        document.body.style.overflow = 'hidden';
+        document.documentElement.style.overflow = 'hidden'; // For iOS
+    } else {
+        overlay.classList.remove('active');
+        // Only re-enable scroll if NO other overlay is active
+        if (!document.querySelector('.overlay.active')) {
+            document.body.style.overflow = '';
+            document.documentElement.style.overflow = '';
+        }
+    }
 }

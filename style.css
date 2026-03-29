@@ -519,22 +519,27 @@ input[type="number"] {
 .overlay {
     position: fixed;
     inset: 0;
-    background: rgba(0,0,0,0.9);
+    background: rgba(0,0,0,0.92);
     display: none;
-    align-items: center;
-    justify-content: center;
     z-index: 1000;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    padding: 2rem 1rem;
 }
 
-.overlay.active { display: flex; }
+.overlay.active { display: block; }
 
-.pin-container {
+.pin-container, .overlay > .glass-card {
     background: var(--bg-card);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
     padding: 2.5rem;
     border-radius: 32px;
     text-align: center;
-    max-height: 90vh;
-    overflow-y: auto;
+    width: 100%;
+    max-width: 450px;
+    margin: 0 auto;
+    border: 1px solid var(--glass-border);
 }
 
 /* Activity Picker Scroll Fix */
@@ -712,9 +717,10 @@ input[type="number"] {
 }
 
 .badge-info-item.locked {
-    opacity: 0.6;
-    filter: grayscale(0.8);
+    opacity: 0.85; /* Increased opacity for better readability */
+    /* Remove grayscale filter to keep it colorful but distinct */
     border-style: dashed;
+    background: rgba(255, 255, 255, 0.03);
 }
 
 .badge-info-icon {
