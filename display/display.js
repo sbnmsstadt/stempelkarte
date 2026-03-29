@@ -805,8 +805,36 @@ const PET_FRAMES = {
             "BBBBBBBBBBBB",
             "BEEEBBBBEEEB", // Corrected eye symmetry (3 each)
             "BBBBBBBBBBBB",
-            "DBBMMMMMMBBD",
+            "DBBBBBBBBBBD",
             "DBBBMMMMBBBD",
+            ".DDDDDDDDDD.",
+            "..BB....BB.."
+        ],
+        happy: [
+            "............",
+            "............",
+            "..PP....PP..",
+            ".PPPP..PPPP.",
+            ".BBBBBBBBBB.",
+            "BBBBBBBBBBBB",
+            "BEEEBBBBEEEB",
+            "BBBBBBBBBBBB",
+            "BBMMMMMMMMBB",
+            "BBBBMMMMBBBB",
+            ".DDDDDDDDDD.",
+            "..BB....BB.."
+        ],
+        blink: [
+            "............",
+            "............",
+            "..PP....PP..",
+            ".PPPP..PPPP.",
+            ".BBBBBBBBBB.",
+            "BBBBBBBBBBBB",
+            "BBDDBBBBDDBB",
+            "BBBBBBBBBBBB",
+            "BBBBMMMMBBBB",
+            "BBBBBBBBBBBB",
             ".DDDDDDDDDD.",
             "..BB....BB.."
         ],
@@ -902,7 +930,7 @@ const PET_FRAMES = {
             "..PPPPPPPP..",
             ".BBBBBBBBBB.",
             "BBBBBBBBBBBB",
-            "BBDBBBBBBDDB",
+            "BBDDBBBBDDBB", // Symmetrical blinking
             "BBBBBBBBBBBB",
             "BBBBMMMMBBBB",
             "BBBBBBBBBBBB",
@@ -1398,8 +1426,8 @@ function renderTamagotchi() {
         if (tama.isSleeping) mood = "sleep";
         else if (tama.stats.hunger < 30 || tama.stats.thirst < 30 || tama.stats.love < 30) mood = "sad";
         else if (tama.stats.fun < 30) mood = "bored";
+        else if (_isBlinking) mood = "blink"; // Blinking takes priority over neutral/happy
         else if (tama.stats.hunger > 80 && tama.stats.thirst > 80 && tama.stats.love > 80) mood = "happy";
-        else if (_isBlinking) mood = "blink";
     }
 
     const frame = (PET_FRAMES[stage] && PET_FRAMES[stage][mood]) || PET_FRAMES.baby.neutral;
