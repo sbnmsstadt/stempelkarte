@@ -1750,7 +1750,8 @@ function handleTamaActionDetection(tama) {
             triggerLoveAnimation();
             showSpeechBubble(`Hab dich lieb, ${tama.lastActionStudentName || 'Abenteurer'}! ❤️`);
         } else if (tama.lastAction === 'feed') {
-            const foodEmoji = (tama.lastSubAction === 'donut') ? '🍩' : '🍎';
+            const sub = (tama.lastSubAction || "").toLowerCase();
+            const foodEmoji = (sub === 'donut') ? '🍩' : '🍎';
             triggerFeedAnimation(foodEmoji);
             showSpeechBubble(`Yummy! ${foodEmoji}`);
         } else if (tama.lastAction === 'water') {

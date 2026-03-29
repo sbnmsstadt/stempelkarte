@@ -795,7 +795,11 @@ export default {
 
             // POST /api/tamagotchi/care — Deduct 1 stamp and care for the pet
             if (path === "/api/tamagotchi/care" && method === "POST") {
-                const { studentId, action } = await request.json();
+                const body = await request.json();
+                const studentId = body.studentId;
+                const action = body.action;
+                const subAction = (body.subAction || "").toLowerCase(); // Normalize!
+
                 const studentsRaw = await getKV("students");
                 let students = JSON.parse(studentsRaw || "[]");
                 const idx = students.findIndex(s => String(s.id) === String(studentId));
@@ -804,7 +808,7 @@ export default {
                 const student = students[idx];
                 const today = new Date().toISOString().split('T')[0];
 
-                // --- Daily Limit Logic (2 actions per student) ---
+                // ... (rest of the action count logic) ...
                 if (!student.tamaActions) student.tamaActions = { count: 0, date: "" };
                 if (student.tamaActions.date !== today) {
                     student.tamaActions.count = 0;
@@ -831,6 +835,8 @@ export default {
 
                 // Interaction wakes up the Tamagotchi AND gives a fun boost to keep it awake
                 settings.tamagotchi.isSleeping = false;
+                settings.tamagotchi.lastActionTime = Date.now();
+                settings.tamagotchi.lastAction = action;
                 settings.tamagotchi.stats.fun = Math.max(settings.tamagotchi.stats.fun || 0, 20); // Force out of low-fun zone
 
                 // Record Student Name for Greeting
@@ -838,8 +844,8 @@ export default {
 
                 let logMsg = "";
                 if (action === "feed") { 
-                    const subAction = student.lastSubAction || 'apple'; // Use student-stored preference or default
-                    settings.tamagotchi.lastSubAction = subAction; // Store for the Infoboard to display correctly
+                    const currentFood = subAction || 'apple'; 
+                    settings.tamagotchi.lastSubAction = currentFood; // Store for the Infoboard to display correctly
                     
                     // Check for Hand Wash (must be within last 60 seconds)
                     const now = Date.now();
