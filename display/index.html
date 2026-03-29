@@ -1060,7 +1060,6 @@
         }
 
         .tama-pixel-grid.walking-away {
-            transform: translate(-50%, -40px) scale(0.28);
             opacity: 0.6;
             filter: blur(2px) saturate(0.6);
             transition: transform 10s ease-in-out, opacity 10s, filter 10s;
@@ -1424,14 +1423,17 @@
 
             <!-- Tamagotchi Widget: NEW RETRO PIXEL STYLE -->
             <div class="card tamagotchi-card" id="tamagotchi-card" style="display:none; flex-shrink:0; background: rgba(15,15,20,0.6); border-color: rgba(255,255,255,0.1); min-height: 520px;">
-                <div class="card-header" style="background: rgba(255,255,255,0.03); margin: -22px -22px 12px -22px; padding: 12px 22px; border-bottom: 1px solid rgba(255,255,255,0.05);">
-                    <div class="card-icon" style="font-size: 1.2rem;">👾</div>
-                    <div class="card-title" id="tama-name" style="font-family: 'Press Start 2P', cursive; font-size: 0.7rem; color: #60a5fa; letter-spacing: 1px;">NACHMI-PET</div>
+                <div class="card-header" style="background: rgba(255,255,255,0.03); margin: -22px -22px 12px -22px; padding: 12px 22px; border-bottom: 1px solid rgba(255,255,255,0.05); display: flex; align-items: center; justify-content: space-between;">
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <div class="card-icon" style="font-size: 1.2rem; margin:0;">👾</div>
+                        <div class="card-title" id="tama-name" style="font-family: 'Press Start 2P', cursive; font-size: 0.7rem; color: #60a5fa; letter-spacing: 1px; margin:0;">NACHMI-PET</div>
+                    </div>
+                    <div id="tama-status-text" style="font-family: 'Press Start 2P', cursive; font-size: 0.5rem; color: #facc15; letter-spacing: 0.5px; text-shadow: 0 0 8px rgba(250, 204, 21, 0.3);">Lädt...</div>
                 </div>
                 
-                <div class="tama-screen">
+                <div class="tama-screen" style="min-height: 480px; position: relative; overflow: hidden;">
                     <!-- Stats Overlay (HUD STYLE) -->
-                    <div class="tama-stats-overlay">
+                    <div class="tama-stats-overlay" style="top: 10px; left: 10px;">
                         <div class="stat-row">
                             <span class="stat-icon">🍏</span>
                             <div class="stat-bar-outer">
@@ -1473,10 +1475,8 @@
                     <div id="tama-heart-container" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 16;"></div>
 
                     <!-- Pure Code Pixel Pet Grid (12x12) -->
-                    <div id="tama-pixel-grid" class="tama-pixel-grid"></div>
+                    <div id="tama-pixel-grid" class="tama-pixel-grid" style="bottom: 20px;"></div>
                 </div>
-
-                <div id="tama-status-text" style="font-family: 'Press Start 2P', cursive; font-size: 0.55rem; color: #facc15; text-align: center; margin-top: 5px; letter-spacing: 1px; text-shadow: 0 0 10px rgba(250, 204, 21, 0.4);">Lädt...</div>
             </div>
         </div>
 

@@ -821,6 +821,7 @@ const PET_FRAMES = {
 let _isInteractionActive = false;
 let _zzzInterval = null;
 let _lastActionTimeSeen = null; // Track fresh interactions village
+let _awayOffset = { x: 0, y: -20, scale: 0.6 }; // Reduced distance and increased scale (closer)
 
 function spawnZzz() {
     const container = document.getElementById('tama-zzz-container');
@@ -1083,10 +1084,23 @@ function renderTamagotchi() {
 
         // Walk away after 60s of silence
         if (inactiveSeconds > 60 && !tama.isSleeping && !gridEl.classList.contains('chasing') && !gridEl.classList.contains('hopping-back')) {
-            gridEl.classList.add('walking-away');
+            if (!gridEl.classList.contains('walking-away')) {
+                // Initialize random walk direction once
+                _awayOffset.x = (Math.random() - 0.5) * 160; // +/- 80px range
+                gridEl.classList.add('walking-away');
+            }
+            gridEl.style.transform = `translateX(calc(-50% + ${_awayOffset.x}px)) translateY(${_awayOffset.y}px) scale(${_awayOffset.scale})`;
         } else if (inactiveSeconds < 15) {
             // Ensure we are not stuck "far away" if an action happened
-            gridEl.classList.remove('walking-away');
+            if (gridEl.classList.contains('walking-away')) {
+                gridEl.classList.remove('walking-away');
+                gridEl.style.transform = 'translateX(-50%)'; // Reset
+            }
+        }
+        
+        // Clear transform if not walking away (unless chasing which handles itself)
+        if (!gridEl.classList.contains('walking-away') && !gridEl.classList.contains('chasing') && !gridEl.classList.contains('hopping-back')) {
+            gridEl.style.transform = 'translateX(-50%)';
         }
         
         if (statusEl) statusEl.textContent = statusText;
