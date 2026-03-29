@@ -1672,7 +1672,8 @@ function handleTamaIdleBehavior(tama, inactiveSeconds, gridEl, statusEl) {
             _currentIdleAction = 'stroll';
             _idleTargetPos.x = (Math.random() - 0.5) * 400; 
             _idleTargetPos.scale = 0.7 + Math.random() * 0.3;
-            gridEl.classList.add('tama-walking');
+            clearIdleState(gridEl);
+            gridEl.classList.add('strolling');
         }
         gridEl.style.transform = `translateX(calc(-50% + ${_idleTargetPos.x}px)) scale(${_idleTargetPos.scale})`;
         return;
@@ -1728,7 +1729,8 @@ function handleTamaIdleBehavior(tama, inactiveSeconds, gridEl, statusEl) {
 }
 
 function clearIdleState(gridEl) {
-    gridEl.classList.remove('walking-away', 'tama-walking', 'tama-flipping', 'tama-rolling', 'tama-hopping');
+    if (!gridEl) return;
+    gridEl.classList.remove('strolling', 'tama-walking', 'tama-flipping', 'tama-rolling', 'tama-hopping');
 }
 
 // Dedicated helper to detect and trigger action animations
