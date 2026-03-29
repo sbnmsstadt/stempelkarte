@@ -187,7 +187,8 @@ function updateTamagotchiAdmin(tama) {
         if (hatchControls) hatchControls.classList.remove('hidden');
         if (activeControls) activeControls.classList.add('hidden');
     } else {
-        if (statusEl) statusEl.innerHTML = `${tama.name} 🐣 (${tama.stage})`;
+        const stageLabel = tama.stage || "Baby";
+        if (statusEl) statusEl.innerHTML = `${tama.name} 🐣 (${stageLabel})`;
         if (hatchControls) hatchControls.classList.add('hidden');
         if (activeControls) activeControls.classList.remove('hidden');
         
@@ -197,10 +198,10 @@ function updateTamagotchiAdmin(tama) {
         const love = document.getElementById('tama-admin-love');
         const fun = document.getElementById('tama-admin-fun');
 
-        if (hunger) hunger.innerText = `${Math.round(tama.stats.hunger)}%`;
-        if (thirst) thirst.innerText = `${Math.round(tama.stats.thirst)}%`;
+        if (hunger) hunger.innerText = `${Math.round(tama.stats.hunger || 0)}%`;
+        if (thirst) thirst.innerText = `${Math.round(tama.stats.thirst || 0)}%`;
         if (hygiene) hygiene.innerText = `${Math.round(tama.stats.hygiene || 0)}%`;
-        if (love) love.innerText = `${Math.round(tama.stats.love)}%`;
+        if (love) love.innerText = `${Math.round(tama.stats.love || 0)}%`;
         if (fun) fun.innerText = `${Math.round(tama.stats.fun || 0)}%`;
     }
 }
