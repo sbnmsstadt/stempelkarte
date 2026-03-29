@@ -280,6 +280,10 @@ async function simulateTamaAction(action) {
         newSettings.tamagotchi.stats.fun = Math.min(100, (newSettings.tamagotchi.stats.fun || 0) + 15);
     } else if (action === 'feed') {
         newSettings.tamagotchi.stats.hunger = Math.min(100, (newSettings.tamagotchi.stats.hunger || 0) + 15);
+    } else if (action === 'water') {
+        newSettings.tamagotchi.stats.thirst = Math.min(100, (newSettings.tamagotchi.stats.thirst || 0) + 15);
+    } else if (action === 'love') {
+        newSettings.tamagotchi.stats.love = Math.min(100, (newSettings.tamagotchi.stats.love || 0) + 15);
     }
     
     try {

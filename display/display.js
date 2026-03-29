@@ -730,9 +730,9 @@ const PET_FRAMES = {
     baby: {
         neutral: [
             "............",
+            "............",
             "..PP....PP..",
             ".PPPP..PPPP.",
-            "............",
             ".BBBBBBBBBB.",
             "BBBBBBBBBBBB",
             "BBEEBBBBEEBB",
@@ -744,9 +744,9 @@ const PET_FRAMES = {
         ],
         blink: [
             "............",
+            "............",
             "..PP....PP..",
             ".PPPP..PPPP.",
-            "............",
             ".BBBBBBBBBB.",
             "BBBBBBBBBBBB",
             "BBDDBBBBDDBB",
@@ -758,9 +758,9 @@ const PET_FRAMES = {
         ],
         sad: [
             "............",
+            "............",
             "..PP....PP..",
             ".PPPP..PPPP.",
-            "............",
             ".BBBBBBBBBB.",
             "BBBBBBBBBBBB",
             "BBEEBBBBEEBB",
@@ -772,9 +772,9 @@ const PET_FRAMES = {
         ],
         sleep: [
             "............",
+            "............",
             "..PP....PP..",
             ".PPPP..PPPP.",
-            "............",
             ".BBBBBBBBBB.",
             "BBBBBBBBBBBB",
             "BBDDBBBBDDBB",
@@ -786,9 +786,9 @@ const PET_FRAMES = {
         ],
         bored: [
             "............",
+            "............",
             "..PP....PP..",
             ".PPPP..PPPP.",
-            "............",
             ".BBBBBBBBBB.",
             "BBBBBBBBBBBB",
             "BBEEBBBBEEBB",
@@ -1060,17 +1060,17 @@ function renderTamagotchi() {
         const inactiveSeconds = (now - referenceTime) / 1000;
 
         // --- Interaction Protection ---
-        // On first board load, we store the current time and SKIP any animation
-        // so we don't play an old action from 1 hour ago.
+        let shouldTrigger = false;
         if (_lastActionTimeSeen === null) {
             _lastActionTimeSeen = tama.lastActionTime || "none";
             console.log("Tamagotchi base interaction set:", _lastActionTimeSeen);
-            return; // Wait for next poll to trigger "new" stuff
+        } else if (tama.lastActionTime && tama.lastActionTime !== _lastActionTimeSeen) {
+            _lastActionTimeSeen = tama.lastActionTime;
+            shouldTrigger = true;
         }
 
         // Fresh action detected? Hop back and trigger animation!
-        if (tama.lastActionTime && tama.lastActionTime !== _lastActionTimeSeen) {
-            _lastActionTimeSeen = tama.lastActionTime;
+        if (shouldTrigger) {
             
             // 1. Hop back if away
             if (gridEl.classList.contains('walking-away')) {
