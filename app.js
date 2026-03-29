@@ -1111,11 +1111,21 @@ async function careForTama(action) {
             currentStudent = data.student;
             SETTINGS.tamagotchi = data.tamagotchi;
             
-            // Visual feedback
+            // Visual feedback - More prominent for student
             const avatar = document.getElementById('tama-ui-avatar');
+            const section = document.getElementById('tamagotchi-section');
+            if (section) {
+                section.style.boxShadow = "0 0 30px rgba(16, 185, 129, 0.4)";
+                setTimeout(() => section.style.boxShadow = "", 1000);
+            }
             if (avatar) {
-                avatar.style.transform = "scale(1.5)";
-                setTimeout(() => avatar.style.transform = "scale(1)", 300);
+                const originalText = avatar.innerText;
+                avatar.innerText = "✨✔️"; 
+                avatar.style.transform = "scale(1.5) translateY(-5px)";
+                setTimeout(() => {
+                    avatar.innerText = originalText;
+                    avatar.style.transform = "scale(1)";
+                }, 1000);
             }
 
             updateStampDisplay(currentStudent);

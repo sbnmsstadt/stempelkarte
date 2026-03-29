@@ -693,7 +693,7 @@ updateClock();
 setInterval(updateClock, 1000);
 
 fetchData();
-setInterval(fetchData, 5000); // Poll every 5 seconds for responsive Tamagotchi village
+setInterval(fetchData, 3000); // Faster polling (3s) for responsive Tamagotchi
 
 // Start the ticker RAF loop immediately (it runs forever)
 startTickerLoop();
@@ -1058,6 +1058,15 @@ function renderTamagotchi() {
         const lastUpdate = tama.lastUpdate ? new Date(tama.lastUpdate).getTime() : now;
         const referenceTime = Math.max(actionTime, lastUpdate);
         const inactiveSeconds = (now - referenceTime) / 1000;
+
+        // --- Interaction Protection ---
+        // On first board load, we store the current time and SKIP any animation
+        // so we don't play an old action from 1 hour ago.
+        if (_lastActionTimeSeen === null) {
+            _lastActionTimeSeen = tama.lastActionTime || "none";
+            console.log("Tamagotchi base interaction set:", _lastActionTimeSeen);
+            return; // Wait for next poll to trigger "new" stuff
+        }
 
         // Fresh action detected? Hop back and trigger animation!
         if (tama.lastActionTime && tama.lastActionTime !== _lastActionTimeSeen) {
