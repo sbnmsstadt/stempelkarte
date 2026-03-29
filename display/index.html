@@ -1130,6 +1130,66 @@
             z-index: 5;
         }
 
+        .tama-weather-overlay {
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+            z-index: 2;
+            transition: opacity 2s;
+        }
+
+        .weather-rain { background: rgba(0, 100, 255, 0.1); animation: rainEffect 0.5s linear infinite; }
+        .weather-snow { background: rgba(255, 255, 255, 0.05); animation: snowEffect 2s linear infinite; }
+        .weather-sun { background: radial-gradient(circle at 20% 20%, rgba(255, 255, 0, 0.2), transparent 50%); }
+
+        @keyframes rainEffect {
+            0% { transform: translateY(-20px) skewX(-10deg); }
+            100% { transform: translateY(20px) skewX(-10deg); }
+        }
+        @keyframes snowEffect {
+            0% { transform: translateY(-100%) translateX(-10%); }
+            100% { transform: translateY(100%) translateX(10%); }
+        }
+
+        .tama-speech-bubble {
+            position: absolute;
+            top: 60px;
+            left: 50%;
+            transform: translateX(-50%) scale(0);
+            background: #fff;
+            color: #000;
+            padding: 8px 12px;
+            border-radius: 12px;
+            font-family: 'Press Start 2P', cursive;
+            font-size: 0.55rem;
+            text-align: center;
+            z-index: 20;
+            box-shadow: 4px 4px 0 rgba(0,0,0,0.5);
+            transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            pointer-events: none;
+            max-width: 80%;
+        }
+        .tama-speech-bubble::after {
+            content: '';
+            position: absolute;
+            bottom: -8px;
+            left: 50%;
+            transform: translateX(-50%);
+            border-left: 8px solid transparent;
+            border-right: 8px solid transparent;
+            border-top: 8px solid #fff;
+        }
+        .tama-speech-bubble.active { transform: translateX(-50%) scale(1); }
+
+        .poop-container {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            z-index: 3;
+            display: flex;
+            gap: 4px;
+        }
+
         /* Stats Overlay moved to bottom area outside the screen */
         .tama-stats-overlay {
             display: flex;
@@ -1429,9 +1489,11 @@
                 
                 <div class="tama-screen" style="min-height: 150px; position: relative; overflow: hidden;">
                     <img id="tama-bg-img" src="" class="tama-bg" alt="screen bg">
+                    <div id="weather-overlay" class="tama-weather-overlay"></div>
                     <div class="tama-scanlines"></div>
                     
-                    <div class="tama-scanline-move" style="position: absolute; top: 0; left: 0; width: 100%; height: 2px; background: rgba(255, 255, 255, 0.1); animation: scanline 4s linear infinite; pointer-events: none; z-index: 6;"></div>
+                    <div id="tama-bubble" class="tama-speech-bubble">Danke!</div>
+                    <div id="poop-container" class="poop-container"></div>
                     
                     <!-- Interaction & Effect Layers -->
                     <div id="tama-zzz-container" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 15;"></div>
@@ -1443,7 +1505,7 @@
                 </div>
 
                 <!-- Stats moved BELOW the screen between display and container border -->
-                <div class="tama-stats-overlay">
+                <div class="tama-stats-overlay" style="top: 10px; left: 10px;">
                     <div class="stat-row">
                         <span class="stat-icon">🍏</span>
                         <div class="stat-bar-outer">
@@ -1457,6 +1519,13 @@
                             <div id="tama-thirst" class="stat-bar-inner" style="background: #3b82f6;"></div>
                         </div>
                         <span id="tama-thirst-val" class="stat-val">?%</span>
+                    </div>
+                    <div class="stat-row">
+                        <span class="stat-icon">✨</span>
+                        <div class="stat-bar-outer">
+                            <div id="tama-hygiene" class="stat-bar-inner" style="background: #a855f7;"></div>
+                        </div>
+                        <span id="tama-hygiene-val" class="stat-val">?%</span>
                     </div>
                     <div class="stat-row">
                         <span class="stat-icon">❤️</span>

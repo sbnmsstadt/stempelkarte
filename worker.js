@@ -1,5 +1,28 @@
 export default {
     async fetch(request, env) {
+        // ── WEATHER SYNC HELPER (Hallein: 47.68, 13.17) ──────────────────
+        async function updateWeather(settings, env) {
+            const now = Date.now();
+            const lastSync = settings.weather?.lastSync || 0;
+            
+            // Sync every 30 minutes
+            if (now - lastSync < 30 * 60 * 1000) return settings.weather;
+
+            try {
+                const resp = await fetch("https://api.open-meteo.com/v1/forecast?latitude=47.68&longitude=13.17&current=weather_code,temperature_2m");
+                if (resp.ok) {
+                    const data = await resp.json();
+                    settings.weather = {
+                        code: data.current.weather_code,
+                        temp: data.current.temperature_2m,
+                        lastSync: now
+                    };
+                    await env.DATABASE.put("settings", JSON.stringify(settings));
+                }
+            } catch (e) { console.error("Weather fetch failed", e); }
+            return settings.weather;
+        }
+
         const url = new URL(request.url);
         const path = url.pathname.replace(/\/$/, ""); // Normalize path (remove trailing slash)
         const method = request.method;
@@ -65,6 +88,9 @@ export default {
                     studentOfWeek: null
                 };
 
+                // Trigger Weather Update
+                await updateWeather(settings, env);
+
                 // CRITICAL: Ensure tamagotchi exists for existing users
                 if (!settings.tamagotchi) {
                     settings.tamagotchi = {
@@ -94,6 +120,11 @@ export default {
                         // Auto-Sleep if Fun is critically low
                         if (settings.tamagotchi.stats.fun < 15 && !settings.tamagotchi.isSleeping) {
                             settings.tamagotchi.isSleeping = true;
+                        }
+
+                        // 20% chance per hour to poop
+                        if (Math.random() < 0.2 * hoursPassed) {
+                            settings.tamagotchi.poopCount = Math.min(3, (settings.tamagotchi.poopCount || 0) + 1);
                         }
 
                         settings.tamagotchi.lastUpdate = now;
@@ -701,6 +732,9 @@ export default {
                 
                 if (!student.history) student.history = [];
                 
+                // Record Student Name for Greeting
+                settings.tamagotchi.lastActionStudentName = student.name;
+
                 let logMsg = "";
                 if (action === "feed") { 
                     settings.tamagotchi.stats.hunger = Math.min(100, settings.tamagotchi.stats.hunger + 5); 
@@ -727,6 +761,35 @@ export default {
                     settings.tamagotchi.lastActionTime = new Date().toISOString();
                     logMsg = "Tamagotchi gestreichelt ❤️"; 
                 }
+                else if (action === "clean") {
+                    settings.tamagotchi.stats.hygiene = Math.min(100, (settings.tamagotchi.stats.hygiene || 0) + 40);
+                    settings.tamagotchi.poopCount = 0;
+                    settings.tamagotchi.lastAction = 'clean';
+                    settings.tamagotchi.lastActionTime = new Date().toISOString();
+                    logMsg = "Tamagotchi Display geputzt ✨";
+                }
+                else if (action === "train") {
+                    settings.tamagotchi.stats.intelligence = Math.min(100, (settings.tamagotchi.stats.intelligence || 0) + 5);
+                    settings.tamagotchi.stats.xp = (settings.tamagotchi.stats.xp || 0) + 10;
+                    
+                    // Level Up Logic
+                    const nextLevelXp = (settings.tamagotchi.stats.level || 1) * 100;
+                    if (settings.tamagotchi.stats.xp >= nextLevelXp) {
+                        settings.tamagotchi.stats.level = (settings.tamagotchi.stats.level || 1) + 1;
+                        settings.tamagotchi.stats.xp = 0;
+                    }
+
+                    settings.tamagotchi.lastAction = 'train';
+                    settings.tamagotchi.lastActionTime = new Date().toISOString();
+                    logMsg = "Mit Tamagotchi gelernt 📚";
+                }
+                else if (action === "style") {
+                    const hats = ['hat_party', 'hat_crown', 'hat_cool', 'hat_detective'];
+                    settings.tamagotchi.currentHat = hats[Math.floor(Math.random() * hats.length)];
+                    settings.tamagotchi.lastAction = 'style';
+                    settings.tamagotchi.lastActionTime = new Date().toISOString();
+                    logMsg = "Tamagotchi neu gestylt 🎩";
+                }
                 
                 student.history.push({ date: today, reason: logMsg, emoji: "🐣" });
                 settings.tamagotchi.lastUpdate = Date.now();
@@ -748,13 +811,15 @@ export default {
                 let settings = JSON.parse(settingsRaw || "{}");
                 
                 settings.tamagotchi = {
+                    name,
                     status: "hatched",
-                    name: name || "Pixelino",
-                    hatchDate: new Date().toISOString().split('T')[0],
+                    born: Date.now(),
                     lastUpdate: Date.now(),
-                    stats: { hunger: 80, thirst: 80, love: 50, fun: 80 },
-                    stage: "baby",
-                    isSleeping: false
+                    stats: { hunger: 80, thirst: 80, love: 50, fun: 50, hygiene: 100, intelligence: 1, xp: 0, level: 1 },
+                    lastAction: 'hatch',
+                    lastActionTime: new Date().toISOString(),
+                    poopCount: 0,
+                    currentHat: null
                 };
 
                 await env.DATABASE.put("settings", JSON.stringify(settings));

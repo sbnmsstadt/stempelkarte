@@ -805,6 +805,36 @@ const PET_FRAMES = {
             "..BB....BB.."
         ]
     },
+    adult: {
+        neutral: [
+            "....PPPP....",
+            "...PPPPPP...",
+            "..PPPPPPPP..",
+            ".BBBBBBBBBB.",
+            "BBBBBBBBBBBB",
+            "BBEBBBBBBBBE",
+            "BBBBBBBBBBBB",
+            "BBBBMMMMBBBB",
+            "BBBBBBBBBBBB",
+            "DBBBBBBBBBBD",
+            "DDBBBBBBBBDD",
+            ".DDDDDDDDDD."
+        ],
+        blink: [
+            "....PPPP....",
+            "...PPPPPP...",
+            "..PPPPPPPP..",
+            ".BBBBBBBBBB.",
+            "BBBBBBBBBBBB",
+            "BBDBBBBBBDDB",
+            "BBBBBBBBBBBB",
+            "BBBBMMMMBBBB",
+            "BBBBBBBBBBBB",
+            "DBBBBBBBBBBD",
+            "DDBBBBBBBBDD",
+            ".DDDDDDDDDD."
+        ]
+    },
     egg: {
         neutral: [
             "............",
@@ -823,11 +853,120 @@ const PET_FRAMES = {
     }
 };
 
+const HAT_ASSETS = {
+    hat_party: [
+        "......R.....",
+        ".....RRR....",
+        "....RRRRR...",
+        "............",
+        "............",
+        "............",
+        "............",
+        "............",
+        "............",
+        "............",
+        "............",
+        "............"
+    ],
+    hat_crown: [
+        "...Y.Y.Y....",
+        "...YYYYY....",
+        "............",
+        "............",
+        "............",
+        "............",
+        "............",
+        "............",
+        "............",
+        "............",
+        "............",
+        "............"
+    ],
+    hat_cool: [
+        "............",
+        "............",
+        ".EEEEEEEEEE.",
+        "............",
+        "............",
+        "............",
+        "............",
+        "............",
+        "............",
+        "............",
+        "............",
+        "............"
+    ],
+    hat_detective: [
+        "....DDDD....",
+        "...DDDDDD...",
+        ".DDDDDDDDDD.",
+        "............",
+        "............",
+        "............",
+        "............",
+        "............",
+        "............",
+        "............",
+        "............",
+        "............"
+    ]
+};
+
+const POOP_ASSET = [
+    "............",
+    "............",
+    "............",
+    "............",
+    "............",
+    "............",
+    "............",
+    "............",
+    "............",
+    "......YY....",
+    ".....YYYY...",
+    "....YYYYYY.."
+];
+
 // ── TAMAGOTCHI INTERACTION HELPERS ────────────────
 let _isInteractionActive = false;
 let _zzzInterval = null;
 let _lastActionTimeSeen = null; // Track fresh interactions village
 let _awayOffset = { x: 0, y: -20, scale: 0.6 }; // Reduced distance and increased scale (closer)
+
+function updateWeatherView() {
+    const weather = settings.weather;
+    const overlay = document.getElementById('weather-overlay');
+    const bgImg = document.getElementById('tama-bg-img');
+    if (!overlay || !weather) return;
+
+    overlay.className = 'tama-weather-overlay'; // Reset
+    
+    // weather_code mappings (Simplified Open-Meteo)
+    // 0: Clear, 1-3: Partly Cloudy, 45-48: Fog
+    // 51-67: Rain/Drizzle, 71-77: Snow, 80-82: Showers
+    const code = weather.code || 0;
+    
+    if (code >= 71 && code <= 77) {
+        overlay.classList.add('weather-snow');
+        if (bgImg) bgImg.style.filter = 'brightness(0.8) saturate(0.5) sepia(0.2)';
+    } else if (code >= 51 && code <= 82) {
+        overlay.classList.add('weather-rain');
+        if (bgImg) bgImg.style.filter = 'brightness(0.6) saturate(0.8)';
+    } else if (code <= 3) {
+        overlay.classList.add('weather-sun');
+        if (bgImg) bgImg.style.filter = 'brightness(1.1) saturate(1.2)';
+    } else {
+        if (bgImg) bgImg.style.filter = 'brightness(0.9)';
+    }
+}
+
+function showSpeechBubble(text) {
+    const bubble = document.getElementById('tama-bubble');
+    if (!bubble) return;
+    bubble.textContent = text;
+    bubble.classList.add('active');
+    setTimeout(() => bubble.classList.remove('active'), 4000);
+}
 
 function spawnZzz() {
     const container = document.getElementById('tama-zzz-container');
@@ -962,7 +1101,7 @@ function renderTamagotchi() {
     }
 
     // 2. Determine Frame
-    let stage = tama.stage || "baby";
+    let stage = tama.stats.level >= 10 ? "adult" : "baby";
     if (tama.status === "egg") stage = "egg";
     
     let mood = "neutral";
@@ -974,13 +1113,20 @@ function renderTamagotchi() {
     }
 
     const frame = (PET_FRAMES[stage] && PET_FRAMES[stage][mood]) || PET_FRAMES.baby.neutral;
+    const hat = tama.currentHat ? HAT_ASSETS[tama.currentHat] : null;
 
-    // 3. Render Frame to Grid
+    // 3. Render Frame to Grid (Including Hat Layer)
     if (gridEl) {
         const pixels = gridEl.children;
         for (let r = 0; r < TAMA_SIZE; r++) {
             for (let c = 0; c < TAMA_SIZE; c++) {
-                const char = frame[r][c];
+                let char = frame[r][c];
+                
+                // Overlay Hat if exists and pixel is transparent in base frame
+                if (hat && hat[r][c] !== '.') {
+                    char = hat[r][c];
+                }
+
                 const idx = r * TAMA_SIZE + c;
                 let cls = "px-transparent";
                 if (char === 'B') cls = "px-body";
@@ -990,6 +1136,7 @@ function renderTamagotchi() {
                 if (char === 'W') cls = "px-white";
                 if (char === 'R') cls = "px-red";
                 if (char === 'P') cls = "px-pink";
+                if (char === 'Y') cls = "px-yellow";
                 if (char === 'N') cls = "px-white"; // Nose/Mouth detail
                 
                 const targetCls = `pixel ${cls}`;
@@ -999,6 +1146,25 @@ function renderTamagotchi() {
             }
         }
     }
+
+    // 3.5 Render Poop
+    const poopContainer = document.getElementById('poop-container');
+    if (poopContainer) {
+        const currentPoopCount = poopContainer.children.length;
+        const targetPoopCount = tama.poopCount || 0;
+        if (currentPoopCount !== targetPoopCount) {
+            poopContainer.innerHTML = '';
+            for (let i = 0; i < targetPoopCount; i++) {
+                const p = document.createElement('div');
+                p.textContent = '💩';
+                p.style.fontSize = '1.2rem';
+                poopContainer.appendChild(p);
+            }
+        }
+    }
+
+    // 3.6 Update Weather
+    updateWeatherView();
 
     // 4. Update UI Text & Bars
     if (tama.status === "egg") {
@@ -1034,24 +1200,37 @@ function renderTamagotchi() {
 
         const hungerEl = document.getElementById('tama-hunger');
         const thirstEl = document.getElementById('tama-thirst');
+        const hygieneEl = document.getElementById('tama-hygiene');
         const loveEl = document.getElementById('tama-love');
         const funEl = document.getElementById('tama-fun');
+        const xpEl = document.getElementById('tama-xp');
+
         const hungerVal = document.getElementById('tama-hunger-val');
         const thirstVal = document.getElementById('tama-thirst-val');
+        const hygieneVal = document.getElementById('tama-hygiene-val');
         const loveVal = document.getElementById('tama-love-val');
         const funVal = document.getElementById('tama-fun-val');
+        const levelVal = document.getElementById('tama-level');
 
-        const stats = tama.stats || { hunger: 50, thirst: 50, love: 50, fun: 50 };
+        const stats = tama.stats || { hunger: 50, thirst: 50, love: 50, fun: 50, hygiene: 100, xp: 0, level: 1 };
 
         if (hungerEl) hungerEl.style.width = `${stats.hunger}%`;
         if (thirstEl) thirstEl.style.width = `${stats.thirst}%`;
+        if (hygieneEl) hygieneEl.style.width = `${stats.hygiene || 0}%`;
         if (loveEl) loveEl.style.width = `${stats.love}%`;
         if (funEl) funEl.style.width = `${stats.fun || 0}%`;
 
+        // XP Bar
+        const nextLevelXp = stats.level * 100;
+        const xpPercent = Math.min(100, (stats.xp / nextLevelXp) * 100);
+        if (xpEl) xpEl.style.width = `${xpPercent}%`;
+
         if (hungerVal) hungerVal.textContent = `${stats.hunger}%`;
         if (thirstVal) thirstVal.textContent = `${stats.thirst}%`;
+        if (hygieneVal) hygieneVal.textContent = `${stats.hygiene || 0}%`;
         if (loveVal) loveVal.textContent = `${stats.love}%`;
         if (funVal) funVal.textContent = `${stats.fun || 0}%`;
+        if (levelVal) levelVal.textContent = `Lvl ${stats.level}`;
 
         let statusText = "Glücklich ✨";
         if (tama.isSleeping) statusText = "Schläft... 💤";
@@ -1127,12 +1306,22 @@ function handleTamaActionDetection(tama) {
         // 2. Trigger Specific Animation
         if (tama.lastAction === 'play') {
             triggerPlayAnimation();
+            showSpeechBubble(`Juhu! 🎾`);
         } else if (tama.lastAction === 'love') {
             triggerLoveAnimation();
+            showSpeechBubble(`Hab dich lieb, ${tama.lastActionStudentName || 'Abenteurer'}! ❤️`);
         } else if (tama.lastAction === 'feed') {
             triggerFeedAnimation();
+            showSpeechBubble(`Lecker! 🍎`);
         } else if (tama.lastAction === 'water') {
             triggerWaterAnimation();
+            showSpeechBubble(`Erfrischend! 💧`);
+        } else if (tama.lastAction === 'clean') {
+            showSpeechBubble(`Danke fürs Putzen! ✨`);
+        } else if (tama.lastAction === 'train') {
+            showSpeechBubble(`Ich bin jetzt schlauer! 📚`);
+        } else if (tama.lastAction === 'style') {
+            showSpeechBubble(`Steht mir das? 🎩`);
         }
     }
 }

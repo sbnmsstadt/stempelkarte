@@ -100,6 +100,7 @@ async function silentSync() {
                 SETTINGS = freshSettings;
                 updateStampDisplay(currentStudent);
                 renderRewards(currentStudent);
+                renderTamagotchiUI(SETTINGS.tamagotchi, currentStudent);
                 // Also update home screen if needed (community goal)
                 updateCommunityGoal(); 
             }
@@ -227,12 +228,17 @@ function showDetail(student) {
         startSync();
     }
 
-    updateStampDisplay(student);
-    renderRewards(student);
-    renderBadges(student);
-    renderHistory(student.history || []);
-
-    // NEW: Render PERSONAL AI Motivation
+        updateStampDisplay(student);
+        renderRewards(student);
+        renderBadges(student);
+        renderHistory(student.history || []);
+        
+        // --- Tamagotchi Sync ---
+        // Need settings to know if it's hatched
+        fetch(`${API_URL}/settings`).then(r => r.json()).then(set => {
+            SETTINGS = set;
+            renderTamagotchiUI(SETTINGS.tamagotchi, student);
+        });
     const aiSection = document.getElementById('ai-section');
     const aiText = document.getElementById('ai-motivation-student');
     if (aiSection && aiText) {
@@ -1089,6 +1095,42 @@ async function openBadgeInfo() {
 function closeBadgeInfoOverlay() {
     document.getElementById('badge-info-overlay').classList.remove('active');
 }
+function renderTamagotchiUI(tama, student) {
+    const section = document.getElementById('tamagotchi-section');
+    if (!section) return;
+    
+    if (!tama || tama.status !== "hatched") {
+        section.classList.add('hidden');
+        return;
+    }
+    
+    section.classList.remove('hidden');
+    
+    const nameEl = document.getElementById('tama-ui-name');
+    const avatarEl = document.getElementById('tama-ui-avatar');
+    const levelEl = document.getElementById('tama-ui-level');
+    const xpBarEl = document.getElementById('tama-ui-xp-bar');
+    const limitText = document.getElementById('tama-limit-text');
+    
+    if (nameEl) nameEl.textContent = tama.name || "Pixelino";
+    if (avatarEl) avatarEl.textContent = (tama.stats.level >= 10) ? "🦖" : "🐣";
+    if (levelEl) levelEl.textContent = `LVL ${tama.stats.level || 1}`;
+    
+    if (xpBarEl) {
+        const nextLevelXp = (tama.stats.level || 1) * 100;
+        const xpPercent = Math.min(100, ((tama.stats.xp || 0) / nextLevelXp) * 100);
+        xpBarEl.style.width = `${xpPercent}%`;
+    }
+    
+    if (limitText && student.tamaActions) {
+        const today = new Date().toISOString().split('T')[0];
+        const count = student.tamaActions.date === today ? student.tamaActions.count : 0;
+        limitText.textContent = `Limit: ${count}/2 heute genutzt`;
+        if (count >= 2) limitText.style.color = "#ef4444";
+        else limitText.style.color = "rgba(255,255,255,0.3)";
+    }
+}
+
 async function careForTama(action) {
     if (!currentStudent) return;
     
@@ -1129,12 +1171,13 @@ async function careForTama(action) {
             updateStampDisplay(currentStudent);
             renderRewards(currentStudent);
             renderHistory(currentStudent.history || []);
+            renderTamagotchiUI(SETTINGS.tamagotchi, currentStudent);
             
             // Optional: silent sync to update UI
             silentSync();
         } else {
             const msg = await response.text();
-            alert("Fehler: " + msg);
+            alert(msg); // Show the specific "limit reached" or other error message
         }
     } catch (err) {
         console.error("Care error:", err);
