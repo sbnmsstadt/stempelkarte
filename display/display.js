@@ -1475,10 +1475,32 @@ function renderTamagotchi() {
         if (currentPoopCount !== targetPoopCount) {
             poopContainer.innerHTML = '';
             for (let i = 0; i < targetPoopCount; i++) {
+                const wrapper = document.createElement('div');
+                wrapper.className = 'poop-wrapper';
+                
+                // Deterministic random positions based on index so they don't jump on every sync
+                // Wide spread across the whole screen width and meadow height
+                const randomX = ((i * 137.5) % 94) + 3; // 3% to 97%
+                const randomY = ((i * 97.3) % 100) + 5;  // 5px to 105px (on the meadow)
+                
+                wrapper.style.left = `${randomX}%`;
+                wrapper.style.bottom = `${randomY}px`;
+                wrapper.style.position = 'absolute';
+                
+                // Steam effect
+                const steam = document.createElement('div');
+                steam.className = 'poop-steam';
+                steam.textContent = '♨️';
+                steam.style.animationDelay = `${(i * 0.5) % 2}s`;
+                
+                // Poop emoji
                 const p = document.createElement('div');
                 p.textContent = '💩';
                 p.style.fontSize = '1.2rem';
-                poopContainer.appendChild(p);
+                
+                wrapper.appendChild(steam);
+                wrapper.appendChild(p);
+                poopContainer.appendChild(wrapper);
             }
         }
     }
@@ -1649,7 +1671,7 @@ function handleTamaActionDetection(tama) {
             triggerWaterAnimation();
             showSpeechBubble(`Erfrischend! 💧`);
         } else if (tama.lastAction === 'clean') {
-            showSpeechBubble(`Danke fürs Putzen! ✨`);
+            showSpeechBubble(`Danke fürs Putzen! 🧼`);
         } else if (tama.lastAction === 'train') {
             showSpeechBubble(`Ich bin jetzt schlauer! 📚`);
         } else if (tama.lastAction === 'style') {

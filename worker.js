@@ -114,21 +114,27 @@ export default {
                     const activeHours = calculateActiveHours(last, now, ignoreFreeze);
 
                     if (activeHours > 0 && settings.tamagotchi.status === "hatched") {
-                        // Decay stats: 20% per 30 mins = 40% per hour
-                        const decay = activeHours * 40;
-                        settings.tamagotchi.stats.hunger = Math.max(0, Math.round(settings.tamagotchi.stats.hunger - decay));
-                        settings.tamagotchi.stats.thirst = Math.max(0, Math.round(settings.tamagotchi.stats.thirst - decay));
-                        settings.tamagotchi.stats.love = Math.max(0, Math.round(settings.tamagotchi.stats.love - decay));
-                        settings.tamagotchi.stats.fun = Math.max(0, Math.round((settings.tamagotchi.stats.fun || 100) - decay));
+                        // Base decay: 20% per 30 mins = 40% per hour
+                        const baseDecay = activeHours * 40;
+                        
+                        // Poop penalty: each poop increases LOVE decay by 50%
+                        const poopCount = settings.tamagotchi.poopCount || 0;
+                        const lovePenaltyFactor = 1 + (poopCount * 0.5);
+                        const loveDecay = baseDecay * lovePenaltyFactor;
+
+                        settings.tamagotchi.stats.hunger = Math.max(0, Math.round(settings.tamagotchi.stats.hunger - baseDecay));
+                        settings.tamagotchi.stats.thirst = Math.max(0, Math.round(settings.tamagotchi.stats.thirst - baseDecay));
+                        settings.tamagotchi.stats.love = Math.max(0, Math.round(settings.tamagotchi.stats.love - loveDecay));
+                        settings.tamagotchi.stats.fun = Math.max(0, Math.round((settings.tamagotchi.stats.fun || 100) - baseDecay));
                         
                         // Auto-Sleep if Fun is critically low
                         if (settings.tamagotchi.stats.fun < 15 && !settings.tamagotchi.isSleeping) {
                             settings.tamagotchi.isSleeping = true;
                         }
 
-                        // Poop Chance: 52% per active hour
+                        // Poop Chance: 52% per active hour (MAX 100 poops)
                         if (Math.random() < 0.52 * activeHours) {
-                            settings.tamagotchi.poopCount = Math.min(3, (settings.tamagotchi.poopCount || 0) + 1);
+                            settings.tamagotchi.poopCount = Math.min(100, (settings.tamagotchi.poopCount || 0) + 1);
                         }
 
                         // --- Hat Expiration ---
@@ -793,7 +799,7 @@ export default {
                     settings.tamagotchi.poopCount = 0;
                     settings.tamagotchi.lastAction = 'clean';
                     settings.tamagotchi.lastActionTime = new Date().toISOString();
-                    logMsg = "Tamagotchi Display geputzt ✨";
+                    logMsg = "Tamagotchi Display geputzt 🧼";
                 }
                 else if (action === "train") {
                     settings.tamagotchi.stats.intelligence = Math.min(100, (settings.tamagotchi.stats.intelligence || 0) + 5);
@@ -811,7 +817,7 @@ export default {
                     logMsg = "Mit Tamagotchi gelernt 📚";
                 }
                 else if (action === "poop") {
-                    settings.tamagotchi.poopCount = Math.min(3, (settings.tamagotchi.poopCount || 0) + 1);
+                    settings.tamagotchi.poopCount = Math.min(20, (settings.tamagotchi.poopCount || 0) + 1);
                     settings.tamagotchi.lastAction = 'poop';
                     settings.tamagotchi.lastActionTime = new Date().toISOString();
                     logMsg = "Häufchen gemacht 💩";

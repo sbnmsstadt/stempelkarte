@@ -1176,6 +1176,8 @@ async function careForTama(action) {
                 toast.textContent = "Neues Outfit am Start! 🔥 (24h)";
             } else if (action === "love") {
                 toast.textContent = "Tamagotchi liebt dich! ❤️";
+            } else if (action === "clean") {
+                toast.textContent = "Alles wieder blitzblank! 🧼";
             } else {
                 toast.textContent = "Tamagotchi freut sich! ✨";
             }

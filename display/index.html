@@ -1257,11 +1257,29 @@
 
         .poop-container {
             position: absolute;
-            bottom: 20px;
-            right: 20px;
+            inset: 0; /* Full screen for random absolute placement */
             z-index: 3;
+            pointer-events: none;
+        }
+        .poop-wrapper {
+            position: absolute;
             display: flex;
-            gap: 4px;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-end;
+            width: 30px;
+            height: 50px;
+        }
+        .poop-steam {
+            font-size: 1rem;
+            opacity: 0;
+            animation: steamRise 3s infinite;
+            filter: grayscale(1) brightness(2); /* White-ish steam */
+        }
+        @keyframes steamRise {
+            0% { transform: translateY(0) scale(0.5); opacity: 0; }
+            30% { opacity: 0.4; }
+            100% { transform: translateY(-40px) scale(1.5); opacity: 0; }
         }
 
         /* Stats Overlay moved to bottom area outside the screen */
@@ -1632,7 +1650,7 @@
                         <span id="tama-thirst-val" class="stat-val">?%</span>
                     </div>
                     <div class="stat-row">
-                        <span class="stat-icon">✨</span>
+                        <span class="stat-icon">🧼</span>
                         <div class="stat-bar-outer">
                             <div id="tama-hygiene" class="stat-bar-inner" style="background: #a855f7;"></div>
                         </div>
