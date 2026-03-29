@@ -205,8 +205,11 @@ export default {
                     };
                 }
 
-                // Calculate decay but DON'T save to D1 right now (to save writes)
-                applyTamagotchiDecay(settings, Date.now());
+                // IMPORTANT: If decay happened (stats changed or poop generated), SAVE to DB!
+                // This prevents "flickering" or items disappearing between polls.
+                if (applyTamagotchiDecay(settings, Date.now())) {
+                    await putKV("settings", JSON.stringify(settings));
+                }
                 
                 return new Response(JSON.stringify(settings), {
                     headers: { ...corsHeaders, "Content-Type": "application/json" }
@@ -836,6 +839,7 @@ export default {
                 let logMsg = "";
                 if (action === "feed") { 
                     const subAction = student.lastSubAction || 'apple'; // Use student-stored preference or default
+                    settings.tamagotchi.lastSubAction = subAction; // Store for the Infoboard to display correctly
                     
                     // Check for Hand Wash (must be within last 60 seconds)
                     const now = Date.now();

@@ -1761,36 +1761,65 @@ function handleTamaActionDetection(tama) {
             showSpeechBubble(`Das tat gut! 🧼🚿`);
         } else if (tama.lastAction === 'handwash') {
             triggerHandWashAnimation();
-            showSpeechBubble(`Hände sind sauber! Vorbildlich, ${tama.lastActionStudentName || 'Abenteurer'}! 🧼✨`);
+            showSpeechBubble(`Hände sind sauber! 🧼✨`);
         }
     }
 }
 function triggerHandWashAnimation() {
-    triggerBubbleEffect(30, false); 
+    const gridEl = document.getElementById('tama-pixel-grid');
+    const screen = document.querySelector('.tama-screen');
+    if (!gridEl || !screen) return;
+    
+    // Get current horizontal center relative to screen
+    const rect = gridEl.getBoundingClientRect();
+    const screenRect = screen.getBoundingClientRect();
+    const relativeX = (rect.left - screenRect.left) + (rect.width / 2);
+
+    triggerBubbleEffect(40, false, relativeX); 
 }
 
 function triggerShowerAnimation() {
-    triggerBubbleEffect(50, true); // More bubbles for shower
+    const gridEl = document.getElementById('tama-pixel-grid');
+    const screen = document.querySelector('.tama-screen');
+    const container = document.getElementById('tama-item-container');
+    if (!gridEl || !screen || !container) return;
+
+    // 1. Show the Shower Emoji on the side (like food/water)
+    const shower = document.createElement('div');
+    shower.className = 'shower-fx';
+    shower.textContent = '🚿';
+    // Position it relative to the pet
+    const rect = gridEl.getBoundingClientRect();
+    const screenRect = screen.getBoundingClientRect();
+    const relativeX = (rect.left - screenRect.left) + (rect.width / 2);
+    
+    // Shift slightly to the side
+    shower.style.left = `calc(50% + ${relativeX - (screenRect.width/2) + 40}px)`;
+    container.appendChild(shower);
+    setTimeout(() => shower.remove(), 2500);
+
+    // 2. Trigger centered bubbles/water
+    triggerBubbleEffect(60, true, relativeX); 
 }
 
-function triggerBubbleEffect(count, isShower) {
+function triggerBubbleEffect(count, isShower, targetX) {
     const screen = document.querySelector('.tama-screen');
-    const gridEl = document.getElementById('tama-pixel-grid');
-    if (!screen || !gridEl) return;
+    if (!screen) return;
     
-    // Position relative to the screen container
     const width = screen.offsetWidth;
+    // If targetX not provided, use center
+    const centerX = targetX !== undefined ? targetX : (width / 2);
 
     for (let i = 0; i < count; i++) {
         setTimeout(() => {
             const bubble = document.createElement('div');
             bubble.style.position = 'absolute';
-            // Spawn at the bottom area of the grid
-            const randomX = Math.random() * width;
+            // Spawn NARROWLY around the pet
+            const randomX = (centerX - 40) + Math.random() * 80;
             bubble.style.left = randomX + 'px';
-            bubble.style.bottom = '10px';
+            bubble.style.bottom = '15px';
             bubble.style.fontSize = (Math.random() * 1.5 + 0.8) + 'rem';
-            bubble.style.zIndex = '14'; // Above pet, below scanlines
+            bubble.style.zIndex = '14'; 
             bubble.style.pointerEvents = 'none';
             
             if (isShower) {
@@ -1801,20 +1830,20 @@ function triggerBubbleEffect(count, isShower) {
             }
             
             // Random horizontal drift
-            const drift = (Math.random() - 0.5) * 80;
-            const height = 180 + Math.random() * 80;
+            const drift = (Math.random() - 0.5) * 40;
+            const height = 140 + Math.random() * 60;
 
             bubble.animate([
                 { transform: 'translateY(0) scale(0)', opacity: 0 },
-                { transform: `translateY(-${height/2}px) translateX(${drift/2}px) scale(1.5)`, opacity: 0.9 },
+                { transform: `translateY(-${height/2}px) translateX(${drift/2}px) scale(1.6)`, opacity: 0.9 },
                 { transform: `translateY(-${height}px) translateX(${drift}px) scale(0)`, opacity: 0 }
             ], {
-                duration: 1800 + Math.random() * 1000,
+                duration: 1500 + Math.random() * 800,
                 easing: 'ease-out'
             });
             
             screen.appendChild(bubble);
-            setTimeout(() => bubble.remove(), 3000);
-        }, i * (isShower ? 30 : 50));
+            setTimeout(() => bubble.remove(), 2500);
+        }, i * (isShower ? 25 : 45));
     }
 }
