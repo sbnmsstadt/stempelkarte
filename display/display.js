@@ -803,9 +803,9 @@ const PET_FRAMES = {
             ".PPPP..PPPP.",
             ".BBBBBBBBBB.",
             "BBBBBBBBBBBB",
-            "BBEEEEBBEEBB", // Wide eyes
+            "BEEEBBBBEEEB", // Corrected eye symmetry (3 each)
             "BBBBBBBBBBBB",
-            "DBBMMMMMMBBD", // Smiling mouth corners
+            "DBBMMMMMMBBD",
             "DBBBMMMMBBBD",
             ".DDDDDDDDDD.",
             "..BB....BB.."
@@ -817,9 +817,9 @@ const PET_FRAMES = {
             ".PPPP..PPPP.",
             ".BBBBBBBBBB.",
             "BBBBBBBBBBBB",
-            "BBDDBBBBDDBB", // Dark downward dots
+            "BBDDBBBBDDBB", // Symmetrical dark dots
             "BBBBBBBBBBBB",
-            "DBBBMMMMBBBD", // Frowny corners
+            "DBBBMMMMBBBD",
             "DBBMM..MMBBD",
             ".DDDDDDDDDD.",
             "..BB....BB.."
@@ -874,9 +874,9 @@ const PET_FRAMES = {
             "..PPPPPPPP..",
             ".BBBBBBBBBB.",
             "BBBBBBBBBBBB",
-            "BBEEEEBBEEBB", // Happier looking eyes
+            "BEEEBBBBEEEB", // Symmetrical happy eyes
             "BBBBBBBBBBBB",
-            "BBMMMMMMMMBB", // Ultra wide grin
+            "BBMMMMMMMMBB",
             "BBBBMMMMBBBB",
             "DBBBBBBBBBBD",
             "DDBBBBBBBBDD",
@@ -1551,8 +1551,8 @@ function renderTamagotchi() {
         // --- Interaction Protection ---
         handleTamaActionDetection(tama);
         
-        // Walk away after 60s of silence
-        if (inactiveSeconds > 60 && !tama.isSleeping && !gridEl.classList.contains('chasing') && !gridEl.classList.contains('hopping-back')) {
+        // Walk away after 20s of silence
+        if (inactiveSeconds > 20 && !tama.isSleeping && !gridEl.classList.contains('chasing') && !gridEl.classList.contains('hopping-back')) {
             if (!gridEl.classList.contains('walking-away')) {
                 // Initialize random walk direction and distance once
                 // X: random left/right (+/- 100px)
@@ -1564,7 +1564,7 @@ function renderTamagotchi() {
                 gridEl.classList.add('walking-away');
             }
             gridEl.style.transform = `translateX(calc(-50% + ${_awayOffset.x}px)) translateY(${_awayOffset.y}px) scale(${_awayOffset.scale})`;
-        } else if (inactiveSeconds < 15) {
+        } else if (inactiveSeconds < 5) {
             // Ensure we are not stuck "far away" if an action happened
             if (gridEl.classList.contains('walking-away')) {
                 gridEl.classList.remove('walking-away');

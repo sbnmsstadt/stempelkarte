@@ -107,22 +107,27 @@ export default {
                 }
 
                 if (settings.tamagotchi) {
+                    // --- Tamagotchi Stat Decay & Aging ---
                     const now = Date.now();
                     const last = settings.tamagotchi.lastUpdate || now;
-                    const hoursPassed = (now - last) / (1000 * 3600);
-                    if (hoursPassed >= 1 && settings.tamagotchi.status === "hatched") {
-                        // Decay stats: Hunger -4/h, Thirst -6/h, Love -2/h, Fun -5/h
-                        settings.tamagotchi.stats.hunger = Math.max(0, settings.tamagotchi.stats.hunger - Math.floor(hoursPassed * 4));
-                        settings.tamagotchi.stats.thirst = Math.max(0, settings.tamagotchi.stats.thirst - Math.floor(hoursPassed * 6));
-                        settings.tamagotchi.stats.love = Math.max(0, settings.tamagotchi.stats.love - Math.floor(hoursPassed * 2));
-                        settings.tamagotchi.stats.fun = Math.max(0, (settings.tamagotchi.stats.fun || 100) - Math.floor(hoursPassed * 5));
+                    const ignoreFreeze = settings.tamagotchi.ignoreWeekendFreeze || false;
+                    const activeHours = calculateActiveHours(last, now, ignoreFreeze);
+
+                    if (activeHours > 0 && settings.tamagotchi.status === "hatched") {
+                        // Decay stats: 20% per 30 mins = 40% per hour
+                        const decay = activeHours * 40;
+                        settings.tamagotchi.stats.hunger = Math.max(0, settings.tamagotchi.stats.hunger - decay);
+                        settings.tamagotchi.stats.thirst = Math.max(0, settings.tamagotchi.stats.thirst - decay);
+                        settings.tamagotchi.stats.love = Math.max(0, settings.tamagotchi.stats.love - decay);
+                        settings.tamagotchi.stats.fun = Math.max(0, (settings.tamagotchi.stats.fun || 100) - decay);
                         
                         // Auto-Sleep if Fun is critically low
                         if (settings.tamagotchi.stats.fun < 15 && !settings.tamagotchi.isSleeping) {
                             settings.tamagotchi.isSleeping = true;
                         }
 
-                        if (Math.random() < 0.2 * hoursPassed) {
+                        // Poop Chance: 52% per active hour
+                        if (Math.random() < 0.52 * activeHours) {
                             settings.tamagotchi.poopCount = Math.min(3, (settings.tamagotchi.poopCount || 0) + 1);
                         }
 
@@ -759,26 +764,26 @@ export default {
 
                 let logMsg = "";
                 if (action === "feed") { 
-                    settings.tamagotchi.stats.hunger = Math.min(100, settings.tamagotchi.stats.hunger + 5); 
+                    settings.tamagotchi.stats.hunger = Math.min(100, (settings.tamagotchi.stats.hunger || 0) + 25); 
                     settings.tamagotchi.lastAction = 'feed';
                     settings.tamagotchi.lastActionTime = new Date().toISOString();
                     logMsg = "Tamagotchi gefüttert 🍎"; 
                 }
                 else if (action === "water") { 
-                    settings.tamagotchi.stats.thirst = Math.min(100, settings.tamagotchi.stats.thirst + 5); 
+                    settings.tamagotchi.stats.thirst = Math.min(100, (settings.tamagotchi.stats.thirst || 0) + 25); 
                     settings.tamagotchi.lastAction = 'water';
                     settings.tamagotchi.lastActionTime = new Date().toISOString();
                     logMsg = "Tamagotchi getränkt 💧"; 
                 }
                 else if (action === "play") { 
-                    settings.tamagotchi.stats.fun = Math.min(100, (settings.tamagotchi.stats.fun || 0) + 5); 
-                    settings.tamagotchi.stats.love = Math.min(100, settings.tamagotchi.stats.love + 2); 
+                    settings.tamagotchi.stats.fun = Math.min(100, (settings.tamagotchi.stats.fun || 0) + 25); 
+                    settings.tamagotchi.stats.love = Math.min(100, (settings.tamagotchi.stats.love || 0) + 5); 
                     settings.tamagotchi.lastAction = 'play';
                     settings.tamagotchi.lastActionTime = new Date().toISOString();
                     logMsg = "Mit Tamagotchi gespielt 🧶"; 
                 }
                 else if (action === "love") { 
-                    settings.tamagotchi.stats.love = Math.min(100, settings.tamagotchi.stats.love + 10); 
+                    settings.tamagotchi.stats.love = Math.min(100, (settings.tamagotchi.stats.love || 0) + 25); 
                     settings.tamagotchi.lastAction = 'love';
                     settings.tamagotchi.lastActionTime = new Date().toISOString();
                     logMsg = "Tamagotchi gestreichelt ❤️"; 
@@ -1451,4 +1456,43 @@ async function sendTelegramMessage(env, text, token = null, chatId = null) {
         console.error("Telegram error:", err);
         return false;
     }
+}
+
+// --- Helper for Time-Aware Decay ---
+function calculateActiveHours(lastUpdate, now, ignoreFreeze) {
+    if (ignoreFreeze) {
+        return (now - lastUpdate) / (1000 * 3600);
+    }
+
+    let activems = 0;
+    let current = new Date(lastUpdate);
+    const target = new Date(now);
+
+    // Hourly steps
+    while (current < target) {
+        const day = current.getDay(); // 0(Sun) - 6(Sat)
+        const hour = current.getHours();
+        
+        const isWeekend = (day === 0 || day === 6);
+        const isActiveHour = (hour >= 11 && hour < 17);
+
+        if (!isWeekend && isActiveHour) {
+            const startOfHour = new Date(current);
+            startOfHour.setMinutes(0,0,0);
+            const endOfHour = new Date(current);
+            endOfHour.setMinutes(59,59,999);
+            
+            const effectiveStart = Math.max(current.getTime(), startOfHour.getTime());
+            const effectiveEnd = Math.min(target.getTime(), endOfHour.getTime());
+            
+            if (effectiveEnd > effectiveStart) {
+                activems += (effectiveEnd - effectiveStart);
+            }
+        }
+        
+        current.setHours(current.getHours() + 1);
+        current.setMinutes(0, 0, 0);
+    }
+    
+    return activems / (1000 * 3600);
 }

@@ -123,6 +123,9 @@ document.addEventListener('DOMContentLoaded', async () => {
             btn.disabled = false;
         }
     });
+
+    // ── TAMAGOTCHI TOGGLE LISTENER ──
+    document.getElementById('setting-tama-ignore-freeze')?.addEventListener('change', saveSettings);
 });
 
 async function fetchRewards() {
@@ -975,6 +978,7 @@ async function loadSettings() {
             updateField('setting-community-visible', settings.communityGoalVisible !== false, true);
             updateField('setting-community-title', settings.communityTitle || "Pizza-Party");
             updateField('setting-community-target', settings.communityTarget || 500);
+            updateField('setting-tama-ignore-freeze', settings.tamagotchi?.ignoreWeekendFreeze || false, true);
 
             if (settings.activities) {
                 const text = settings.activities.map(a => `${a.emoji} ${a.label}`).join('\n');
@@ -1087,6 +1091,10 @@ async function saveSettings() {
                 ...(currentSettings?.groupReward || { current: 0, icon: "🎬" }),
                 title: groupTitle,
                 target: groupTarget
+            },
+            tamagotchi: {
+                ...(currentSettings?.tamagotchi || {}),
+                ignoreWeekendFreeze: document.getElementById('setting-tama-ignore-freeze').checked
             }
         };
 
