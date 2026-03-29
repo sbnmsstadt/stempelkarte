@@ -232,6 +232,7 @@ function renderAttendance() {
             return b ? `<span class="attendance-badge-icon" title="${b.name}">${b.emoji}</span>` : '';
         }).join('');
 
+        const timeClass = (s.pickupTime || '15:30').replace(':', '');
         return `
             <div class="attendance-item">
                 <div class="attendance-avatar">${avatar}</div>
@@ -239,7 +240,7 @@ function renderAttendance() {
                     <span class="attendance-name-text">${s.name.split(' ')[0]}</span>
                     <div class="attendance-badges">${badgeEmojis}</div>
                 </div>
-                <span class="attendance-time-tag">${s.pickupTime || '15:30'}</span>
+                <span class="attendance-time-tag time-${timeClass}">${s.pickupTime || '15:30'}</span>
             </div>
         `;
     }).join('');
