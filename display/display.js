@@ -860,6 +860,44 @@ function triggerPlayAnimation() {
     }, 12000); // Play for 12 seconds
 }
 
+function triggerFeedAnimation() {
+    if (_isInteractionActive) return;
+    _isInteractionActive = true;
+
+    const container = document.getElementById('tama-item-container');
+    if (!container) return;
+
+    const foods = ['🍎', '🍌', '🍔', '🍕', '🍰'];
+    const item = document.createElement('div');
+    item.className = 'tama-feed-item';
+    item.textContent = foods[Math.floor(Math.random() * foods.length)];
+    container.appendChild(item);
+
+    setTimeout(() => {
+        item.remove();
+        _isInteractionActive = false;
+    }, 3000);
+}
+
+function triggerWaterAnimation() {
+    if (_isInteractionActive) return;
+    _isInteractionActive = true;
+
+    const container = document.getElementById('tama-item-container');
+    if (!container) return;
+
+    const drinks = ['💧', '🥤', '🍼', '🧉'];
+    const item = document.createElement('div');
+    item.className = 'tama-water-item';
+    item.textContent = drinks[Math.floor(Math.random() * drinks.length)];
+    container.appendChild(item);
+
+    setTimeout(() => {
+        item.remove();
+        _isInteractionActive = false;
+    }, 3000);
+}
+
 function triggerLoveAnimation() {
     if (_isInteractionActive) return;
     _isInteractionActive = true;
@@ -906,8 +944,9 @@ function renderTamagotchi() {
         bgImg.onerror = () => { bgImg.style.display = 'none'; };
     }
 
-    // 1. Initialize Grid if empty
-    if (gridEl && gridEl.children.length === 0) {
+    // 1. Initialize Grid (Force clear if size mismatch)
+    if (gridEl && gridEl.children.length !== TAMA_SIZE * TAMA_SIZE) {
+        gridEl.innerHTML = '';
         for (let i = 0; i < TAMA_SIZE * TAMA_SIZE; i++) {
             const px = document.createElement('div');
             px.className = 'pixel px-transparent';
@@ -1035,6 +1074,10 @@ function renderTamagotchi() {
                 triggerPlayAnimation();
             } else if (tama.lastAction === 'love') {
                 triggerLoveAnimation();
+            } else if (tama.lastAction === 'feed') {
+                triggerFeedAnimation();
+            } else if (tama.lastAction === 'water') {
+                triggerWaterAnimation();
             }
         }
 

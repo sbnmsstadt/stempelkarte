@@ -1194,6 +1194,12 @@
             100% { transform: translate(0, -120px) scale(1.5); opacity: 0; }
         }
 
+        @keyframes tama-item-appear {
+            0% { transform: translate(40px, -100px) scale(0) rotate(-30deg); opacity: 0; }
+            40% { transform: translate(20px, -60px) scale(1.4) rotate(10deg); opacity: 1; }
+            100% { transform: translate(0, -20px) scale(1) rotate(0); opacity: 0; }
+        }
+
         .heart-particle {
             position: absolute;
             color: #ff4d4d;
@@ -1202,6 +1208,21 @@
             z-index: 16;
             animation: heart-float 4s ease-out forwards;
             text-shadow: 0 0 10px rgba(255, 77, 77, 0.5);
+        }
+
+        .tama-play-item, .tama-feed-item, .tama-water-item {
+            position: absolute;
+            font-size: 2.5rem;
+            bottom: 60px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 12;
+            pointer-events: none;
+            filter: drop-shadow(0 4px 8px rgba(0,0,0,0.3));
+        }
+
+        .tama-feed-item, .tama-water-item {
+            animation: tama-item-appear 3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
         }
 
         .tama-pixel-grid.chasing {
