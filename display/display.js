@@ -1085,8 +1085,13 @@ function renderTamagotchi() {
         // Walk away after 60s of silence
         if (inactiveSeconds > 60 && !tama.isSleeping && !gridEl.classList.contains('chasing') && !gridEl.classList.contains('hopping-back')) {
             if (!gridEl.classList.contains('walking-away')) {
-                // Initialize random walk direction once
-                _awayOffset.x = (Math.random() - 0.5) * 160; // +/- 80px range
+                // Initialize random walk direction and distance once
+                // X: random left/right (+/- 100px)
+                // Y: random vertical distance (0 to -40px to stay in bottom third)
+                // Scale: random depth (0.5 to 0.75)
+                _awayOffset.x = (Math.random() - 0.5) * 200; 
+                _awayOffset.y = -(Math.random() * 40); 
+                _awayOffset.scale = 0.5 + (Math.random() * 0.25);
                 gridEl.classList.add('walking-away');
             }
             gridEl.style.transform = `translateX(calc(-50% + ${_awayOffset.x}px)) translateY(${_awayOffset.y}px) scale(${_awayOffset.scale})`;
