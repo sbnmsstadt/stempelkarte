@@ -1675,7 +1675,12 @@ function handleTamaIdleBehavior(tama, inactiveSeconds, gridEl, statusEl) {
             clearIdleState(gridEl);
             gridEl.classList.add('strolling');
         }
-        gridEl.style.transform = `translateX(calc(-50% + ${_idleTargetPos.x}px)) scale(${_idleTargetPos.scale})`;
+        
+        // Depth Illusion: Higher scale = Closer (at bottom), Smaller scale = Further (higher up)
+        // Screen height is 320px. Bottom 1/3 is ~106px. Base is 40px. 
+        // We move up by max ~60px to stay safe.
+        const verticalShift = (1 - _idleTargetPos.scale) * -150; 
+        gridEl.style.transform = `translateX(calc(-50% + ${_idleTargetPos.x}px)) translateY(${verticalShift}px) scale(${_idleTargetPos.scale})`;
         return;
     }
 
@@ -1714,7 +1719,8 @@ function handleTamaIdleBehavior(tama, inactiveSeconds, gridEl, statusEl) {
 
         // Apply visual transformation for movement
         if (_currentIdleAction !== 'chill') {
-            gridEl.style.transform = `translateX(calc(-50% + ${_idleTargetPos.x}px)) scale(${_idleTargetPos.scale})`;
+            const verticalShift = (1 - _idleTargetPos.scale) * -150;
+            gridEl.style.transform = `translateX(calc(-50% + ${_idleTargetPos.x}px)) translateY(${verticalShift}px) scale(${_idleTargetPos.scale})`;
         } else {
             gridEl.style.transform = 'translateX(-50%)';
         }
