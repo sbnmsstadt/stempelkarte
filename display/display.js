@@ -1650,7 +1650,21 @@ function handleTamaIdleBehavior(tama, inactiveSeconds, gridEl, statusEl) {
         return;
     }
 
-    // Threshold: 10 minutes of inactivity (600s)
+    // --- Tier 1: Gentle Idle Stroll (30s - 10m) ---
+    if (inactiveSeconds > 30 && inactiveSeconds <= 600) {
+        const now = Date.now();
+        if (!_currentIdleAction || (now - _idleActionStartTime > 15000)) { // Change spot every 15s
+            _idleActionStartTime = now;
+            _currentIdleAction = 'stroll';
+            _idleTargetPos.x = (Math.random() - 0.5) * 400; 
+            _idleTargetPos.scale = 0.7 + Math.random() * 0.3;
+            gridEl.classList.add('tama-walking');
+        }
+        gridEl.style.transform = `translateX(calc(-50% + ${_idleTargetPos.x}px)) scale(${_idleTargetPos.scale})`;
+        return;
+    }
+
+    // --- Tier 2: Self-Entertainment Actions ( > 10m) ---
     if (inactiveSeconds > 600) {
         const now = Date.now();
         
@@ -1690,9 +1704,10 @@ function handleTamaIdleBehavior(tama, inactiveSeconds, gridEl, statusEl) {
             gridEl.style.transform = 'translateX(-50%)';
         }
     } else {
-        // Reset if activity happened recently
-        if (inactiveSeconds < 5) {
+        // Only reset if truly active (interaction within last 10s)
+        if (inactiveSeconds < 10 && _currentIdleAction) {
             clearIdleState(gridEl);
+            _currentIdleAction = null;
             gridEl.style.transform = 'translateX(-50%)';
         }
     }
