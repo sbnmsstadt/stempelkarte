@@ -100,7 +100,6 @@ async function silentSync() {
                 SETTINGS = freshSettings;
                 updateStampDisplay(currentStudent);
                 renderRewards(currentStudent);
-                renderStudentTama(); // Sync Tamagotchi HUD
                 // Also update home screen if needed (community goal)
                 updateCommunityGoal(); 
             }
@@ -288,9 +287,13 @@ function showDetail(student) {
         }
     }
 
-    if (tamaSection && SETTINGS.tamagotchi) {
+    // Tamagotchi Section
+    const tamaSection = document.getElementById('tamagotchi-section');
+    const tamaName = document.getElementById('tama-ui-name');
+    const tamaAvatar = document.getElementById('tama-ui-avatar');
+
+    if (tamaSection && SETTINGS.tamagotchi && SETTINGS.tamagotchi.status === "hatched") {
         tamaSection.classList.remove('hidden');
-        renderStudentTama();
         if (tamaName) tamaName.innerText = SETTINGS.tamagotchi.name || "Pixelino";
         
         let avatar = "🐣";
@@ -1108,32 +1111,16 @@ async function careForTama(action) {
             currentStudent = data.student;
             SETTINGS.tamagotchi = data.tamagotchi;
             
-            // Visual feedback - Reaction POP
+            // Visual feedback
             const avatar = document.getElementById('tama-ui-avatar');
-            const reaction = document.getElementById('tama-ui-reaction');
-            const icons = { feed: '🍎', water: '💧', play: '🎾', love: '❤️' };
-            
             if (avatar) {
-                avatar.classList.add('tama-reacting');
-                setTimeout(() => avatar.classList.remove('tama-reacting'), 600);
-            }
-            
-            if (reaction) {
-                reaction.textContent = icons[action] || '✨';
-                reaction.style.opacity = '1';
-                reaction.style.transform = 'translateY(-20px) scale(1.5)';
-                reaction.style.animation = 'reactionFloat 1s forwards';
-                setTimeout(() => {
-                    reaction.style.opacity = '0';
-                    reaction.style.animation = '';
-                    reaction.style.transform = '';
-                }, 1000);
+                avatar.style.transform = "scale(1.5)";
+                setTimeout(() => avatar.style.transform = "scale(1)", 300);
             }
 
             updateStampDisplay(currentStudent);
             renderRewards(currentStudent);
             renderHistory(currentStudent.history || []);
-            renderStudentTama(); // Force update HUD
             
             // Optional: silent sync to update UI
             silentSync();
@@ -1145,49 +1132,4 @@ async function careForTama(action) {
         console.error("Care error:", err);
         alert("Netzwerkfehler beim Pflegen des Klassentiers.");
     }
-}
-
-function renderStudentTama() {
-    const tama = SETTINGS.tamagotchi;
-    if (!tama) return;
-
-    // Update Bars
-    const bars = {
-        'hunger': tama.hunger,
-        'thirst': tama.thirst,
-        'love': tama.love,
-        'fun': tama.fun
-    };
-
-    for (const [key, val] of Object.entries(bars)) {
-        const el = document.getElementById(`tama-ui-${key}`);
-        if (el) el.style.width = val + '%';
-    }
-
-    // Update Avatar & State Text
-    const avatarEl = document.getElementById('tama-ui-avatar');
-    const stateEl = document.getElementById('tama-ui-state-text');
-    const headerEl = document.getElementById('tama-ui-name-header');
-
-    if (headerEl) headerEl.textContent = tama.name || 'Pixelino';
-
-    let moodEmoji = '🦖';
-    let moodText = 'Glücklich';
-
-    if (tama.isEgg) {
-        moodEmoji = '🐣';
-        moodText = 'Noch im Ei';
-    } else if (tama.isSleeping) {
-        moodEmoji = '😴';
-        moodText = 'Schläft';
-    } else if (tama.hunger < 30 || tama.thirst < 30) {
-        moodEmoji = '😭';
-        moodText = 'Braucht Hilfe';
-    } else if (tama.hunger < 60 || tama.thirst < 60 || tama.love < 50) {
-        moodEmoji = '😐';
-        moodText = 'Mittelmäßig';
-    }
-
-    if (avatarEl) avatarEl.textContent = moodEmoji;
-    if (stateEl) stateEl.textContent = `${moodEmoji} ${moodText}`;
 }
