@@ -727,12 +727,19 @@ function renderAdminList(filter = "") {
                     <div class="subtitle" style="font-size:0.75rem">ID: ${student.id} · ${fullCards} Karte(n)</div>
                 </div>
                 <!-- Compact Attendance Chips -->
-                <div class="attendance-chips-container">
-                    ${['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'].map(day => {
-                        const active = student.attendance && student.attendance[day];
-                        const chars = { mon:'M', tue:'D', wed:'M', thu:'D', fri:'F', sat:'S', sun:'S' };
-                        return `<div class="attendance-chip ${active ? 'active' : ''}" onclick="event.stopPropagation(); toggleAttendance('${student.id}', '${day}', ${active})" title="${day.toUpperCase()}">${chars[day]}</div>`;
-                    }).join('')}
+                <div class="attendance-chips-container" style="display:flex; flex-direction:column; align-items:flex-end; gap:6px;">
+                    <div style="display:flex; gap:4px;">
+                        ${['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'].map(day => {
+                            const active = student.attendance && student.attendance[day];
+                            const chars = { mon:'M', tue:'D', wed:'M', thu:'D', fri:'F', sat:'S', sun:'S' };
+                            return `<div class="attendance-chip ${active ? 'active' : ''}" onclick="event.stopPropagation(); toggleAttendance('${student.id}', '${day}', ${active})" title="${day.toUpperCase()}">${chars[day]}</div>`;
+                        }).join('')}
+                    </div>
+                    <!-- Pickup Time Toggle -->
+                    <div class="pickup-toggle-container" style="display:flex; background:rgba(255,255,255,0.05); border-radius:8px; padding:2px; border:1px solid rgba(255,255,255,0.1);">
+                        <button onclick="updatePickupTime('${student.id}', '15:30')" class="pickup-btn ${student.pickupTime === '15:30' ? 'active' : ''}" style="border:none; background:none; color:${student.pickupTime === '15:30' ? 'white' : 'rgba(255,255,255,0.3)'}; font-size:0.6rem; font-weight:800; padding:2px 6px; border-radius:6px; cursor:pointer;">15:30</button>
+                        <button onclick="updatePickupTime('${student.id}', '16:30')" class="pickup-btn ${student.pickupTime === '16:30' ? 'active' : ''}" style="border:none; background:none; color:${student.pickupTime === '16:30' ? 'white' : 'rgba(255,255,255,0.3)'}; font-size:0.6rem; font-weight:800; padding:2px 6px; border-radius:6px; cursor:pointer;">16:30</button>
+                    </div>
                 </div>
             </div>
 
@@ -871,6 +878,37 @@ async function updateAttendance(id, day, val) {
         }
     } catch (err) {
         console.error("Attendance update error:", err);
+    }
+}
+
+async function updatePickupTime(id, time) {
+    try {
+        await fetch(`${API_URL}/students/${id}`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ pickupTime: time })
+        });
+        
+        // Update local memory and UI instant feedback
+        const s = window.students.find(x => x.id === id);
+        if (s) {
+            s.pickupTime = time;
+        }
+
+        // Silent UI update: find the card and toggle active class on buttons
+        const container = document.getElementById('admin-student-list');
+        const card = Array.from(container.children).find(el => el.innerHTML.includes(id));
+        if (card) {
+            const btns = card.querySelectorAll('.pickup-btn');
+            btns.forEach(btn => {
+                const isActive = btn.innerText === time;
+                btn.classList.toggle('active', isActive);
+                btn.style.color = isActive ? 'white' : 'rgba(255,255,255,0.3)';
+                if (isActive) btn.parentElement.querySelector('.active')?.classList.remove('active');
+            });
+        }
+    } catch (err) {
+        console.error("Pickup update error:", err);
     }
 }
 

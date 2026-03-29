@@ -235,7 +235,10 @@ function renderAttendance() {
         return `
             <div class="attendance-item">
                 <div class="attendance-avatar">${avatar}</div>
-                <div class="attendance-name">${s.name.split(' ')[0]}</div>
+                <div class="attendance-name">
+                    ${s.name.split(' ')[0]}
+                    <span class="attendance-time-tag">${s.pickupTime || '15:30'}</span>
+                </div>
                 <div class="attendance-badges">${badgeEmojis}</div>
             </div>
         `;

@@ -430,7 +430,8 @@ export default {
                     badges: [],
                     history: [],
                     redemptions: {},
-                    attendance: { mon: false, tue: false, wed: false, thu: false, fri: false, sat: false, sun: false }
+                    attendance: { mon: false, tue: false, wed: false, thu: false, fri: false, sat: false, sun: false },
+                    pickupTime: "15:30"
                 };
                 students.push(newStudent);
                 await env.DATABASE.put("students", JSON.stringify(students));
@@ -448,7 +449,7 @@ export default {
                 if (pathParts.length === 4) {
                     const id = pathParts[3];
                     const body = await request.json();
-                    const { stamps, avatar, badges, reason, attendance } = body;
+                    const { stamps, avatar, badges, reason, attendance, pickupTime } = body;
                     const studentsRaw = await env.DATABASE.get("students");
                     let students = JSON.parse(studentsRaw || "[]");
 
@@ -461,6 +462,9 @@ export default {
                     if (students[index].history === undefined) students[index].history = [];
                     if (students[index].attendance === undefined) {
                         students[index].attendance = { mon: false, tue: false, wed: false, thu: false, fri: false, sat: false, sun: false };
+                    }
+                    if (students[index].pickupTime === undefined) {
+                        students[index].pickupTime = "15:30";
                     }
 
                     if (stamps !== undefined) {
@@ -475,6 +479,7 @@ export default {
                         students[index].stamps = stamps;
                     }
                     if (avatar !== undefined) students[index].avatar = avatar;
+                    if (pickupTime !== undefined) students[index].pickupTime = pickupTime;
                     if (attendance !== undefined) {
                         students[index].attendance = { 
                             ...students[index].attendance, 
