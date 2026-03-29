@@ -293,7 +293,29 @@ function showDetail(student) {
         }
     }
 
-    // ------------------------------------------
+    // Tamagotchi Section
+    const tamaSection = document.getElementById('tamagotchi-section');
+    const tamaName = document.getElementById('tama-ui-name');
+    const tamaAvatar = document.getElementById('tama-ui-avatar');
+
+    if (tamaSection && SETTINGS.tamagotchi && SETTINGS.tamagotchi.status === "hatched") {
+        tamaSection.classList.remove('hidden');
+        if (tamaName) tamaName.innerText = SETTINGS.tamagotchi.name || "Pixelino";
+        
+        let avatar = "🐣";
+        const stage = SETTINGS.tamagotchi.stage;
+        if (stage === "baby") avatar = "🐣";
+        else if (stage === "child") avatar = "🐥";
+        else if (stage === "teen") avatar = "🐦";
+        else if (stage === "adult") avatar = "🦉";
+        
+        if (SETTINGS.tamagotchi.stats.hunger < 20 || SETTINGS.tamagotchi.stats.thirst < 20) avatar = "🤒";
+        else if (SETTINGS.tamagotchi.stats.love < 30) avatar = "😢";
+        
+        if (tamaAvatar) tamaAvatar.innerText = avatar;
+    } else if (tamaSection) {
+        tamaSection.classList.add('hidden');
+    }
 }
 
 function renderRewards(student) {

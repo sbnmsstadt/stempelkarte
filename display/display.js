@@ -1415,7 +1415,6 @@ function triggerHandwashAnimation() {
         b.className = 'zzz-particle'; // Reuse float animation
         b.style.color = '#fff';
         b.textContent = '🫧';
-        b.style.fontSize = '2rem'; // Much larger!
         b.style.left = (Math.random() * 40 + 30) + '%';
         b.style.bottom = '40px';
         container.appendChild(b);
@@ -1438,7 +1437,6 @@ function triggerTeethbrushAnimation() {
         const s = document.createElement('div');
         s.className = 'zzz-particle';
         s.textContent = '✨';
-        s.style.fontSize = '1.8rem'; // Much larger!
         s.style.left = (Math.random() * 20 + 40) + '%';
         s.style.bottom = '55px';
         container.appendChild(s);
@@ -1456,30 +1454,11 @@ function triggerShowerAnimation() {
     if (_isInteractionActive) return;
     _isInteractionActive = true;
     const container = document.getElementById('tama-item-container');
-    const zzzContainer = document.getElementById('tama-zzz-container');
-    if (!container || !zzzContainer) return;
-    
-    // Drop Shower Emoji
+    if (!container) return;
     const item = document.createElement('div');
-    item.className = 'tama-water-item'; 
+    item.className = 'tama-water-item'; // Reuse drop animation
     item.textContent = '🚿';
     container.appendChild(item);
-    
-    // Spawn Soaps & Bubbles
-    let count = 0;
-    const itv = setInterval(() => {
-        const s = document.createElement('div');
-        s.className = 'zzz-particle';
-        s.textContent = Math.random() > 0.5 ? '🧼' : '🫧';
-        s.style.fontSize = '1.4rem';
-        s.style.left = (Math.random() * 50 + 25) + '%';
-        s.style.bottom = '40px';
-        zzzContainer.appendChild(s);
-        setTimeout(() => s.remove(), 2000);
-        count++;
-        if (count > 12) clearInterval(itv);
-    }, 250);
-
     setTimeout(() => { item.remove(); _isInteractionActive = false; }, 4000);
 }
 
