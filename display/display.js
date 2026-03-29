@@ -709,31 +709,46 @@ function renderTamagotchi() {
     const tama = settings.tamagotchi;
     if (!tama || !card) return;
 
+    // Asset Paths (Generated)
+    const ASSETS = {
+        bg: 'C:\\Users\\Limitless\\.gemini\\antigravity\\brain\\35fc07bf-0648-4a49-8a26-c87d6b2af5f7\\tama_pixel_bg_1774779784524.png',
+        egg: 'C:\\Users\\Limitless\\.gemini\\antigravity\\brain\\35fc07bf-0648-4a49-8a26-c87d6b2af5f7\\tama_egg_sprite_1774779799968.png',
+        baby: 'C:\\Users\\Limitless\\.gemini\\antigravity\\brain\\35fc07bf-0648-4a49-8a26-c87d6b2af5f7\\tama_baby_sprite_1774779814661.png'
+    };
+
+    const bgImg = document.getElementById('tama-bg-img');
+    const spriteImg = document.getElementById('tama-sprite-img');
+    const emojiFallback = document.getElementById('tama-avatar-emoji');
+    const nameEl = document.getElementById('tama-name');
+    const statusEl = document.getElementById('tama-status-text');
+
+    // Default BG
+    if (bgImg) bgImg.src = ASSETS.bg;
+
     if (tama.status === "egg") {
         card.style.display = 'block';
-        const nameEl = document.getElementById('tama-name');
-        const avatarEl = document.getElementById('tama-avatar');
-        const statusEl = document.getElementById('tama-status-text');
-
-        if (nameEl) nameEl.textContent = "Geheimnisvolles Ei";
-        if (avatarEl) {
-            avatarEl.textContent = "🥚";
-            avatarEl.style.animation = 'tamaEggWiggle 3s ease-in-out infinite';
+        if (nameEl) nameEl.textContent = "GEHEIMNISVOLLES EI";
+        if (spriteImg) {
+            spriteImg.src = ASSETS.egg;
+            spriteImg.style.display = 'block';
+            spriteImg.style.animation = 'tamaEggWiggle 3s ease-in-out infinite';
         }
-        if (statusEl) statusEl.textContent = "Wartet auf September...";
+        if (emojiFallback) emojiFallback.style.display = 'none';
+        if (statusEl) statusEl.textContent = "SCHLÜPFT IM SEPTEMBER...";
         return;
     }
 
     if (tama.status === "hatched") {
         card.style.display = 'block';
-        const nameEl = document.getElementById('tama-name');
         const hungerEl = document.getElementById('tama-hunger');
         const thirstEl = document.getElementById('tama-thirst');
         const loveEl = document.getElementById('tama-love');
-        const statusEl = document.getElementById('tama-status-text');
-        const avatarEl = document.getElementById('tama-avatar');
+        
+        const hungerVal = document.getElementById('tama-hunger-val');
+        const thirstVal = document.getElementById('tama-thirst-val');
+        const loveVal = document.getElementById('tama-love-val');
 
-        if (nameEl) nameEl.textContent = tama.name || "Pixel-Pet";
+        if (nameEl) nameEl.textContent = (tama.name || "PIXEL-PET").toUpperCase();
         
         // Stats
         if (hungerEl) hungerEl.style.width = `${tama.stats.hunger}%`;

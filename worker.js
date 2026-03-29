@@ -51,7 +51,8 @@ export default {
                     { label: "Projekt", emoji: "🚀" },
                     { label: "Sonstiges", emoji: "✨" }
                 ];
-                const settings = settingsRaw ? JSON.parse(settingsRaw) : { 
+                
+                let settings = settingsRaw ? JSON.parse(settingsRaw) : { 
                     communityTarget: 500, 
                     communityTitle: "Pizza-Party",
                     communityGoalVisible: true,
@@ -61,16 +62,35 @@ export default {
                     currentProjects: "",
                     upcomingProjects: "",
                     todayPlan: "",
-                    studentOfWeek: null,
-                    tamagotchi: {
+                    studentOfWeek: null
+                };
+
+                // CRITICAL: Ensure tamagotchi exists for existing users
+                if (!settings.tamagotchi) {
+                    settings.tamagotchi = {
                         status: "egg",
                         name: "Pixelino",
                         hatchDate: null,
                         lastUpdate: Date.now(),
                         stats: { hunger: 100, thirst: 100, love: 100, energy: 100 },
                         stage: "egg"
+                    };
+                }
+
+                if (settings.tamagotchi) {
+                    const now = Date.now();
+                    const last = settings.tamagotchi.lastUpdate || now;
+                    const hoursPassed = (now - last) / (1000 * 3600);
+                    if (hoursPassed >= 1 && settings.tamagotchi.status === "hatched") {
+                        // Decay stats: Hunger -4/h, Thirst -6/h, Love -2/h
+                        settings.tamagotchi.stats.hunger = Math.max(0, settings.tamagotchi.stats.hunger - Math.floor(hoursPassed * 4));
+                        settings.tamagotchi.stats.thirst = Math.max(0, settings.tamagotchi.stats.thirst - Math.floor(hoursPassed * 6));
+                        settings.tamagotchi.stats.love = Math.max(0, settings.tamagotchi.stats.love - Math.floor(hoursPassed * 2));
+                        settings.tamagotchi.lastUpdate = now;
+                        await env.DATABASE.put("settings", JSON.stringify(settings));
                     }
-                };
+                }
+                
                 return new Response(JSON.stringify(settings), {
                     headers: { ...corsHeaders, "Content-Type": "application/json" }
                 });
