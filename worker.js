@@ -507,7 +507,7 @@ export default {
                     badges: [],
                     history: [],
                     redemptions: {},
-                    attendance: attendance || { mon: false, tue: false, wed: false, thu: false, fri: false, sat: false, sun: false },
+                    attendance: attendance || { mon: false, tue: false, wed: false, thu: false, fri: false },
                     pickupTime: pickupTime || "15:30"
                 };
                 students.push(newStudent);
@@ -538,7 +538,7 @@ export default {
                     if (students[index].badges === undefined) students[index].badges = [];
                     if (students[index].history === undefined) students[index].history = [];
                     if (students[index].attendance === undefined) {
-                        students[index].attendance = { mon: false, tue: false, wed: false, thu: false, fri: false, sat: false, sun: false };
+                        students[index].attendance = { mon: false, tue: false, wed: false, thu: false, fri: false };
                     }
                     if (students[index].pickupTime === undefined) {
                         students[index].pickupTime = "15:30";
@@ -1020,6 +1020,7 @@ export default {
                 settings.tamagotchi = {
                     name,
                     status: "hatched",
+                    stage: "baby", // Fix for "(undefined)" in admin
                     born: Date.now(),
                     lastUpdate: Date.now(),
                     stats: { hunger: 80, thirst: 80, love: 50, fun: 50, hygiene: 100, intelligence: 1, xp: 0, level: 1 },
@@ -1648,6 +1649,7 @@ function calculateActiveHours(lastUpdate, now, ignoreFreeze) {
         const hour = current.getHours();
         
         const isWeekend = (day === 0 || day === 6);
+        // Active from 11:00 to 16:30 (16.5)
         const isActiveHour = (hour >= 11 && hour < 17);
 
         if (!isWeekend && isActiveHour) {
@@ -1657,7 +1659,16 @@ function calculateActiveHours(lastUpdate, now, ignoreFreeze) {
             endOfHour.setMinutes(59,59,999);
             
             const effectiveStart = Math.max(current.getTime(), startOfHour.getTime());
-            const effectiveEnd = Math.min(target.getTime(), endOfHour.getTime());
+            
+            // Limit the end of the active window to 16:30 (16.5 hours)
+            let hourEndLimit = endOfHour.getTime();
+            if (hour === 16) {
+                const limit30 = new Date(current);
+                limit30.setMinutes(30, 0, 0);
+                hourEndLimit = Math.min(hourEndLimit, limit30.getTime());
+            }
+
+            const effectiveEnd = Math.min(target.getTime(), hourEndLimit);
             
             if (effectiveEnd > effectiveStart) {
                 activems += (effectiveEnd - effectiveStart);

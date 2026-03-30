@@ -737,9 +737,9 @@ function renderAdminList(filter = "") {
                 <!-- Compact Attendance Chips -->
                 <div class="attendance-chips-container" style="display:flex; flex-direction:column; align-items:flex-end; gap:6px;">
                     <div style="display:flex; gap:4px;">
-                        ${['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'].map(day => {
+                        ${['mon', 'tue', 'wed', 'thu', 'fri'].map(day => {
                             const active = student.attendance && student.attendance[day];
-                            const chars = { mon:'M', tue:'D', wed:'M', thu:'D', fri:'F', sat:'S', sun:'S' };
+                            const chars = { mon:'M', tue:'D', wed:'M', thu:'D', fri:'F' };
                             return `<div class="attendance-chip ${active ? 'active' : ''}" onclick="event.stopPropagation(); toggleAttendance('${student.id}', '${day}', ${active})" title="${day.toUpperCase()}">${chars[day]}</div>`;
                         }).join('')}
                     </div>
@@ -895,7 +895,7 @@ async function toggleAttendance(id, day, currentVal) {
     const studentCard = Array.from(container.children).find(el => el.innerHTML.includes(id));
     if (studentCard) {
         const chips = studentCard.querySelectorAll('.attendance-chip');
-        const dayIdx = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'].indexOf(day);
+        const dayIdx = ['mon', 'tue', 'wed', 'thu', 'fri'].indexOf(day);
         if (chips[dayIdx]) {
             chips[dayIdx].classList.toggle('active', newVal);
             chips[dayIdx].setAttribute('onclick', `event.stopPropagation(); toggleAttendance('${id}', '${day}', ${newVal})`);
