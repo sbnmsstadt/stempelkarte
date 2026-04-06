@@ -205,6 +205,7 @@ export default {
                         trashCount: 0,
                         needsBrushing: false,
                         isSleeping: false,
+                        visible: true,
                         lastAction: null,
                         lastActionTime: null
                     };

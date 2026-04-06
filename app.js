@@ -1099,7 +1099,7 @@ function renderTamagotchiUI(tama, student) {
     const section = document.getElementById('tamagotchi-section');
     if (!section) return;
     
-    if (!tama || (tama.status !== "hatched" && tama.status !== "dead")) {
+    if (!tama || (tama.status !== "hatched" && tama.status !== "dead") || tama.visible === false) {
         section.classList.add('hidden');
         return;
     }

@@ -14,6 +14,7 @@ function checkAuth() {
     if (sessionStorage.getItem('admin_auth') === PIN_ADMIN) {
         if (loginOverlay) loginOverlay.style.display = 'none';
         if (adminApp) adminApp.style.display = 'block';
+        loadSettings(); // Load settings once authorized
     } else {
         if (loginOverlay) loginOverlay.style.display = 'flex';
         if (adminApp) adminApp.style.display = 'none';
@@ -248,6 +249,33 @@ async function resetTamagotchi() {
             loadSettings();
         }
     } catch (err) { alert("Fehler beim Zurücksetzen."); }
+}
+
+async function toggleTamaVisibility() {
+    if (!currentSettings) return;
+    const newSettings = { ...currentSettings };
+    if (!newSettings.tamagotchi) return;
+    
+    const isVisible = newSettings.tamagotchi.visible !== false;
+    newSettings.tamagotchi.visible = !isVisible;
+    
+    try {
+        const res = await fetch(`${API_URL}/settings`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(newSettings)
+        });
+        if (res.ok) {
+            currentSettings = newSettings;
+            const visBtn = document.getElementById('tama-visibility-btn');
+            if (visBtn) {
+                visBtn.innerText = !isVisible ? "TAMA EIN" : "TAMA AUS"; // showing current state of target
+                visBtn.style.color = !isVisible ? "#60a5fa" : "#ef4444";
+                visBtn.style.borderColor = !isVisible ? "#60a5fa44" : "#ef444444";
+            }
+            // No alert needed for minimalist feel, just visual feedback
+        }
+    } catch (err) { alert("Fehler beim Umschalten."); }
 }
 
 // ── TAMAGOTCHI TEST CONSOLE ──────────────────────
@@ -1026,6 +1054,15 @@ async function loadSettings() {
 
             renderSotwCurrent();
             updateTamagotchiAdmin(settings.tamagotchi);
+
+            // Sync Visibility Button
+            const visBtn = document.getElementById('tama-visibility-btn');
+            if (visBtn) {
+                const isVisible = settings.tamagotchi?.visible !== false;
+                visBtn.innerText = isVisible ? "TAMA EIN" : "TAMA AUS";
+                visBtn.style.color = isVisible ? "#60a5fa" : "#ef4444";
+                visBtn.style.borderColor = isVisible ? "#60a5fa44" : "#ef444444";
+            }
         }
     } catch (err) { }
 }
