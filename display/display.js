@@ -1440,7 +1440,11 @@ function triggerLoveAnimation() {
 function renderTamagotchi() {
     const card = document.getElementById('tamagotchi-card');
     const tama = settings.tamagotchi;
-    if (!tama || !card) return;
+    
+    if (!tama || !card || tama.visible === false) {
+        if (card) card.style.display = 'none';
+        return;
+    }
 
     const gridEl = document.getElementById('tama-pixel-grid');
     const nameEl = document.getElementById('tama-name');
