@@ -29,8 +29,8 @@ export default {
             const activeHours = calculateActiveHours(last, now, ignoreFreeze);
 
             if (activeHours > 0) {
-                // Base decay: 20% per 30 mins = 40% per hour
-                const baseDecay = activeHours * 40;
+                // Base decay: 12.5% per 30 mins = 25% per hour 
+                const baseDecay = activeHours * 25;
                 
                 // Poop penalty: each poop increases LOVE decay by 50%
                 const poopCount = settings.tamagotchi.poopCount || 0;

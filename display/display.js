@@ -1659,6 +1659,7 @@ function renderTamagotchi() {
         if (funVal) funVal.textContent = `${Math.round(stats.fun || 0)}%`;
         if (levelVal) levelVal.textContent = `Lvl ${stats.level}`;
 
+        let statusText = "Alles super! ✨";
         if (tama.status === "dead") {
             statusText = "GEIST 👻";
             gridEl.classList.add('tama-dead');
@@ -1668,7 +1669,7 @@ function renderTamagotchi() {
             else if (stats.hunger < 30) statusText = "Hungrig! 🍏";
             else if (stats.thirst < 30) statusText = "Durstig! 💧";
             else if (stats.fun < 30) statusText = "Langweilig... 🥱";
-            else if (stats.love < 50) statusText = "Braucht Liebe ❤️";
+            else if (stats.love < 30) statusText = "Braucht Liebe ❤️";
         }
         const now = Date.now();
         // Calc inactivity relative ONLY to last interaction
