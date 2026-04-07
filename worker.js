@@ -1650,8 +1650,8 @@ function calculateActiveHours(lastUpdate, now, ignoreFreeze) {
         const hour = current.getHours();
         
         const isWeekend = (day === 0 || day === 6);
-        // Active from 11:00 to 16:30 (16.5)
-        const isActiveHour = (hour >= 11 && hour < 17);
+        // NEW Window: 12:20 to 16:30
+        const isActiveHour = (hour >= 12 && hour < 17);
 
         if (!isWeekend && isActiveHour) {
             const startOfHour = new Date(current);
@@ -1659,9 +1659,14 @@ function calculateActiveHours(lastUpdate, now, ignoreFreeze) {
             const endOfHour = new Date(current);
             endOfHour.setMinutes(59,59,999);
             
-            const effectiveStart = Math.max(current.getTime(), startOfHour.getTime());
-            
-            // Limit the end of the active window to 16:30 (16.5 hours)
+            // Adjust the window for specific hours (12:20 start and 16:30 end)
+            let hourStartLimit = startOfHour.getTime();
+            if (hour === 12) {
+                const limit20 = new Date(current);
+                limit20.setMinutes(20, 0, 0);
+                hourStartLimit = Math.max(hourStartLimit, limit20.getTime());
+            }
+
             let hourEndLimit = endOfHour.getTime();
             if (hour === 16) {
                 const limit30 = new Date(current);
@@ -1669,6 +1674,7 @@ function calculateActiveHours(lastUpdate, now, ignoreFreeze) {
                 hourEndLimit = Math.min(hourEndLimit, limit30.getTime());
             }
 
+            const effectiveStart = Math.max(current.getTime(), hourStartLimit);
             const effectiveEnd = Math.min(target.getTime(), hourEndLimit);
             
             if (effectiveEnd > effectiveStart) {
