@@ -1,9 +1,9 @@
 const API_URL = "https://stempelkarte.sb-nmsstadt.workers.dev/api";
 const PIN_ADMIN = "8520"; 
-const PIN_STAMP = "1590"; 
-const PIN_SUPERVISOR = "1590"; 
+const PIN_STAMP = "1591"; 
+const PIN_SUPERVISOR = "1591"; 
 
-const MAX_STAMPS = 60;
+const MAX_STAMPS = 9999;
 const STAMPS_PER_LEVEL = 20;
 
 const AVATARS = ["🦁", "🐯", "🦊", "🐭", "🐹", "🐰", "🐻", "🐼", "🐨", "🐸", "🐵", "🦄", "🐙", "🦋", "🦖"];
@@ -480,11 +480,13 @@ function updateStampDisplay(student) {
     }
     const maxCompletedRedemption = usedStamps;
 
-    // Create 3 levels
+    // Create levels dynamically
     const dotsContainer = document.getElementById('carousel-dots');
     dotsContainer.innerHTML = '';
 
-    for (let l = 1; l <= 3; l++) {
+    const numLevels = Math.max(3, Math.floor(student.stamps / STAMPS_PER_LEVEL) + 1);
+
+    for (let l = 1; l <= numLevels; l++) {
         const levelContainer = document.createElement('div');
         levelContainer.className = 'level-group';
         levelContainer.dataset.level = l;
@@ -540,10 +542,10 @@ function updateStampDisplay(student) {
     };
 
     // Auto-scroll to current level
-    const currentLevel = Math.min(3, Math.floor(student.stamps / STAMPS_PER_LEVEL) + 1);
+    const currentLevel = Math.floor(student.stamps / STAMPS_PER_LEVEL) + 1;
     
     // Glitter Explosion (Confetti) Logic
-    const milestones = [20, 40, 60];
+    const milestones = [20, 40, 60, 80, 100, 120, 140, 160, 180, 200];
     milestones.forEach(m => {
         if (student.stamps >= m) {
             const key = `confetti_${student.id}_${m}`;
@@ -656,35 +658,32 @@ function validatePin() {
 
 async function addStamp(count = 1) {
     if (!currentStudent) return;
-    const finalCount = Math.min(MAX_STAMPS, currentStudent.stamps + count);
-    if (currentStudent.stamps < MAX_STAMPS) {
-        const newCount = finalCount;
-        try {
-            const response = await fetch(`${API_URL}/students/${currentStudent.id}`, {
-                method: 'PATCH',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ 
-                    stamps: newCount,
-                    reason: selectedActivity 
-                })
-            });
-            if (response.ok) {
-                currentStudent = await response.json();
-                updateStampDisplay(currentStudent);
-                renderRewards(currentStudent);
-                renderHistory(currentStudent.history || []);
-                
-                // Reset activity for next time
-                selectedActivity = "Stempel";
-                selectedActivityEmoji = "🌟";
-                
-                // Close any remaining overlays (like activity or pin)
-                closeActivityOverlay();
-                closePinOverlay();
-            }
-        } catch (err) {
-            alert("Fehler beim Speichern.");
+    const newCount = currentStudent.stamps + count;
+    try {
+        const response = await fetch(`${API_URL}/students/${currentStudent.id}`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ 
+                stamps: newCount,
+                reason: selectedActivity 
+            })
+        });
+        if (response.ok) {
+            currentStudent = await response.json();
+            updateStampDisplay(currentStudent);
+            renderRewards(currentStudent);
+            renderHistory(currentStudent.history || []);
+            
+            // Reset activity for next time
+            selectedActivity = "Stempel";
+            selectedActivityEmoji = "🌟";
+            
+            // Close any remaining overlays (like activity or pin)
+            closeActivityOverlay();
+            closePinOverlay();
         }
+    } catch (err) {
+        alert("Fehler beim Speichern.");
     }
 }
 // Community Goal
