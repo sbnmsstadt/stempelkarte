@@ -1640,50 +1640,39 @@ function calculateActiveHours(lastUpdate, now, ignoreFreeze) {
         return (now - lastUpdate) / (1000 * 3600);
     }
 
+    const formatter = new Intl.DateTimeFormat('en-US', {
+        timeZone: 'Europe/Vienna',
+        hour: 'numeric',
+        minute: 'numeric',
+        weekday: 'short',
+        hour12: false
+    });
+
     let activems = 0;
-    let current = new Date(lastUpdate);
-    const target = new Date(now);
+    let current = lastUpdate;
+    // Step by 1 minute for precision (robust against UTC offsets and DST)
+    const step = 60 * 1000;
 
-    // Hourly steps
-    while (current < target) {
-        const day = current.getDay(); // 0(Sun) - 6(Sat)
-        const hour = current.getHours();
+    while (current < now) {
+        const next = Math.min(current + step, now);
+        const mid = new Date(current + (next - current) / 2);
         
-        const isWeekend = (day === 0 || day === 6);
-        // NEW Window: 12:20 to 16:30
-        const isActiveHour = (hour >= 12 && hour < 17);
-
-        if (!isWeekend && isActiveHour) {
-            const startOfHour = new Date(current);
-            startOfHour.setMinutes(0,0,0);
-            const endOfHour = new Date(current);
-            endOfHour.setMinutes(59,59,999);
-            
-            // Adjust the window for specific hours (12:20 start and 16:30 end)
-            let hourStartLimit = startOfHour.getTime();
-            if (hour === 12) {
-                const limit20 = new Date(current);
-                limit20.setMinutes(20, 0, 0);
-                hourStartLimit = Math.max(hourStartLimit, limit20.getTime());
-            }
-
-            let hourEndLimit = endOfHour.getTime();
-            if (hour === 16) {
-                const limit30 = new Date(current);
-                limit30.setMinutes(30, 0, 0);
-                hourEndLimit = Math.min(hourEndLimit, limit30.getTime());
-            }
-
-            const effectiveStart = Math.max(current.getTime(), hourStartLimit);
-            const effectiveEnd = Math.min(target.getTime(), hourEndLimit);
-            
-            if (effectiveEnd > effectiveStart) {
-                activems += (effectiveEnd - effectiveStart);
-            }
+        const parts = formatter.formatToParts(mid);
+        const d = {};
+        parts.forEach(p => d[p.type] = p.value);
+        
+        const hour = parseInt(d.hour);
+        const min = parseInt(d.minute);
+        const isWeekend = (d.weekday === 'Sat' || d.weekday === 'Sun');
+        
+        // Active Window: 12:20 to 16:30 local time
+        const totalMinutes = hour * 60 + min;
+        const isActive = !isWeekend && totalMinutes >= (12 * 60 + 20) && totalMinutes < (16 * 60 + 30);
+        
+        if (isActive) {
+            activems += (next - current);
         }
-        
-        current.setHours(current.getHours() + 1);
-        current.setMinutes(0, 0, 0);
+        current = next;
     }
     
     return activems / (1000 * 3600);
