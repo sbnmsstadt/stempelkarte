@@ -118,62 +118,11 @@ export default {
         const corsHeaders = {
             "Access-Control-Allow-Origin": "*",
             "Access-Control-Allow-Methods": "GET, POST, PUT, PATCH, DELETE, OPTIONS",
-            "Access-Control-Allow-Headers": "Content-Type, Authorization, X-Requested-With",
-            "Access-Control-Max-Age": "86400",
+            "Access-Control-Allow-Headers": "Content-Type",
         };
 
         if (method === "OPTIONS") {
-            return new Response(null, { status: 204, headers: corsHeaders });
-        }
-
-        // Diagnostic Ping
-        if (path === "/api/ping") {
-            return new Response("pong", { headers: corsHeaders });
-        }
-
-        // --- Appointments ---
-        if (path === "/api/appointments" && method === "GET") {
-            const eventsRaw = await getKV("events");
-            const events = eventsRaw ? JSON.parse(eventsRaw) : [];
-            return new Response(JSON.stringify(events), {
-                headers: { ...corsHeaders, "Content-Type": "application/json" }
-            });
-        }
-
-        if (path === "/api/appointments" && method === "POST") {
-            const body = await request.json();
-            const eventsRaw = await getKV("events");
-            let events = eventsRaw ? JSON.parse(eventsRaw) : [];
-
-            const newEvent = {
-                id: Date.now().toString(),
-                studentId: body.studentId || "unknown",
-                studentName: body.studentName || "Unbekannt",
-                text: body.text || "",
-                time: body.time || "00:00",
-                date: body.date || new Date().toISOString().split('T')[0],
-                createdAt: new Date().toISOString()
-            };
-
-            events.push(newEvent);
-            await putKV("events", JSON.stringify(events));
-            
-            return new Response(JSON.stringify(newEvent), {
-                status: 201,
-                headers: { ...corsHeaders, "Content-Type": "application/json" }
-            });
-        }
-
-        if (path.startsWith("/api/appointments/") && method === "DELETE") {
-            const parts = path.split("/").filter(Boolean);
-            const id = parts[parts.length - 1];
-            const eventsRaw = await getKV("events");
-            let events = JSON.parse(eventsRaw || "[]");
-
-            events = events.filter(e => String(e.id) !== String(id));
-            await putKV("events", JSON.stringify(events));
-            
-            return new Response(null, { status: 204, headers: corsHeaders });
+            return new Response(null, { headers: corsHeaders });
         }
 
         if (!env.DB) {
@@ -679,8 +628,6 @@ export default {
                     headers: { ...corsHeaders, "Content-Type": "application/json" }
                 });
             }
-
-
 
             // Handle Redeem Endpoints
             if (path.includes("/redeem") && (method === "POST" || method === "PATCH")) {

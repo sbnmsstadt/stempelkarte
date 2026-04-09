@@ -3,22 +3,11 @@ const API_URL = "https://stempelkarte.sb-nmsstadt.workers.dev/api";
 let students = [];
 let settings = {};
 let rewards = [];
-let events = [];
 let planFlipInterval = null; 
 let _celebrationSignaled = false; // Prevents repeated popups
 let _lastCelebrationId = null;   // Tracks last seen celebration event
 let _isBlinking = false;         // Global blink state for Tamagotchi
 let _blinkStarted = false;       // Flag to prevent multiple blink loops
-
-// Broadcast listener for instant updates from Admin
-try {
-    const bc = new BroadcastChannel('nachmi_updates');
-    bc.onmessage = (msg) => {
-        if (msg.data.type === 'appointments_updated') {
-            fetchData();
-        }
-    };
-} catch (e) {}
 
 // ── PARTICLES ──────────────────────────────────
 function createParticles() {
@@ -46,43 +35,26 @@ function updateClock() {
 }
 
 // ── FETCH ──────────────────────────────────────
-async function safeFetch(endpoint, fallback = []) {
-    try {
-        const res = await fetch(`${API_URL}/${endpoint}`);
-        if (res.ok) return await res.json();
-        console.warn(`Fetch failed for ${endpoint}: ${res.status}`);
-    } catch (err) {
-        console.error(`Network error for ${endpoint}:`, err);
-    }
-    return fallback;
-}
+let badges = [];
 
 async function fetchData() {
     try {
-        // Fetch all in parallel but handle each one safely
-        const [sData, stData, rData, bData, eData] = await Promise.all([
-            safeFetch('students'),
-            safeFetch('settings', {}),
-            safeFetch('rewards'),
-            safeFetch('badges'),
-            safeFetch('appointments')
+        const [sRes, stRes, rRes, bRes] = await Promise.all([
+            fetch(`${API_URL}/students`),
+            fetch(`${API_URL}/settings`),
+            fetch(`${API_URL}/rewards`),
+            fetch(`${API_URL}/badges`)
         ]);
-
-        students = sData;
-        settings = stData;
-        rewards = rData;
-        badges = bData;
-        events = eData;
+        students = sRes.ok ? await sRes.json() : [];
+        settings = stRes.ok ? await stRes.json() : {};
+        rewards = rRes.ok ? await rRes.json() : [];
+        badges = bRes.ok ? await bRes.json() : [];
 
         renderAll();
 
         const now = new Date();
-        const lastUpdatedEl = document.getElementById('last-updated');
-        if (lastUpdatedEl) {
-            lastUpdatedEl.textContent =
-                `Zuletzt: ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}:${String(now.getSeconds()).padStart(2, '0')}`;
-        }
-
+        document.getElementById('last-updated').textContent =
+            `Zuletzt: ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}:${String(now.getSeconds()).padStart(2, '0')}`;
         // Start Blinking Cycle for Tamagotchi (Once)
         if (!_blinkStarted) {
             _blinkStarted = true;
@@ -93,7 +65,7 @@ async function fetchData() {
         handleTamaActionDetection(settings.tamagotchi);
 
     } catch (err) {
-        console.error('Outer fetchData error:', err);
+        console.error('Fetch error:', err);
     }
 }
 
@@ -604,40 +576,8 @@ function renderUpcomingProjects() {
 function renderDailyNotes() {
     const el = document.getElementById('daily-notes-list');
     if (!el) return;
-
-    const today = new Date().toISOString().split('T')[0];
-    const todayEvents = events.filter(e => e.date === today);
-    
-    // Sort events by time
-    todayEvents.sort((a, b) => a.time.localeCompare(b.time));
-
-    const now = new Date();
-    const currentMinutes = now.getHours() * 60 + now.getMinutes();
-
-    let html = '';
-
-    // Render dynamic events as list items
-    if (todayEvents.length > 0) {
-        html += todayEvents.map(e => {
-            const [h, m] = e.time.split(':').map(Number);
-            const eventMinutes = h * 60 + m;
-            const isPassed = (currentMinutes > eventMinutes + 5);
-            return `<div class="${isPassed ? 'is-passed' : ''}" style="margin-bottom: 2px;">• <span style="color:var(--primary-light);">🕒 ${e.time}</span> <strong style="color:white;">${e.studentName}:</strong> <span style="color: rgba(255,255,255,0.95);">${e.text}</span></div>`;
-        }).join('');
-    }
-
-    // Render static notes (the ones from system settings)
-    if (settings.dailyNotes && settings.dailyNotes.trim()) {
-        // If we already have appointments, add a small gap
-        if (html) html += '<div style="margin-top: 6px;"></div>';
-        html += `<div class="static-daily-notes">${formatList(settings.dailyNotes)}</div>`;
-    }
-
-    if (!html.trim()) {
-        html = `<div style="color:var(--text-muted); font-style:italic;">Keine besonderen Notizen für heute.</div>`;
-    }
-
-    el.innerHTML = html;
+    const txt = settings.dailyNotes || "Keine besonderen Notizen für heute.";
+    el.innerHTML = formatList(txt);
 }
 
 // ── TODAY PLAN ────────────────────────────────
