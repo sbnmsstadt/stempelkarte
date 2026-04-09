@@ -1,13 +1,28 @@
+const DEFAULT_REWARDS = [
+    { threshold: 8, title: "Eis essen", icon: "🍦", desc: "Ein Eis deiner Wahl", active: true },
+    { threshold: 24, title: "Kino Nachmittag", icon: "🎬", desc: "Film schauen mit Popcorn", active: true },
+    { threshold: 40, title: "Große Überraschung", icon: "🎁", desc: "Etwas ganz Besonderes", active: true },
+    { threshold: 60, title: "3 Volle Karten Bonus", icon: "🏆", desc: "Spezial-Belohnung für 3 volle Karten!", active: true },
+    { threshold: 40, icon: "🎮", title: "Level 2: Extra-Spielzeit", desc: "15 Min an der Konsole/Spiel." },
+    { threshold: 60, icon: "👑", title: "Level 3: VIP Woche", desc: "Entscheide über die Spiele!" }
+];
+
 export default {
     async fetch(request, env) {
         // ── WEATHER SYNC HELPER (Hallein: 47.68, 13.17) ──────────────────
         // ── STORAGE HELPERS (Migrating from KV to D1) ─────────────────
         async function getKV(key) {
-            // Try D1 first
-            const res = await env.DB.prepare("SELECT value FROM kv_data WHERE id = ?").bind(key).first("value");
-            if (res) return res;
+            // Try D1 first (if bound)
+            if (env.DB) {
+                try {
+                    const res = await env.DB.prepare("SELECT value FROM kv_data WHERE id = ?").bind(key).first("value");
+                    if (res) return res;
+                } catch (e) {
+                    console.error("D1 read failed:", e);
+                }
+            }
             
-            // Fallback to KV for migration (if it exists and is not 429'd for reads)
+            // Fallback to KV for migration (if it exists)
             if (env.DATABASE) {
                 try {
                     return await env.DATABASE.get(key);
@@ -17,7 +32,15 @@ export default {
         }
 
         async function putKV(key, value) {
-            await env.DB.prepare("INSERT OR REPLACE INTO kv_data (id, value) VALUES (?, ?)").bind(key, value).run();
+            if (env.DB) {
+                try {
+                    await env.DB.prepare("INSERT OR REPLACE INTO kv_data (id, value) VALUES (?, ?)").bind(key, value).run();
+                } catch (e) {
+                    console.error("D1 write failed:", e);
+                }
+            } else if (env.DATABASE) {
+                await env.DATABASE.put(key, value);
+            }
         }
 
         // ── TAMAGOTCHI DECAY HELPER ──────────────────────────────────
@@ -183,17 +206,7 @@ export default {
             });
         }
 
-        try {
-            const DEFAULT_REWARDS = [
-                    { threshold: 8, title: "Eis essen", icon: "🍦", desc: "Ein Eis deiner Wahl", active: true },
-                    { threshold: 24, title: "Kino Nachmittag", icon: "🎬", desc: "Film schauen mit Popcorn", active: true },
-                    { threshold: 40, title: "Große Überraschung", icon: "🎁", desc: "Etwas ganz Besonderes", active: true },
-                    { threshold: 60, title: "3 Volle Karten Bonus", icon: "🏆", desc: "Spezial-Belohnung für 3 volle Karten!", active: true },
-                    { threshold: 40, icon: "🎮", title: "Level 2: Extra-Spielzeit", desc: "15 Min an der Konsole/Spiel." },
-                    { threshold: 60, icon: "👑", title: "Level 3: VIP Woche", desc: "Entscheide über die Spiele!" }
-                ];
-
-            // ── MIGRATION ENDPOINT ───────────────────────────────────────
+        // ── MIGRATION ENDPOINT ───────────────────────────────────────
             if (path === "/api/migrate-kv-to-d1" && method === "GET") {
                 if (!env.DATABASE) return new Response("KV nicht gefunden", { status: 404, headers: corsHeaders });
                 const mainKeys = ["settings", "students", "rewards", "projects", "badges"];
@@ -1458,10 +1471,7 @@ Deine Aufgabe: Schreibe eine ausführliche, begeisterte Nachricht für die Infot
                 }
             }
 
-            return new Response(`Not Found: ${method} ${path}`, { status: 404, headers: corsHeaders });
-        } catch (err) {
-            return new Response(err.message, { status: 500, headers: corsHeaders });
-        }
+        return new Response(`Not Found: ${method} ${path}`, { status: 404, headers: corsHeaders });
     },
 
     async scheduled(event, env, ctx) {
@@ -1749,8 +1759,15 @@ function calculateActiveHours(lastUpdate, now, ignoreFreeze) {
 
     let activems = 0;
     let current = lastUpdate;
-    // Step by 1 minute for precision (robust against UTC offsets and DST)
-    const step = 60 * 1000;
+    
+    // Safety cap: Max 48 hours lookback to prevent CPU exhaustion on very old data
+    const maxLookback = 48 * 60 * 60 * 1000;
+    if (now - current > maxLookback) {
+        current = now - maxLookback;
+    }
+
+    // Step by 15 minutes (precision is sufficient for decay, significantly reduces CPU load)
+    const step = 15 * 60 * 1000;
 
     while (current < now) {
         const next = Math.min(current + step, now);
@@ -1758,7 +1775,7 @@ function calculateActiveHours(lastUpdate, now, ignoreFreeze) {
         
         const parts = formatter.formatToParts(mid);
         const d = {};
-        parts.forEach(p => d[p.type] = p.value);
+        for (const p of parts) { d[p.type] = p.value; }
         
         const hour = parseInt(d.hour);
         const min = parseInt(d.minute);

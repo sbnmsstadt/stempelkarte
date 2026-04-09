@@ -1343,3 +1343,18 @@ async function clearStudentOfWeek() {
     document.getElementById('sotw-reason').value = '';
     document.getElementById('sotw-current').style.display = 'none';
 }
+function showStatus(msg, type = 'info') {
+    console.log(`[${type}] ${msg}`);
+    if (type === 'error') {
+        const studentList = document.getElementById('admin-student-list');
+        if (studentList && studentList.innerText.includes('Lade')) {
+            studentList.innerHTML = `<div class="glass-card" style="text-align:center; border-color: var(--accent);">
+                <p>⚠️ ${msg}</p>
+                <button onclick="location.reload()" class="add-stamp-btn" style="margin-top:10px">Erneut versuchen</button>
+            </div>`;
+        }
+    }
+}
+
+// Ensure the function is available globally
+window.showStatus = showStatus;
