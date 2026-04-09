@@ -65,8 +65,8 @@ header {
 /* Top Navigation Row - NEW */
 .top-nav-row {
     display: grid;
-    grid-template-columns: repeat(5, 1fr);
-    gap: 1rem;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1.5rem;
     margin-bottom: 2rem;
 }
 
@@ -74,10 +74,10 @@ header {
     background: var(--bg-card);
     border: 1px solid var(--glass-border);
     border-radius: 20px;
-    padding: 0.8rem 1rem;
+    padding: 1.2rem;
     display: flex;
     align-items: center;
-    gap: 12px;
+    gap: 15px;
     cursor: pointer;
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     position: relative;
@@ -114,12 +114,12 @@ header {
 }
 
 .nav-icon {
-    font-size: 1.6rem;
+    font-size: 2rem;
 }
 
 .nav-info h3 {
     margin: 0 !important;
-    font-size: 0.95rem;
+    font-size: 1.1rem;
     font-weight: 800;
 }
 
