@@ -10,6 +10,16 @@ let _lastCelebrationId = null;   // Tracks last seen celebration event
 let _isBlinking = false;         // Global blink state for Tamagotchi
 let _blinkStarted = false;       // Flag to prevent multiple blink loops
 
+// Broadcast listener for instant updates from Admin
+try {
+    const bc = new BroadcastChannel('nachmi_updates');
+    bc.onmessage = (msg) => {
+        if (msg.data.type === 'appointments_updated') {
+            fetchData();
+        }
+    };
+} catch (e) {}
+
 // ── PARTICLES ──────────────────────────────────
 function createParticles() {
     const colors = ['#3b82f6', '#8b5cf6', '#10b981', '#f59e0b', '#ec4899'];
@@ -612,21 +622,14 @@ function renderDailyNotes() {
             const [h, m] = e.time.split(':').map(Number);
             const eventMinutes = h * 60 + m;
             const isPassed = (currentMinutes > eventMinutes + 5);
-            
-            return `
-                <div class="${isPassed ? 'is-passed' : ''}" style="margin-bottom: 4px; line-height: 1.2;">
-                    • <span style="color:var(--primary-light);">🕒 ${e.time}</span> 
-                    <strong style="color:white;">${e.studentName}:</strong> 
-                    <span style="color: rgba(255,255,255,0.95);">${e.text}</span>
-                </div>
-            `;
+            return `<div class="${isPassed ? 'is-passed' : ''}" style="margin-bottom: 2px;">• <span style="color:var(--primary-light);">🕒 ${e.time}</span> <strong style="color:white;">${e.studentName}:</strong> <span style="color: rgba(255,255,255,0.95);">${e.text}</span></div>`;
         }).join('');
     }
 
     // Render static notes (the ones from system settings)
     if (settings.dailyNotes && settings.dailyNotes.trim()) {
         // If we already have appointments, add a small gap
-        if (html) html += '<div style="margin-top: 8px;"></div>';
+        if (html) html += '<div style="margin-top: 6px;"></div>';
         html += `<div class="static-daily-notes">${formatList(settings.dailyNotes)}</div>`;
     }
 

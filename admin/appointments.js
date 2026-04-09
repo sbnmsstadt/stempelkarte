@@ -184,6 +184,14 @@ const Appointments = {
                 this.renderEvents();
                 // Reset text
                 document.getElementById('appointment-text').value = '';
+                
+                // Signal Infotafel to refresh immediately
+                try {
+                    const bc = new BroadcastChannel('nachmi_updates');
+                    bc.postMessage({ type: 'appointments_updated' });
+                    bc.close();
+                } catch (e) {}
+
             } else {
                 alert("Fehler beim Speichern.");
             }
