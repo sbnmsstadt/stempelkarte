@@ -196,15 +196,32 @@ export default {
             // ── MIGRATION ENDPOINT ───────────────────────────────────────
             if (path === "/api/migrate-kv-to-d1" && method === "GET") {
                 if (!env.DATABASE) return new Response("KV nicht gefunden", { status: 404, headers: corsHeaders });
-                const keys = ["settings", "students", "rewards", "projects", "badges"];
+                const mainKeys = ["settings", "students", "rewards", "projects", "badges"];
                 let count = 0;
-                for (const k of keys) {
+                
+                // Migrate main keys
+                for (const k of mainKeys) {
                     const val = await env.DATABASE.get(k);
                     if (val) {
                         await putKV(k, val);
                         count++;
                     }
                 }
+
+                // Migrate archived summaries
+                try {
+                    const list = await env.DATABASE.list({ prefix: "archived_summary_" });
+                    for (const key of list.keys) {
+                        const val = await env.DATABASE.get(key.name);
+                        if (val) {
+                            await putKV(key.name, val);
+                            count++;
+                        }
+                    }
+                } catch (e) {
+                    console.error("Archive migration failed:", e);
+                }
+
                 return new Response(`Migration abgeschlossen! ${count} Keys von KV nach D1 kopiert. 🎉`, { headers: corsHeaders });
             }
 
@@ -1260,9 +1277,21 @@ export default {
             }
 
             if (path === "/api/ai/day-summary/list" && method === "GET") {
-                // Query D1 instead of KV to get the full list of archived summaries
+                // 1. Get dates from D1
                 const { results } = await env.DB.prepare("SELECT id FROM kv_data WHERE id LIKE 'archived_summary_%'").all();
-                const dates = results.map(r => r.id.replace("archived_summary_", ""));
+                let dates = results.map(r => r.id.replace("archived_summary_", ""));
+                
+                // 2. Get dates from KV if available
+                if (env.DATABASE) {
+                    try {
+                        const list = await env.DATABASE.list({ prefix: "archived_summary_" });
+                        const kvDates = list.keys.map(k => k.name.replace("archived_summary_", ""));
+                        dates = [...new Set([...dates, ...kvDates])];
+                    } catch (e) {
+                        console.error("KV listing failed:", e);
+                    }
+                }
+
                 return new Response(JSON.stringify({ dates }), {
                     headers: { ...corsHeaders, "Content-Type": "application/json" }
                 });
