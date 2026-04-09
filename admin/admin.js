@@ -44,8 +44,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     Appointments.init();
     fetchStudents();
 
-    // Poll every 5 seconds for new data
-    setInterval(fetchStudentsSilent, 5000);
+    // Poll every 30 seconds for new data (increased from 5s to save API requests)
+    setInterval(fetchStudentsSilent, 30000);
 
     document.getElementById('add-btn')?.addEventListener('click', createNewStudent);
     document.getElementById('add-reward-btn')?.addEventListener('click', createNewReward);
@@ -388,21 +388,48 @@ async function toggleTamaSleep(active) {
 async function fetchStudentsSilent() {
     if (document.hidden) return;
     try {
-        const response = await fetch(`${API_URL}/students`);
+        // Optimized: Single request for both students and settings
+        const response = await fetch(`${API_URL}/sync/admin`);
         if (response.ok) {
-            const raw = await response.text();
-            if (raw !== lastStudentsSnapshot) {
-                lastStudentsSnapshot = raw;
-                window.students = JSON.parse(raw);
+            const data = await response.json();
+            const { students: freshStudents, settings: freshSettings } = data;
+
+            // Check if students data actually changed
+            const rawStudents = JSON.stringify(freshStudents);
+            if (rawStudents !== lastStudentsSnapshot) {
+                lastStudentsSnapshot = rawStudents;
+                window.students = freshStudents;
                 renderAdminList(document.getElementById('search-students')?.value.toLowerCase());
                 renderBirthdayDashboard();
                 renderRedemptionDashboard();
                 updateStats();
                 if (typeof Appointments !== 'undefined') Appointments.renderStudentList();
             }
+
+            // Sync settings
+            if (freshSettings) {
+                currentSettings = freshSettings;
+                // Sync UI elements from settings
+                const updateField = (id, value, isCheckbox = false) => {
+                    const el = document.getElementById(id);
+                    if (!el || document.activeElement === el) return;
+                    if (lastLoadedValues[id] !== undefined && el[isCheckbox ? 'checked' : 'value'] !== lastLoadedValues[id]) return;
+                    el[isCheckbox ? 'checked' : 'value'] = value;
+                    lastLoadedValues[id] = value;
+                };
+
+                updateField('setting-community-visible', freshSettings.communityGoalVisible !== false, true);
+                updateField('setting-community-title', freshSettings.communityTitle || "Pizza-Party");
+                updateField('setting-community-target', freshSettings.communityTarget || 500);
+                updateField('setting-tama-ignore-freeze', freshSettings.tamagotchi?.ignoreWeekendFreeze || false, true);
+                updateField('setting-vip-duration', freshSettings.vipDurationDays || 3);
+                window._vipDuration = freshSettings.vipDurationDays || 3;
+                
+                renderSotwCurrent();
+                updateTamagotchiAdmin(freshSettings.tamagotchi);
+            }
         }
     } catch (err) { }
-    loadSettings();
 }
 
 function updateStats() {

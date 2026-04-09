@@ -68,7 +68,7 @@ function startSync() {
         if (document.visibilityState === 'visible' && currentStudent && !isSupervisor) {
             silentSync();
         }
-    }, 5000);
+    }, 30000); // Increased from 5s to 30s to stay under API limits
 }
 
 function stopSync() {
@@ -78,22 +78,19 @@ function stopSync() {
 async function silentSync() {
     if (!currentStudent) return;
     try {
-        const [stRes, setRes] = await Promise.all([
-            fetch(`${API_URL}/students/${currentStudent.id}`),
-            fetch(`${API_URL}/settings`)
-        ]);
+        // Optimized: Single request for both student data and global settings
+        const response = await fetch(`${API_URL}/sync/student?id=${encodeURIComponent(currentStudent.id)}`);
 
-        if (stRes.ok && setRes.ok) {
-            const freshData = await stRes.json();
-            const freshSettings = await setRes.json();
+        if (response.ok) {
+            const data = await response.json();
+            const { student: freshData, settings: freshSettings } = data;
             
             // Check for changes in student data
-            const studentChanged = freshData.stamps !== currentStudent.stamps || 
-                                   freshData.usedStamps !== currentStudent.usedStamps ||
-                                   JSON.stringify(freshData.redemptions) !== JSON.stringify(currentStudent.redemptions);
+            const studentChanged = JSON.stringify(freshData) !== JSON.stringify(currentStudent);
             
-            // Check for changes in group reward activation
-            const settingsChanged = JSON.stringify(freshSettings.groupReward) !== JSON.stringify(SETTINGS.groupReward);
+            // Check for changes in settings (especially group reward or celebration)
+            const settingsChanged = JSON.stringify(freshSettings.groupReward) !== JSON.stringify(SETTINGS.groupReward) ||
+                                   JSON.stringify(freshSettings.celebration) !== JSON.stringify(SETTINGS.celebration);
 
             if (studentChanged || settingsChanged) {
                 currentStudent = freshData;
@@ -102,7 +99,7 @@ async function silentSync() {
                 renderRewards(currentStudent);
                 renderTamagotchiUI(SETTINGS.tamagotchi, currentStudent);
                 // Also update home screen if needed (community goal)
-                updateCommunityGoal(); 
+                updateCommunityGoal(null, freshSettings); 
             }
 
             // Check for group celebration trigger

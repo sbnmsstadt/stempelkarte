@@ -59,20 +59,16 @@ async function safeFetch(endpoint, fallback = []) {
 
 async function fetchData() {
     try {
-        // Fetch all in parallel but handle each one safely
-        const [sData, stData, rData, bData, eData] = await Promise.all([
-            safeFetch('students'),
-            safeFetch('settings', {}),
-            safeFetch('rewards'),
-            safeFetch('badges'),
-            safeFetch('appointments')
-        ]);
-
-        students = sData;
-        settings = stData;
-        rewards = rData;
-        badges = bData;
-        events = eData;
+        // Optimized: Combined request for all display data
+        const res = await fetch(`${API_URL}/sync/display`);
+        if (!res.ok) return;
+        
+        const data = await res.json();
+        students = data.students || [];
+        settings = data.settings || {};
+        rewards = data.rewards || [];
+        badges = data.badges || [];
+        events = data.appointments || [];
 
         renderAll();
 
@@ -804,35 +800,14 @@ updateClock();
 setInterval(updateClock, 1000);
 
 fetchData();
-setInterval(fetchData, 3000); // Faster polling (3s) for responsive Tamagotchi
+setInterval(fetchData, 30000); // Polling every 30s (bundled) to save API requests
 
 // Start the ticker RAF loop immediately (it runs forever)
 startTickerLoop();
 
 // ── FILMTAG LIVE POLL (every 5s) ───────────────
-async function fetchFilmtagLive() {
-    try {
-        const res = await fetch(`${API_URL}/settings`);
-        if (!res.ok) return;
-        const newSettings = await res.json();
-
-        const oldCurrent = settings?.groupReward?.current;
-        const newCurrent = newSettings?.groupReward?.current;
-        const oldCelebId = settings?.celebration?.id;
-        const newCelebId = newSettings?.celebration?.id;
-        const oldTamaActionTime = settings?.tamagotchi?.lastActionTime;
-        const newTamaActionTime = newSettings?.tamagotchi?.lastActionTime;
-
-        if (oldCurrent !== newCurrent || oldCelebId !== newCelebId || oldTamaActionTime !== newTamaActionTime) {
-            settings = newSettings;
-            renderFilmtag();
-            checkCelebrationMode();
-            renderTamagotchi(); // Crucial: ensure Tamagotchi reacts to live updates!
-        }
-    } catch (_) { /* silent fail */ }
-}
-
-setInterval(fetchFilmtagLive, 5000);
+// Note: fetchFilmtagLive removed to save requests, settings are now part of fetchData sync.
+// setInterval(fetchFilmtagLive, 5000);
 
 window.addEventListener('resize', () => {
     if (students.length) renderKids();

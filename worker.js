@@ -193,6 +193,54 @@ export default {
                     { threshold: 60, icon: "👑", title: "Level 3: VIP Woche", desc: "Entscheide über die Spiele!" }
                 ];
 
+            // ── SYNC ENDPOINTS (Optimization for Rate Limits) ──────────
+            if (path === "/api/sync/admin" && method === "GET") {
+                const [studentsRaw, settingsRaw] = await Promise.all([
+                    getKV("students"),
+                    getKV("settings")
+                ]);
+                return new Response(JSON.stringify({
+                    students: JSON.parse(studentsRaw || "[]"),
+                    settings: JSON.parse(settingsRaw || "{}")
+                }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+            }
+
+            if (path === "/api/sync/student" && method === "GET") {
+                const id = url.searchParams.get("id");
+                if (!id) return new Response("Missing ID", { status: 400, headers: corsHeaders });
+                
+                const [studentsRaw, settingsRaw] = await Promise.all([
+                    getKV("students"),
+                    getKV("settings")
+                ]);
+                
+                const students = JSON.parse(studentsRaw || "[]");
+                const student = students.find(s => s.id === id);
+                if (!student) return new Response("Not found", { status: 404, headers: corsHeaders });
+                
+                return new Response(JSON.stringify({
+                    student,
+                    settings: JSON.parse(settingsRaw || "{}")
+                }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+            }
+
+            if (path === "/api/sync/display" && method === "GET") {
+                const [studentsRaw, settingsRaw, rewardsRaw, appointmentsRaw, badgesRaw] = await Promise.all([
+                    getKV("students"),
+                    getKV("settings"),
+                    getKV("rewards"),
+                    getKV("appointments"),
+                    getKV("badges")
+                ]);
+                return new Response(JSON.stringify({
+                    students: JSON.parse(studentsRaw || "[]"),
+                    settings: JSON.parse(settingsRaw || "{}"),
+                    rewards: JSON.parse(rewardsRaw || "[]"),
+                    appointments: JSON.parse(appointmentsRaw || "[]"),
+                    badges: JSON.parse(badgesRaw || "[]")
+                }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+            }
+
             // ── MIGRATION ENDPOINT ───────────────────────────────────────
             if (path === "/api/migrate-kv-to-d1" && method === "GET") {
                 if (!env.DATABASE) return new Response("KV nicht gefunden", { status: 404, headers: corsHeaders });
