@@ -10,7 +10,23 @@ const Appointments = {
         console.log("Appointments initialized");
         this.renderBaseLayout();
         this.renderStudentList();
+        this.checkApiConnection(); // Diagnostic ping
         this.fetchEvents();
+    },
+
+    async checkApiConnection() {
+        try {
+            const url = (typeof API_URL !== 'undefined') ? API_URL : "https://stempelkarte.sb-nmsstadt.workers.dev/api";
+            console.log("Testing Connection to:", `${url}/ping`);
+            const res = await fetch(`${url}/ping`);
+            if (res.ok) {
+                console.log("API Connection OK (Ping: " + await res.text() + ")");
+            } else {
+                console.warn("API Connection status:", res.status);
+            }
+        } catch (err) {
+            console.error("API Connection Failed:", err);
+        }
     },
 
     renderStudentList() {
@@ -78,8 +94,9 @@ const Appointments = {
     },
 
     async fetchEvents() {
+        const url = (typeof API_URL !== 'undefined') ? API_URL : "https://stempelkarte.sb-nmsstadt.workers.dev/api";
         try {
-            const res = await fetch(`${API_URL}/events`);
+            const res = await fetch(`${url}/events`);
             if (res.ok) {
                 this.events = await res.json();
                 this.renderEvents();
@@ -144,10 +161,14 @@ const Appointments = {
         btn.disabled = true;
         btn.innerText = "Speichere...";
 
+        const url = (typeof API_URL !== 'undefined') ? API_URL : "https://stempelkarte.sb-nmsstadt.workers.dev/api";
+
         try {
-            const res = await fetch(`${API_URL}/events`, {
+            const res = await fetch(`${url}/events`, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: { 
+                    'Content-Type': 'application/json'
+                },
                 body: JSON.stringify({
                     studentId,
                     studentName: student.name,
@@ -178,8 +199,10 @@ const Appointments = {
     async deleteEntry(id) {
         if (!confirm("Termin wirklich löschen?")) return;
 
+        const url = (typeof API_URL !== 'undefined') ? API_URL : "https://stempelkarte.sb-nmsstadt.workers.dev/api";
+
         try {
-            const res = await fetch(`${API_URL}/events/${id}`, {
+            const res = await fetch(`${url}/events/${id}`, {
                 method: 'DELETE'
             });
 
@@ -190,7 +213,7 @@ const Appointments = {
                 alert("Fehler beim Löschen.");
             }
         } catch (err) {
-            alert("Verbindungsfehler.");
+            alert("Verbindungsfehler: " + err.message);
         }
     }
 };

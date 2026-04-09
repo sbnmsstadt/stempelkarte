@@ -118,11 +118,17 @@ export default {
         const corsHeaders = {
             "Access-Control-Allow-Origin": "*",
             "Access-Control-Allow-Methods": "GET, POST, PUT, PATCH, DELETE, OPTIONS",
-            "Access-Control-Allow-Headers": "Content-Type",
+            "Access-Control-Allow-Headers": "*",
+            "Access-Control-Max-Age": "86400",
         };
 
         if (method === "OPTIONS") {
-            return new Response(null, { headers: corsHeaders });
+            return new Response(null, { status: 204, headers: corsHeaders });
+        }
+
+        // Diagnostic Ping
+        if (path === "/api/ping") {
+            return new Response("pong", { headers: corsHeaders });
         }
 
         if (!env.DB) {
