@@ -41,6 +41,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     await fetchBadges(); // ← muss VOR fetchStudents fertig sein, sonst fehlen Badges beim Rendern
     await loadSettings();
     Logbook.init();
+    Appointments.init();
     fetchStudents();
 
     // Poll every 5 seconds for new data
@@ -74,6 +75,38 @@ document.addEventListener('DOMContentLoaded', async () => {
             logbook.classList.add('hidden');
             document.getElementById('search-students').parentElement.style.display = 'flex';
             navBtn.querySelector('h3').innerText = "Pädagog. Logbuch";
+        }
+    });
+
+    // Appointments Navigation
+    document.getElementById('nav-appointments-btn')?.addEventListener('click', () => {
+        const overview = document.getElementById('admin-student-list');
+        const overviewTitle = document.querySelector('.main-content h2');
+        const appointments = document.getElementById('appointments-view');
+        const navBtn = document.getElementById('nav-appointments-btn');
+        const searchBar = document.getElementById('search-students').parentElement;
+
+        if (appointments.classList.contains('hidden')) {
+            // Hide everything else
+            document.getElementById('logbook-view').classList.add('hidden');
+            document.getElementById('nav-logbook-btn').querySelector('h3').innerText = "Pädagog. Logbuch";
+            
+            // Show Appointments
+            overview.classList.add('hidden');
+            if (overviewTitle) overviewTitle.innerText = "Termin-Planer";
+            appointments.classList.remove('hidden');
+            searchBar.style.display = 'none';
+            navBtn.querySelector('h3').innerText = "⬅ Übersicht";
+
+            // Initialize/Render
+            Appointments.init();
+        } else {
+            // Back to Overview
+            overview.classList.remove('hidden');
+            if (overviewTitle) overviewTitle.innerText = "Schüler-Übersicht";
+            appointments.classList.add('hidden');
+            searchBar.style.display = 'flex';
+            navBtn.querySelector('h3').innerText = "Termin-Planer";
         }
     });
 
@@ -156,6 +189,7 @@ async function fetchStudents() {
             updateStats();
             populateSotwDropdown();
             renderSotwCurrent();
+            if (typeof Appointments !== 'undefined') Appointments.renderStudentList();
         } else {
             showStatus("Fehler beim Laden der Schüler.", "error");
         }
@@ -364,6 +398,7 @@ async function fetchStudentsSilent() {
                 renderBirthdayDashboard();
                 renderRedemptionDashboard();
                 updateStats();
+                if (typeof Appointments !== 'undefined') Appointments.renderStudentList();
             }
         }
     } catch (err) { }

@@ -118,11 +118,62 @@ export default {
         const corsHeaders = {
             "Access-Control-Allow-Origin": "*",
             "Access-Control-Allow-Methods": "GET, POST, PUT, PATCH, DELETE, OPTIONS",
-            "Access-Control-Allow-Headers": "Content-Type",
+            "Access-Control-Allow-Headers": "Content-Type, Authorization, X-Requested-With",
+            "Access-Control-Max-Age": "86400",
         };
 
         if (method === "OPTIONS") {
-            return new Response(null, { headers: corsHeaders });
+            return new Response(null, { status: 204, headers: corsHeaders });
+        }
+
+        // Diagnostic Ping
+        if (path === "/api/ping") {
+            return new Response("pong", { headers: corsHeaders });
+        }
+
+        // --- Appointments ---
+        if (path === "/api/appointments" && method === "GET") {
+            const eventsRaw = await getKV("events");
+            const events = eventsRaw ? JSON.parse(eventsRaw) : [];
+            return new Response(JSON.stringify(events), {
+                headers: { ...corsHeaders, "Content-Type": "application/json" }
+            });
+        }
+
+        if (path === "/api/appointments" && method === "POST") {
+            const body = await request.json();
+            const eventsRaw = await getKV("events");
+            let events = eventsRaw ? JSON.parse(eventsRaw) : [];
+
+            const newEvent = {
+                id: Date.now().toString(),
+                studentId: body.studentId || "unknown",
+                studentName: body.studentName || "Unbekannt",
+                text: body.text || "",
+                time: body.time || "00:00",
+                date: body.date || new Date().toISOString().split('T')[0],
+                createdAt: new Date().toISOString()
+            };
+
+            events.push(newEvent);
+            await putKV("events", JSON.stringify(events));
+            
+            return new Response(JSON.stringify(newEvent), {
+                status: 201,
+                headers: { ...corsHeaders, "Content-Type": "application/json" }
+            });
+        }
+
+        if (path.startsWith("/api/appointments/") && method === "DELETE") {
+            const parts = path.split("/").filter(Boolean);
+            const id = parts[parts.length - 1];
+            const eventsRaw = await getKV("events");
+            let events = JSON.parse(eventsRaw || "[]");
+
+            events = events.filter(e => String(e.id) !== String(id));
+            await putKV("events", JSON.stringify(events));
+            
+            return new Response(null, { status: 204, headers: corsHeaders });
         }
 
         if (!env.DB) {
@@ -624,10 +675,17 @@ export default {
                 });
 
                 await putKV("students", JSON.stringify(students));
+
+                // Invalidate AI summary cache for this date
+                const logDate = date || new Date().toISOString().split('T')[0];
+                await env.DB.prepare("DELETE FROM kv_data WHERE id = ?").bind(`day_summary_${logDate}`).run();
+
                 return new Response(JSON.stringify(students[index]), {
                     headers: { ...corsHeaders, "Content-Type": "application/json" }
                 });
             }
+
+
 
             // Handle Redeem Endpoints
             if (path.includes("/redeem") && (method === "POST" || method === "PATCH")) {
@@ -1108,7 +1166,9 @@ export default {
                 if (!force) {
                     // Check older archive format first for backwards compatibility
                     const archived = await getKV(`archived_summary_${date}`);
-                    if (archived) return new Response(JSON.stringify({ text: archived, isArchived: true }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+                    if (archived && !archived.includes("Keine Einträge für diesen Tag gefunden.")) {
+                        return new Response(JSON.stringify({ text: archived, isArchived: true }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+                    }
 
                     // Check new fast cache
                     const cached = await getKV(cacheKey);
@@ -1121,7 +1181,13 @@ export default {
                 let dayLogs = [];
                 students.forEach(s => {
                     if (s.pedagogical_logs) {
-                        const logs = s.pedagogical_logs.filter(l => String(l.date) === String(date));
+                        // Robust filtering: trim dates and also check timestamp as fallback
+                        const logs = s.pedagogical_logs.filter(l => {
+                            const logDate = String(l.date || "").trim();
+                            const searchDate = String(date || "").trim();
+                            return logDate === searchDate || (l.timestamp && l.timestamp.split('T')[0] === searchDate);
+                        });
+                        
                         logs.forEach(l => {
                             dayLogs.push({ studentName: s.name, type: l.type, text: l.text });
                         });
@@ -1129,7 +1195,10 @@ export default {
                 });
 
                 if (dayLogs.length === 0) {
-                    return new Response(JSON.stringify({ text: "Keine Einträge für diesen Tag gefunden." }), {
+                    return new Response(JSON.stringify({ 
+                        text: "Keine Einträge für diesen Tag gefunden.",
+                        date: date
+                    }), {
                         headers: { ...corsHeaders, "Content-Type": "application/json" }
                     });
                 }
@@ -1191,8 +1260,9 @@ export default {
             }
 
             if (path === "/api/ai/day-summary/list" && method === "GET") {
-                const list = await env.DATABASE.list({ prefix: "archived_summary_" });
-                const dates = list.keys.map(k => k.name.replace("archived_summary_", ""));
+                // Query D1 instead of KV to get the full list of archived summaries
+                const { results } = await env.DB.prepare("SELECT id FROM kv_data WHERE id LIKE 'archived_summary_%'").all();
+                const dates = results.map(r => r.id.replace("archived_summary_", ""));
                 return new Response(JSON.stringify({ dates }), {
                     headers: { ...corsHeaders, "Content-Type": "application/json" }
                 });

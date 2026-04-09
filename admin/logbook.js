@@ -9,6 +9,7 @@ const Logbook = {
 
     init() {
         console.log("Logbook initialized");
+        this.currentDate = new Date().toISOString().split('T')[0];
         this.renderBaseLayout();
         this.updateDateDisplay();
     },
@@ -245,13 +246,21 @@ const Logbook = {
                 const regenBtn = document.getElementById('regenerate-summary-btn');
                 const notice = document.getElementById('archived-notice');
                 
+                const isEmpty = data.text.includes("Keine Einträge für diesen Tag gefunden.");
+
                 if (data.isArchived) {
                     archiveBtn?.classList.add('hidden');
                     regenBtn?.classList.remove('hidden');
                     notice?.classList.remove('hidden');
                 } else {
-                    archiveBtn?.classList.remove('hidden');
-                    regenBtn?.classList.add('hidden');
+                    // Only show archive button if there are actually logs summarize
+                    if (isEmpty) {
+                        archiveBtn?.classList.add('hidden');
+                        regenBtn?.classList.remove('hidden'); // allow regeneration if empty
+                    } else {
+                        archiveBtn?.classList.remove('hidden');
+                        regenBtn?.classList.add('hidden');
+                    }
                     notice?.classList.add('hidden');
                 }
             } else {

@@ -716,6 +716,11 @@
             padding: 12px;
             font-weight: 800;
             letter-spacing: -0.01em;
+            overflow-y: auto !important;
+            scrollbar-width: none;
+        }
+        .daily-notes-content::-webkit-scrollbar {
+            display: none;
         }
 
         .projects-content {
@@ -1491,6 +1496,12 @@
             0% { transform: translate(0, 0) scale(1); opacity: 1; }
             30% { transform: translate(-3px, 5px) scale(1.1); opacity: 1; }
             100% { transform: translate(-10px, 40px) scale(0.5); opacity: 0; }
+        }
+
+        .daily-note-item.is-passed {
+            opacity: 0.35;
+            filter: grayscale(1);
+            transition: all 1s ease;
         }
     </style>
 </head>
