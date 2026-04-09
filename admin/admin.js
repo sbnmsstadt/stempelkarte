@@ -60,7 +60,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (logbook.classList.contains('hidden')) {
             // Show Logbook
             overview.classList.add('hidden');
-            if (overviewTitle) overviewTitle.innerText = "Pädagogisches Logbuch";
+            if (overviewTitle) overviewTitle.innerText = "Pädagog. Logbuch";
             logbook.classList.remove('hidden');
             document.getElementById('search-students').parentElement.style.display = 'none';
             navBtn.querySelector('h3').innerText = "⬅ Übersicht";
