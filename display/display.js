@@ -615,33 +615,31 @@ function renderDailyNotes() {
             
             return `
                 <div class="daily-note-item ${isPassed ? 'is-passed' : ''}" style="margin-bottom: 8px;">
-                    <div style="display:flex; align-items:center; gap:8px;">
-                        <span style="font-size:1.1rem;">🕒</span>
-                        <strong style="color:var(--primary-light); font-size:1.1rem;">${e.time}</strong>
-                        <span style="font-weight:800; font-size:1.1rem; color:white;">${e.studentName}:</span>
+                    <div style="display:flex; align-items:baseline; gap:8px;">
+                        <span style="font-size:1.4rem;">🕒</span>
+                        <strong style="color:var(--primary-light); font-size:1.45rem; font-weight: 800;">${e.time}</strong>
+                        <span style="font-weight:800; font-size:1.45rem; color:white;">${e.studentName}:</span>
                     </div>
-                    <div style="margin-left: 28px; font-size: 1rem; color: rgba(255,255,255,0.9);">${e.text}</div>
+                    <div style="margin-left: 32px; font-size: 1.4rem; font-weight: 600; color: rgba(255,255,255,0.95); line-height: 1.2;">${e.text}</div>
                 </div>
             `;
         }).join('');
         
         // Add a separator if there are also static notes
-        if (settings.dailyNotes) {
-            html += '<hr style="border:none; border-top:1px solid rgba(255,255,255,0.1); margin:15px 0;">';
+        if (settings.dailyNotes && settings.dailyNotes.trim()) {
+            html += '<hr style="border:none; border-top:2px solid rgba(255,255,255,0.2); margin:12px 0;">';
         }
     }
 
-    // Render static notes
-    if (settings.dailyNotes) {
-        html += `<div class="static-daily-notes">${formatList(settings.dailyNotes)}</div>`;
+    // Render static notes (the ones from system settings)
+    if (settings.dailyNotes && settings.dailyNotes.trim()) {
+        html += `<div class="static-daily-notes" style="font-size: 1.45rem; font-weight: 800;">${formatList(settings.dailyNotes)}</div>`;
     }
 
-    if (!html) {
+    if (!html.trim()) {
         html = `<div style="color:var(--text-muted); font-style:italic;">Keine besonderen Notizen für heute.</div>`;
     }
 
-    // Using innerHTML directly because we want the styles/classes to apply immediately
-    // If we used smoothUpdate, we'd need to be careful about the hash because of the dynamic time-based 'is-passed'
     el.innerHTML = html;
 }
 
