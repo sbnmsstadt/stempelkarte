@@ -606,7 +606,7 @@ function renderDailyNotes() {
 
     let html = '';
 
-    // Render dynamic events first
+    // Render dynamic events as list items
     if (todayEvents.length > 0) {
         html += todayEvents.map(e => {
             const [h, m] = e.time.split(':').map(Number);
@@ -614,26 +614,20 @@ function renderDailyNotes() {
             const isPassed = (currentMinutes > eventMinutes + 5);
             
             return `
-                <div class="daily-note-item ${isPassed ? 'is-passed' : ''}" style="margin-bottom: 8px;">
-                    <div style="display:flex; align-items:baseline; gap:8px;">
-                        <span style="font-size:1.4rem;">🕒</span>
-                        <strong style="color:var(--primary-light); font-size:1.45rem; font-weight: 800;">${e.time}</strong>
-                        <span style="font-weight:800; font-size:1.45rem; color:white;">${e.studentName}:</span>
-                    </div>
-                    <div style="margin-left: 32px; font-size: 1.4rem; font-weight: 600; color: rgba(255,255,255,0.95); line-height: 1.2;">${e.text}</div>
+                <div class="${isPassed ? 'is-passed' : ''}" style="margin-bottom: 4px; line-height: 1.2;">
+                    • <span style="color:var(--primary-light);">🕒 ${e.time}</span> 
+                    <strong style="color:white;">${e.studentName}:</strong> 
+                    <span style="color: rgba(255,255,255,0.95);">${e.text}</span>
                 </div>
             `;
         }).join('');
-        
-        // Add a separator if there are also static notes
-        if (settings.dailyNotes && settings.dailyNotes.trim()) {
-            html += '<hr style="border:none; border-top:2px solid rgba(255,255,255,0.2); margin:12px 0;">';
-        }
     }
 
     // Render static notes (the ones from system settings)
     if (settings.dailyNotes && settings.dailyNotes.trim()) {
-        html += `<div class="static-daily-notes" style="font-size: 1.45rem; font-weight: 800;">${formatList(settings.dailyNotes)}</div>`;
+        // If we already have appointments, add a small gap
+        if (html) html += '<div style="margin-top: 8px;"></div>';
+        html += `<div class="static-daily-notes">${formatList(settings.dailyNotes)}</div>`;
     }
 
     if (!html.trim()) {
