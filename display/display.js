@@ -3,6 +3,7 @@ const API_URL = "https://stempelkarte.sb-nmsstadt.workers.dev/api";
 let students = [];
 let settings = {};
 let rewards = [];
+let events = [];
 let planFlipInterval = null; 
 let _celebrationSignaled = false; // Prevents repeated popups
 let _lastCelebrationId = null;   // Tracks last seen celebration event
@@ -39,16 +40,18 @@ let badges = [];
 
 async function fetchData() {
     try {
-        const [sRes, stRes, rRes, bRes] = await Promise.all([
+        const [sRes, stRes, rRes, bRes, eRes] = await Promise.all([
             fetch(`${API_URL}/students`),
             fetch(`${API_URL}/settings`),
             fetch(`${API_URL}/rewards`),
-            fetch(`${API_URL}/badges`)
+            fetch(`${API_URL}/badges`),
+            fetch(`${API_URL}/events`)
         ]);
         students = sRes.ok ? await sRes.json() : [];
         settings = stRes.ok ? await stRes.json() : {};
         rewards = rRes.ok ? await rRes.json() : [];
         badges = bRes.ok ? await bRes.json() : [];
+        events = eRes.ok ? await eRes.json() : [];
 
         renderAll();
 
@@ -576,8 +579,55 @@ function renderUpcomingProjects() {
 function renderDailyNotes() {
     const el = document.getElementById('daily-notes-list');
     if (!el) return;
-    const txt = settings.dailyNotes || "Keine besonderen Notizen für heute.";
-    el.innerHTML = formatList(txt);
+
+    const today = new Date().toISOString().split('T')[0];
+    const todayEvents = events.filter(e => e.date === today);
+    
+    // Sort events by time
+    todayEvents.sort((a, b) => a.time.localeCompare(b.time));
+
+    const now = new Date();
+    const currentMinutes = now.getHours() * 60 + now.getMinutes();
+
+    let html = '';
+
+    // Render dynamic events first
+    if (todayEvents.length > 0) {
+        html += todayEvents.map(e => {
+            const [h, m] = e.time.split(':').map(Number);
+            const eventMinutes = h * 60 + m;
+            const isPassed = (currentMinutes > eventMinutes + 5);
+            
+            return `
+                <div class="daily-note-item ${isPassed ? 'is-passed' : ''}" style="margin-bottom: 8px;">
+                    <div style="display:flex; align-items:center; gap:8px;">
+                        <span style="font-size:1.1rem;">🕒</span>
+                        <strong style="color:var(--primary-light); font-size:1.1rem;">${e.time}</strong>
+                        <span style="font-weight:800; font-size:1.1rem; color:white;">${e.studentName}:</span>
+                    </div>
+                    <div style="margin-left: 28px; font-size: 1rem; color: rgba(255,255,255,0.9);">${e.text}</div>
+                </div>
+            `;
+        }).join('');
+        
+        // Add a separator if there are also static notes
+        if (settings.dailyNotes) {
+            html += '<hr style="border:none; border-top:1px solid rgba(255,255,255,0.1); margin:15px 0;">';
+        }
+    }
+
+    // Render static notes
+    if (settings.dailyNotes) {
+        html += `<div class="static-daily-notes">${formatList(settings.dailyNotes)}</div>`;
+    }
+
+    if (!html) {
+        html = `<div style="color:var(--text-muted); font-style:italic;">Keine besonderen Notizen für heute.</div>`;
+    }
+
+    // Using innerHTML directly because we want the styles/classes to apply immediately
+    // If we used smoothUpdate, we'd need to be careful about the hash because of the dynamic time-based 'is-passed'
+    el.innerHTML = html;
 }
 
 // ── TODAY PLAN ────────────────────────────────
