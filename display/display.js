@@ -36,28 +36,43 @@ function updateClock() {
 }
 
 // ── FETCH ──────────────────────────────────────
-let badges = [];
+async function safeFetch(endpoint, fallback = []) {
+    try {
+        const res = await fetch(`${API_URL}/${endpoint}`);
+        if (res.ok) return await res.json();
+        console.warn(`Fetch failed for ${endpoint}: ${res.status}`);
+    } catch (err) {
+        console.error(`Network error for ${endpoint}:`, err);
+    }
+    return fallback;
+}
 
 async function fetchData() {
     try {
-        const [sRes, stRes, rRes, bRes, eRes] = await Promise.all([
-            fetch(`${API_URL}/students`),
-            fetch(`${API_URL}/settings`),
-            fetch(`${API_URL}/rewards`),
-            fetch(`${API_URL}/badges`),
-            fetch(`${API_URL}/events`)
+        // Fetch all in parallel but handle each one safely
+        const [sData, stData, rData, bData, eData] = await Promise.all([
+            safeFetch('students'),
+            safeFetch('settings', {}),
+            safeFetch('rewards'),
+            safeFetch('badges'),
+            safeFetch('events')
         ]);
-        students = sRes.ok ? await sRes.json() : [];
-        settings = stRes.ok ? await stRes.json() : {};
-        rewards = rRes.ok ? await rRes.json() : [];
-        badges = bRes.ok ? await bRes.json() : [];
-        events = eRes.ok ? await eRes.json() : [];
+
+        students = sData;
+        settings = stData;
+        rewards = rData;
+        badges = bData;
+        events = eData;
 
         renderAll();
 
         const now = new Date();
-        document.getElementById('last-updated').textContent =
-            `Zuletzt: ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}:${String(now.getSeconds()).padStart(2, '0')}`;
+        const lastUpdatedEl = document.getElementById('last-updated');
+        if (lastUpdatedEl) {
+            lastUpdatedEl.textContent =
+                `Zuletzt: ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}:${String(now.getSeconds()).padStart(2, '0')}`;
+        }
+
         // Start Blinking Cycle for Tamagotchi (Once)
         if (!_blinkStarted) {
             _blinkStarted = true;
@@ -68,7 +83,7 @@ async function fetchData() {
         handleTamaActionDetection(settings.tamagotchi);
 
     } catch (err) {
-        console.error('Fetch error:', err);
+        console.error('Outer fetchData error:', err);
     }
 }
 
