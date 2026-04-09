@@ -131,8 +131,8 @@ export default {
             return new Response("pong", { headers: corsHeaders });
         }
 
-        // --- Events (Appointments) ---
-        if (path === "/api/events" && method === "GET") {
+        // --- Appointments ---
+        if (path === "/api/appointments" && method === "GET") {
             const eventsRaw = await getKV("events");
             const events = eventsRaw ? JSON.parse(eventsRaw) : [];
             return new Response(JSON.stringify(events), {
@@ -140,7 +140,7 @@ export default {
             });
         }
 
-        if (path === "/api/events" && method === "POST") {
+        if (path === "/api/appointments" && method === "POST") {
             const body = await request.json();
             const eventsRaw = await getKV("events");
             let events = eventsRaw ? JSON.parse(eventsRaw) : [];
@@ -164,7 +164,7 @@ export default {
             });
         }
 
-        if (path.startsWith("/api/events/") && method === "DELETE") {
+        if (path.startsWith("/api/appointments/") && method === "DELETE") {
             const parts = path.split("/").filter(Boolean);
             const id = parts[parts.length - 1];
             const eventsRaw = await getKV("events");

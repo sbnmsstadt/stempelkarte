@@ -96,7 +96,7 @@ const Appointments = {
     async fetchEvents() {
         const url = (typeof API_URL !== 'undefined') ? API_URL : "https://stempelkarte.sb-nmsstadt.workers.dev/api";
         try {
-            const res = await fetch(`${url}/events`);
+            const res = await fetch(`${url}/appointments`);
             if (res.ok) {
                 this.events = await res.json();
                 this.renderEvents();
@@ -164,7 +164,7 @@ const Appointments = {
         const url = (typeof API_URL !== 'undefined') ? API_URL : "https://stempelkarte.sb-nmsstadt.workers.dev/api";
 
         try {
-            const res = await fetch(`${url}/events`, {
+            const res = await fetch(`${url}/appointments`, {
                 method: 'POST',
                 headers: { 
                     'Content-Type': 'application/json'
@@ -202,7 +202,7 @@ const Appointments = {
         const url = (typeof API_URL !== 'undefined') ? API_URL : "https://stempelkarte.sb-nmsstadt.workers.dev/api";
 
         try {
-            const res = await fetch(`${url}/events/${id}`, {
+            const res = await fetch(`${url}/appointments/${id}`, {
                 method: 'DELETE'
             });
 

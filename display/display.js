@@ -55,7 +55,7 @@ async function fetchData() {
             safeFetch('settings', {}),
             safeFetch('rewards'),
             safeFetch('badges'),
-            safeFetch('events')
+            safeFetch('appointments')
         ]);
 
         students = sData;
