@@ -189,6 +189,7 @@ async function fetchStudents() {
             updateStats();
             populateSotwDropdown();
             renderSotwCurrent();
+            if (typeof Appointments !== 'undefined') Appointments.renderStudentList();
         } else {
             showStatus("Fehler beim Laden der Schüler.", "error");
         }
@@ -397,6 +398,7 @@ async function fetchStudentsSilent() {
                 renderBirthdayDashboard();
                 renderRedemptionDashboard();
                 updateStats();
+                if (typeof Appointments !== 'undefined') Appointments.renderStudentList();
             }
         }
     } catch (err) { }

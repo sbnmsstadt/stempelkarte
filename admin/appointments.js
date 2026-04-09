@@ -9,7 +9,18 @@ const Appointments = {
     init() {
         console.log("Appointments initialized");
         this.renderBaseLayout();
+        this.renderStudentList();
         this.fetchEvents();
+    },
+
+    renderStudentList() {
+        const select = document.getElementById('appointment-student-select');
+        if (!select) return;
+        const currentVal = select.value;
+        const studentsHtml = `<option value="">-- Schüler wählen --</option>` + 
+            (window.students ? window.students.map(s => `<option value="${s.id}">${s.name}</option>`).join('') : '');
+        select.innerHTML = studentsHtml;
+        select.value = currentVal;
     },
 
     renderBaseLayout() {
@@ -156,7 +167,8 @@ const Appointments = {
                 alert("Fehler beim Speichern.");
             }
         } catch (err) {
-            alert("Verbindungsfehler.");
+            console.error("Save Entry Error:", err);
+            alert("Fehler: " + err.message);
         } finally {
             btn.disabled = false;
             btn.innerText = "Hinzufügen";
