@@ -601,13 +601,13 @@ function renderDailyNotes() {
     const el = document.getElementById('daily-notes-list');
     if (!el) return;
 
-    const today = new Date().toISOString().split('T')[0];
+    const now = new Date();
+    const today = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0') + '-' + String(now.getDate()).padStart(2, '0');
     const todayEvents = events.filter(e => e.date === today);
     
     // Sort events by time
     todayEvents.sort((a, b) => a.time.localeCompare(b.time));
 
-    const now = new Date();
     const currentMinutes = now.getHours() * 60 + now.getMinutes();
 
     let html = '';

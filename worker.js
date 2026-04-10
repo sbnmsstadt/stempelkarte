@@ -229,7 +229,7 @@ export default {
                     getKV("students"),
                     getKV("settings"),
                     getKV("rewards"),
-                    getKV("appointments"),
+                    getKV("events"),
                     getKV("badges")
                 ]);
                 return new Response(JSON.stringify({
