@@ -37,25 +37,53 @@ let enteredPin = "";
 let pinCallback = null;
 let isSupervisor = false;
 let isDirectLink = false;
-let syncInterval = null;
+let lastActivity = Date.now();
+window.addEventListener('mousedown', () => lastActivity = Date.now());
+window.addEventListener('touchstart', () => lastActivity = Date.now());
+window.addEventListener('keypress', () => lastActivity = Date.now());
 
 document.addEventListener('DOMContentLoaded', async () => {
-    await fetchRewards();
-    await updateCommunityGoal();
-
     const urlParams = new URLSearchParams(window.location.search);
     const idParam = urlParams.get('id');
-    
-    if (idParam) {
-        isDirectLink = true;
-        loginWithId(idParam);
-    } else {
-        const savedId = localStorage.getItem('studentId');
-        if (savedId) {
-            loginWithId(savedId);
-        }
-    }
+    const savedId = localStorage.getItem('studentId');
+    const activeId = idParam || savedId;
+
+    if (idParam) isDirectLink = true;
+
+    // Combined initial load
+    await performInitialSync(activeId);
 });
+
+async function performInitialSync(id) {
+    try {
+        const url = id 
+            ? `${API_URL}/sync/startup?id=${encodeURIComponent(id)}` 
+            : `${API_URL}/sync/startup`;
+            
+        const response = await fetch(url);
+        if (response.ok) {
+            const data = await response.json();
+            
+            // 1. Shared Data
+            SETTINGS = data.settings || {};
+            REWARDS = (data.rewards || []).filter(r => r.active !== false).sort((a,b) => a.threshold - b.threshold);
+            
+            // 2. Student Data (if logged in)
+            if (data.student) {
+                currentStudent = data.student;
+                localStorage.setItem('studentId', currentStudent.id);
+                showDetail(currentStudent);
+            } else {
+                updateCommunityGoal(null, SETTINGS);
+            }
+        }
+    } catch (err) {
+        console.error("Initial sync error:", err);
+        // Fallback to legacy if something fails
+        await fetchRewards();
+        await updateCommunityGoal();
+    }
+}
 
 function toggleRules() {
     document.querySelectorAll('.view').forEach(v => v.classList.add('hidden'));
@@ -65,10 +93,11 @@ function toggleRules() {
 function startSync() {
     stopSync();
     syncInterval = setInterval(() => {
-        if (document.visibilityState === 'visible' && currentStudent && !isSupervisor) {
+        const isIdle = (Date.now() - lastActivity > 180000); // 3 minutes idle
+        if (document.visibilityState === 'visible' && currentStudent && !isSupervisor && !isIdle) {
             silentSync();
         }
-    }, 30000); // Increased from 5s to 30s to stay under API limits
+    }, 60000); // Poll every 60s instead of 30s
 }
 
 function stopSync() {
@@ -231,11 +260,16 @@ function showDetail(student) {
         renderHistory(student.history || []);
         
         // --- Tamagotchi Sync ---
-        // Need settings to know if it's hatched
-        fetch(`${API_URL}/settings`).then(r => r.json()).then(set => {
-            SETTINGS = set;
+        // Use existing SETTINGS from sync/initial
+        if (SETTINGS && SETTINGS.tamagotchi) {
             renderTamagotchiUI(SETTINGS.tamagotchi, student);
-        });
+        } else {
+            // Fallback just in case
+            fetch(`${API_URL}/settings`).then(r => r.json()).then(set => {
+                SETTINGS = set;
+                renderTamagotchiUI(SETTINGS.tamagotchi, student);
+            });
+        }
     const aiSection = document.getElementById('ai-section');
     const aiText = document.getElementById('ai-motivation-student');
     if (aiSection && aiText) {
@@ -687,9 +721,13 @@ async function addStamp(count = 1) {
 async function updateCommunityGoal(providedStudents = null, providedSettings = null) {
     try {
         let allStudents = providedStudents;
-        let settings = providedSettings;
+        let settings = providedSettings || SETTINGS;
 
-        if (!allStudents || !settings) {
+        // Use the optimized total from settings if available
+        const hasOptimizedTotal = settings && settings.communityTotal !== undefined;
+
+        if (!hasOptimizedTotal && !allStudents) {
+            // Only fallback to full list fetch if we don't have the optimized total
             const [stRes, setRes] = await Promise.all([
                 fetch(`${API_URL}/students`),
                 fetch(`${API_URL}/settings`)
@@ -701,7 +739,7 @@ async function updateCommunityGoal(providedStudents = null, providedSettings = n
             }
         }
         
-        if (allStudents && settings) {
+        if (settings) {
             // 1. Community Goal
             const cGoalContainer = document.getElementById('community-goal-container');
             if (cGoalContainer) {
@@ -711,7 +749,12 @@ async function updateCommunityGoal(providedStudents = null, providedSettings = n
                     cGoalContainer.style.display = 'block';
                     const target = settings.communityTarget || 500;
                     const title = settings.communityTitle || "Pizza-Party";
-                    const total = allStudents.reduce((sum, s) => sum + (s.stamps || 0), 0);
+                    
+                    // Use optimized total or calculate from list
+                    const total = hasOptimizedTotal 
+                        ? settings.communityTotal 
+                        : (allStudents ? allStudents.reduce((sum, s) => sum + (s.stamps || 0), 0) : 0);
+                        
                     const progress = Math.min(100, (total / target) * 100);
                     
                     document.getElementById('community-title-label').innerText = `🌍 ${title}`;

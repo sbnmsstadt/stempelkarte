@@ -800,7 +800,7 @@ updateClock();
 setInterval(updateClock, 1000);
 
 fetchData();
-setInterval(fetchData, 30000); // Polling every 30s (bundled) to save API requests
+setInterval(fetchData, 60000); // Polling every 60s (bundled) to save API requests
 
 // Start the ticker RAF loop immediately (it runs forever)
 startTickerLoop();

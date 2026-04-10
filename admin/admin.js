@@ -44,8 +44,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     Appointments.init();
     fetchStudents();
 
-    // Poll every 30 seconds for new data (increased from 5s to save API requests)
-    setInterval(fetchStudentsSilent, 30000);
+    // Poll every 60 seconds for new data (increased from 30s to further save API requests)
+    setInterval(fetchStudentsSilent, 60000);
 
     document.getElementById('add-btn')?.addEventListener('click', createNewStudent);
     document.getElementById('add-reward-btn')?.addEventListener('click', createNewReward);

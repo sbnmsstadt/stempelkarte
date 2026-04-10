@@ -241,6 +241,30 @@ export default {
                 }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
             }
 
+            if (path === "/api/sync/startup" && method === "GET") {
+                const id = url.searchParams.get("id");
+                const [studentsRaw, settingsRaw, rewardsRaw, badgesRaw] = await Promise.all([
+                    getKV("students"),
+                    getKV("settings"),
+                    getKV("rewards"),
+                    getKV("badges")
+                ]);
+
+                const students = JSON.parse(studentsRaw || "[]");
+                const settings = JSON.parse(settingsRaw || "{}");
+                const student = id ? students.find(s => s.id === id.toLowerCase()) : null;
+
+                // Optimization: Calculate community total here
+                settings.communityTotal = students.reduce((sum, s) => sum + (s.stamps || 0), 0);
+
+                return new Response(JSON.stringify({
+                    student,
+                    settings,
+                    rewards: JSON.parse(rewardsRaw || "[]"),
+                    badges: JSON.parse(badgesRaw || "[]")
+                }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+            }
+
             // ── MIGRATION ENDPOINT ───────────────────────────────────────
             if (path === "/api/migrate-kv-to-d1" && method === "GET") {
                 if (!env.DATABASE) return new Response("KV nicht gefunden", { status: 404, headers: corsHeaders });
@@ -332,6 +356,11 @@ export default {
                 if (applyTamagotchiDecay(settings, Date.now())) {
                     await putKV("settings", JSON.stringify(settings));
                 }
+
+                // Optimization for request count
+                const studentsRaw = await getKV("students");
+                const students = JSON.parse(studentsRaw || "[]");
+                settings.communityTotal = students.reduce((sum, s) => sum + (s.stamps || 0), 0);
                 
                 return new Response(JSON.stringify(settings), {
                     headers: { ...corsHeaders, "Content-Type": "application/json" }
