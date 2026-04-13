@@ -9,6 +9,7 @@ let _celebrationSignaled = false; // Prevents repeated popups
 let _lastCelebrationId = null;   // Tracks last seen celebration event
 let _isBlinking = false;         // Global blink state for Tamagotchi
 let _blinkStarted = false;       // Flag to prevent multiple blink loops
+let _lastAlarmKey = null;        // Tracks last triggered time-based alarm (HH:mm)
 
 // Broadcast listener for instant updates from Admin
 try {
@@ -43,6 +44,9 @@ function updateClock() {
     const h = String(now.getHours()).padStart(2, '0');
     const m = String(now.getMinutes()).padStart(2, '0');
     document.getElementById('clock').textContent = `${h}:${m}`;
+    
+    // Check for time-based announcements (Heimgeher-Zeiten)
+    checkTimeAlarms(h, m);
 }
 
 // ── FETCH ──────────────────────────────────────
@@ -576,6 +580,56 @@ function showGoalCelebration(title = "Filmtag") {
         overlay.classList.remove('active');
         stopConfetti(true); // Stop only goal confetti
     }, 20000);
+}
+
+// ── TIME-BASED ANNOUNCEMENTS ──────────────────
+function checkTimeAlarms(h, m) {
+    const timeKey = `${h}:${m}`;
+    if (_lastAlarmKey === timeKey) return; // Already triggered this minute
+
+    // ALARM 1: 15:30 - Departure Time
+    if (timeKey === '15:30') {
+        _lastAlarmKey = timeKey;
+        showAnnouncement(
+            "AB NACH HAUSE! 👋🏠",
+            "Alle 15:30 Kinder dürfen jetzt heimgehen. Bis morgen!",
+            "👋",
+            120000 // 2 minutes
+        );
+    }
+    
+    // ALARM 2: 16:25 - Warning for 16:30 departure
+    if (timeKey === '16:25') {
+        _lastAlarmKey = timeKey;
+        showAnnouncement(
+            "VORBEREITEN! 🎒⏳",
+            "In 5 Minuten ist Schluss für heute! Alle 16:30 Kinder können sich gleich bereit machen.",
+            "🎒",
+            180000 // 3 minutes
+        );
+    }
+}
+
+function showAnnouncement(title, text, emoji, duration = 30000) {
+    const overlay = document.getElementById('announcement-overlay');
+    const titleEl = document.getElementById('announcement-title');
+    const textEl = document.getElementById('announcement-text');
+    const emojiEl = document.getElementById('announcement-emoji');
+    
+    if (!overlay || !titleEl || !textEl || !emojiEl) return;
+
+    titleEl.textContent = title;
+    textEl.textContent = text;
+    emojiEl.textContent = emoji;
+
+    overlay.classList.add('active');
+    
+    // Optional: Play a subtle sound or trigger light confetti if desired
+    // startConfetti(false); 
+
+    setTimeout(() => {
+        overlay.classList.remove('active');
+    }, duration);
 }
 
 

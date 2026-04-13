@@ -1014,6 +1014,65 @@
             50% { transform: rotate(20deg) translateY(-35px); }
         }
 
+        /* ── ANNOUNCEMENT OVERLAY ────────── */
+        .announcement-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(10, 20, 40, 0.92);
+            backdrop-filter: blur(25px);
+            z-index: 10000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: all 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+            transform: scale(1.1);
+        }
+        .announcement-overlay.active {
+            opacity: 1;
+            pointer-events: auto;
+            transform: scale(1);
+        }
+        .announcement-card {
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.4), rgba(16, 185, 129, 0.4));
+            padding: 60px 80px;
+            border-radius: 40px;
+            border: 2px solid rgba(255, 255, 255, 0.4);
+            text-align: center;
+            box-shadow: 0 0 100px rgba(59, 130, 246, 0.4);
+            max-width: 900px;
+            width: 90%;
+            position: relative;
+        }
+        .announcement-icon {
+            font-size: 10rem;
+            margin-bottom: 20px;
+            display: block;
+            animation: waveHand 2s ease-in-out infinite;
+            filter: drop-shadow(0 10px 20px rgba(0,0,0,0.3));
+        }
+        @keyframes waveHand {
+            0%, 100% { transform: rotate(-5deg); }
+            50% { transform: rotate(15deg); }
+        }
+        .announcement-title {
+            font-size: 4rem;
+            font-weight: 900;
+            color: white;
+            margin: 0;
+            line-height: 1.1;
+            letter-spacing: -0.02em;
+            text-transform: uppercase;
+        }
+        .announcement-text {
+            font-size: 2.22rem;
+            color: rgba(255, 255, 255, 0.9);
+            margin-top: 25px;
+            font-weight: 700;
+            line-height: 1.3;
+        }
+
         @keyframes badgeFloat {
             0%, 100% { transform: translateY(0) scale(1) rotate(0); filter: drop-shadow(0 0 10px rgba(139, 92, 246, 0.4)); }
             50% { transform: translateY(-10px) scale(1.1) rotate(5deg); filter: drop-shadow(0 0 25px rgba(139, 92, 246, 0.8)); }
@@ -1768,6 +1827,15 @@
             </div>
             <h2 class="celebration-title">ZIEL ERREICHT!</h2>
             <p class="celebration-text">GÖNNUNG PUR! Der Filmtag ist gesichert! 🎉🍿✨🎬</p>
+        </div>
+    </div>
+
+    <!-- Announcement Overlay (Heimgeh-Zeit, etc.) -->
+    <div id="announcement-overlay" class="announcement-overlay">
+        <div class="announcement-card">
+            <span id="announcement-emoji" class="announcement-icon">👋</span>
+            <h2 id="announcement-title" class="announcement-title">TITEL</h2>
+            <p id="announcement-text" class="announcement-text">Nachrichtentext...</p>
         </div>
     </div>
 
