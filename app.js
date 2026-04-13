@@ -12,6 +12,7 @@ let selectedActivity = "Stempel";
 let selectedActivityEmoji = "🌟";
 let ACTIVITIES = [];
 let SETTINGS = {};
+var syncInterval = null;
 
 let REWARDS = [];
 let selectedStampCount = 1;
@@ -101,7 +102,10 @@ function startSync() {
 }
 
 function stopSync() {
-    if (syncInterval) clearInterval(syncInterval);
+    if (typeof syncInterval !== 'undefined' && syncInterval) {
+        clearInterval(syncInterval);
+        syncInterval = null;
+    }
 }
 
 async function silentSync() {
