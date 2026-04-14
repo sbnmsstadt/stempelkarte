@@ -392,7 +392,19 @@ async function fetchStudentsSilent() {
         const response = await fetch(`${API_URL}/sync/admin`);
         if (response.ok) {
             const data = await response.json();
-            const { students: freshStudents, settings: freshSettings } = data;
+            const { students: freshStudents, settings: freshSettings, rewards: freshRewards } = data;
+
+            // Update rewards if provided
+            if (freshRewards) {
+                const rawRewards = JSON.stringify(freshRewards);
+                if (rawRewards !== JSON.stringify(REWARDS)) {
+                    REWARDS = freshRewards;
+                    REWARDS.sort((a, b) => a.threshold - b.threshold);
+                    renderRewardDashboard();
+                    renderRedemptionDashboard();
+                    updateStats();
+                }
+            }
 
             // Check if students data actually changed
             const rawStudents = JSON.stringify(freshStudents);

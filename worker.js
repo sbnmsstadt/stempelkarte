@@ -185,23 +185,30 @@ export default {
 
         try {
             const DEFAULT_REWARDS = [
-                    { threshold: 8, title: "Eis essen", icon: "🍦", desc: "Ein Eis deiner Wahl", active: true },
-                    { threshold: 24, title: "Kino Nachmittag", icon: "🎬", desc: "Film schauen mit Popcorn", active: true },
-                    { threshold: 40, title: "Große Überraschung", icon: "🎁", desc: "Etwas ganz Besonderes", active: true },
-                    { threshold: 60, title: "3 Volle Karten Bonus", icon: "🏆", desc: "Spezial-Belohnung für 3 volle Karten!", active: true },
-                    { threshold: 40, icon: "🎮", title: "Level 2: Extra-Spielzeit", desc: "15 Min an der Konsole/Spiel." },
-                    { threshold: 60, icon: "👑", title: "Level 3: VIP Woche", desc: "Entscheide über die Spiele!" }
-                ];
+                { threshold: 8, title: "Eis essen", icon: "🍦", desc: "Ein Eis deiner Wahl", active: true },
+                { threshold: 24, title: "Kino Nachmittag", icon: "🎬", desc: "Film schauen mit Popcorn", active: true },
+                { threshold: 40, title: "Große Überraschung", icon: "🎁", desc: "Etwas ganz Besonderes", active: true },
+                { threshold: 60, title: "3 Volle Karten Bonus", icon: "🏆", desc: "Spezial-Belohnung für 3 volle Karten!", active: true },
+                { threshold: 80, icon: "🎮", title: "Level 4: Abenteuer-Ausflug", desc: "Ein besonderes Erlebnis in der Natur." },
+                { threshold: 100, icon: "👑", title: "Level 5: VIP Ehrengast", desc: "Ein ganzer Tag nach deinen Wünschen!" }
+            ];
+
+            const parseRewards = (raw) => {
+                const parsed = JSON.parse(raw || "[]");
+                return (parsed && Array.isArray(parsed) && parsed.length > 0) ? parsed : DEFAULT_REWARDS;
+            };
 
             // ── SYNC ENDPOINTS (Optimization for Rate Limits) ──────────
             if (path === "/api/sync/admin" && method === "GET") {
-                const [studentsRaw, settingsRaw] = await Promise.all([
+                const [studentsRaw, settingsRaw, rewardsRaw] = await Promise.all([
                     getKV("students"),
-                    getKV("settings")
+                    getKV("settings"),
+                    getKV("rewards")
                 ]);
                 return new Response(JSON.stringify({
                     students: JSON.parse(studentsRaw || "[]"),
-                    settings: JSON.parse(settingsRaw || "{}")
+                    settings: JSON.parse(settingsRaw || "{}"),
+                    rewards: parseRewards(rewardsRaw)
                 }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
             }
 
@@ -209,9 +216,10 @@ export default {
                 const id = url.searchParams.get("id");
                 if (!id) return new Response("Missing ID", { status: 400, headers: corsHeaders });
                 
-                const [studentsRaw, settingsRaw] = await Promise.all([
+                const [studentsRaw, settingsRaw, rewardsRaw] = await Promise.all([
                     getKV("students"),
-                    getKV("settings")
+                    getKV("settings"),
+                    getKV("rewards")
                 ]);
                 
                 const students = JSON.parse(studentsRaw || "[]");
@@ -220,7 +228,8 @@ export default {
                 
                 return new Response(JSON.stringify({
                     student,
-                    settings: JSON.parse(settingsRaw || "{}")
+                    settings: JSON.parse(settingsRaw || "{}"),
+                    rewards: parseRewards(rewardsRaw)
                 }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
             }
 
@@ -235,7 +244,7 @@ export default {
                 return new Response(JSON.stringify({
                     students: JSON.parse(studentsRaw || "[]"),
                     settings: JSON.parse(settingsRaw || "{}"),
-                    rewards: JSON.parse(rewardsRaw || "[]"),
+                    rewards: parseRewards(rewardsRaw),
                     appointments: JSON.parse(appointmentsRaw || "[]"),
                     badges: JSON.parse(badgesRaw || "[]")
                 }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
@@ -260,7 +269,7 @@ export default {
                 return new Response(JSON.stringify({
                     student,
                     settings,
-                    rewards: JSON.parse(rewardsRaw || "[]"),
+                    rewards: parseRewards(rewardsRaw),
                     badges: JSON.parse(badgesRaw || "[]")
                 }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
             }
@@ -441,8 +450,7 @@ export default {
 
             if (path === "/api/rewards" && method === "GET") {
                 const rewardsRaw = await getKV("rewards");
-                const rewards = rewardsRaw ? JSON.parse(rewardsRaw) : DEFAULT_REWARDS;
-                return new Response(JSON.stringify(rewards), {
+                return new Response(JSON.stringify(parseRewards(rewardsRaw)), {
                     headers: { ...corsHeaders, "Content-Type": "application/json" }
                 });
             }
