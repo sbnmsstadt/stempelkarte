@@ -10,6 +10,30 @@ let _lastCelebrationId = null;   // Tracks last seen celebration event
 let _isBlinking = false;         // Global blink state for Tamagotchi
 let _blinkStarted = false;       // Flag to prevent multiple blink loops
 let _lastAlarmKey = null;        // Tracks last triggered time-based alarm (HH:mm)
+let _audioEnabled = false;       // Browser audio permission state
+
+function enableAudio() {
+    _audioEnabled = true;
+    const btn = document.getElementById('sound-toggle');
+    if (btn) {
+        btn.style.background = 'rgba(16,185,129,0.12)';
+        btn.style.borderColor = 'rgba(16,185,129,0.35)';
+        btn.style.color = '#10b981';
+        btn.innerHTML = '<span>🔊 Sound an</span>';
+    }
+    // "Unlock" audio API
+    const silent = new Audio('data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAAABkYXRhAgAAAAEA');
+    silent.play().catch(e => console.warn("Audio unlock failed:", e));
+}
+
+function playTimeSound(file) {
+    if (!_audioEnabled) {
+        console.warn("Audio skipped: Permissions not granted yet.");
+        return;
+    }
+    const a = new Audio(file);
+    a.play().catch(e => console.error("Playback failed for " + file, e));
+}
 
 // Broadcast listener for instant updates from Admin
 try {
@@ -596,6 +620,7 @@ function checkTimeAlarms(h, m) {
             "👋",
             120000 // 2 minutes
         );
+        playTimeSound('../audio/zeit1.mp3');
     }
     
     // ALARM 2: 16:25 - Warning for 16:30 departure
@@ -607,6 +632,18 @@ function checkTimeAlarms(h, m) {
             "🎒",
             180000 // 3 minutes
         );
+    }
+
+    // ALARM 3: 16:30 - Final Departure
+    if (timeKey === '16:30') {
+        _lastAlarmKey = timeKey;
+        showAnnouncement(
+            "FEIERABEND! 🌟🎬",
+            "Alle Kinder dürfen jetzt heimgehen. Wir wünschen einen schönen Feierabend!",
+            "🌟",
+            120000 // 2 minutes
+        );
+        playTimeSound('../audio/zeit2.mp3');
     }
 }
 
