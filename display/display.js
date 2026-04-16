@@ -26,23 +26,29 @@ function enableAudio() {
     silent.play().catch(e => console.warn("Audio unlock failed:", e));
 }
 
+let _audioContext = null;
+
 /**
  * Triggers a simple synthesized beep to test audio hardware.
  */
 function beep(freq = 440, duration = 150) {
     try {
-        const ctx = new (window.AudioContext || window.webkitAudioContext)();
-        if (ctx.state === 'suspended') ctx.resume();
-        const osc = ctx.createOscillator();
-        const gain = ctx.createGain();
+        if (!_audioContext) {
+            _audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        }
+        if (_audioContext.state === 'suspended') {
+            _audioContext.resume();
+        }
+        const osc = _audioContext.createOscillator();
+        const gain = _audioContext.createGain();
         osc.connect(gain);
-        gain.connect(ctx.destination);
+        gain.connect(_audioContext.destination);
         osc.type = 'sine';
-        osc.frequency.setValueAtTime(freq, ctx.currentTime);
-        gain.gain.setValueAtTime(0.1, ctx.currentTime);
-        gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + duration/1000);
+        osc.frequency.setValueAtTime(freq, _audioContext.currentTime);
+        gain.gain.setValueAtTime(0.1, _audioContext.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.0001, _audioContext.currentTime + duration/1000);
         osc.start();
-        osc.stop(ctx.currentTime + duration/1000);
+        osc.stop(_audioContext.currentTime + duration/1000);
     } catch (e) {
         console.warn("Beep failed:", e);
     }
@@ -52,8 +58,7 @@ function playTimeSound(file, statusCallback = null) {
     console.log("Attempting to play sound:", file, "Audio enabled:", _audioEnabled);
     
     if (!_audioEnabled) {
-        console.warn("Audio skipped: Permissions not granted yet. Click 'Sound aktivieren' first!");
-        if (statusCallback) statusCallback("🚫 Nicht aktiviert (Sound-Button klicken!)");
+        if (statusCallback) statusCallback("🚫 Nicht aktiviert (Button klicken!)");
         return;
     }
 
@@ -62,34 +67,37 @@ function playTimeSound(file, statusCallback = null) {
     const paths = [
         file, 
         file.startsWith('../') ? file.substring(3) : file, 
-        '/' + (file.startsWith('../') ? file.substring(3) : file)
+        '/' + (file.startsWith('../') ? file.substring(3) : file),
+        'audio/' + (file.includes('zeit') ? (file.split('/').pop()) : file)
     ];
     
     let currentTry = 0;
 
     const tryNext = () => {
         if (currentTry >= paths.length) {
-            console.error("All audio paths failed.");
-            if (statusCallback) statusCallback("❌ 404 - Datei nicht gefunden (alle Pfade getestet)");
+            if (statusCallback) statusCallback("❌ Alle Pfade fehlgeschlagen (404)");
             return;
         }
         
         const path = paths[currentTry];
+        if (statusCallback) statusCallback(`Teste Pfad ${currentTry + 1}: ${path}...`);
+        
         audio.src = path;
         
         audio.oncanplaythrough = () => {
             audio.oncanplaythrough = null;
             audio.onerror = null;
-            console.log("Diagnostic: Success! File loaded from", path);
-            if (statusCallback) statusCallback(`✅ Erfolg! (Pfad: ${path})`);
+            if (statusCallback) statusCallback(`✅ Geladen! Pfad: ${path}`);
             audio.play().catch(e => {
-                console.error("Diagnostic: Playback blocked", e);
-                if (statusCallback) statusCallback(`⚠️ Gefunden, aber blockiert: ${e.name}`);
+                const msg = e.name === 'NotAllowedError' ? "🚫 Blockiert (Interaktion fehlt)" : `⚠️ Fehler: ${e.name}`;
+                if (statusCallback) statusCallback(msg);
             });
         };
 
         audio.onerror = () => {
-            console.warn(`Diagnostic: Path failed: ${path}`);
+            const err = audio.error;
+            let code = err ? err.code : 'unknown';
+            console.warn(`Diagnostic: Path failed: ${path} (Code: ${code})`);
             currentTry++;
             tryNext();
         };
