@@ -11,7 +11,6 @@ let _isBlinking = false;         // Global blink state for Tamagotchi
 let _blinkStarted = false;       // Flag to prevent multiple blink loops
 let _lastAlarmKey = null;        // Tracks last triggered time-based alarm (HH:mm)
 let _audioEnabled = false;       // Browser audio permission state
-let _audioCache = {};            // Pre-loaded audio objects for zero-latency playback
 
 function enableAudio() {
     _audioEnabled = true;
@@ -22,38 +21,9 @@ function enableAudio() {
         btn.style.color = '#10b981';
         btn.innerHTML = '<span>🔊 Sound an</span>';
     }
-    
-    // 1. "Unlock" audio context
+    // "Unlock" audio API
     const silent = new Audio('data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAAABkYXRhAgAAAAEA');
     silent.play().catch(e => console.warn("Audio unlock failed:", e));
-
-    // 2. Pre-load key sounds immediately while we have user interaction context
-    console.log("Pre-loading departure sounds...");
-    const soundsToPreload = [
-        { id: 'zeit1', file: 'audio/zeit1.mp3' },
-        { id: 'zeit2', file: 'audio/zeit2.mp3' }
-    ];
-
-    soundsToPreload.forEach(s => {
-        const audio = new Audio();
-        // Try both absolute and relative paths for robustness
-        const base = window.location.pathname.substring(0, window.location.pathname.lastIndexOf('/display'));
-        const fullPath = (base + '/' + s.file).replace(/\/+/g, '/');
-        
-        audio.src = fullPath;
-        audio.load();
-        _audioCache[s.id] = audio;
-        _audioCache[s.file] = audio; // also cache by path for playTimeSound(path)
-        
-        audio.addEventListener('canplaythrough', () => console.log(`✓ Pre-loaded: ${s.id}`), { once: true });
-        audio.addEventListener('error', () => {
-             // If absolute fails, try relative
-             if (audio.src.includes(fullPath)) {
-                 audio.src = s.file; 
-                 audio.load();
-             }
-        }, { once: true });
-    });
 }
 
 let _audioContext = null;
@@ -92,62 +62,42 @@ function playTimeSound(file, statusCallback = null) {
         return;
     }
 
-    // 1. Check Cache first
-    const cached = _audioCache[file] || _audioCache[file.split('/').pop().replace('.mp3', '')];
-    if (cached && cached.readyState >= 2) {
-        console.log("Using cached audio for:", file);
-        cached.currentTime = 0;
-        cached.play().then(() => {
-            if (statusCallback) statusCallback("✅ Playback success (Cached)");
-        }).catch(e => {
-            console.warn("Cached playback failed, falling back to fetch:", e);
-            performFullLoad(file, statusCallback);
-        });
-        return;
-    }
-
-    performFullLoad(file, statusCallback);
-}
-
-function performFullLoad(file, statusCallback) {
     const audio = new Audio();
     // Path list to try: relative, root-relative, and whatever was passed
-    const fileName = file.split('/').pop();
     const paths = [
         file, 
-        'audio/' + fileName,
-        '../audio/' + fileName,
-        '/' + fileName,
-        '/audio/' + fileName
+        file.startsWith('../') ? file.substring(3) : file, 
+        '/' + (file.startsWith('../') ? file.substring(3) : file),
+        'audio/' + (file.includes('zeit') ? (file.split('/').pop()) : file)
     ];
     
     let currentTry = 0;
 
     const tryNext = () => {
         if (currentTry >= paths.length) {
-            console.warn("❌ All audio paths failed. Triggering fallback beep.");
-            if (statusCallback) statusCallback("❌ Alle Pfade fehlgeschlagen (Beep Fallback)");
-            beep(880, 500); // Higher pitch beep as fallback
-            setTimeout(() => beep(880, 500), 600);
+            if (statusCallback) statusCallback("❌ Alle Pfade fehlgeschlagen (404)");
             return;
         }
         
         const path = paths[currentTry];
+        if (statusCallback) statusCallback(`Teste Pfad ${currentTry + 1}: ${path}...`);
+        
         audio.src = path;
         
         audio.oncanplaythrough = () => {
             audio.oncanplaythrough = null;
             audio.onerror = null;
-            audio.play().then(() => {
-                if (statusCallback) statusCallback(`✅ Geladen & Abgespielt: ${path}`);
-            }).catch(e => {
-                console.warn(`Playback blocked for ${path}:`, e);
-                currentTry++;
-                tryNext();
+            if (statusCallback) statusCallback(`✅ Geladen! Pfad: ${path}`);
+            audio.play().catch(e => {
+                const msg = e.name === 'NotAllowedError' ? "🚫 Blockiert (Interaktion fehlt)" : `⚠️ Fehler: ${e.name}`;
+                if (statusCallback) statusCallback(msg);
             });
         };
 
         audio.onerror = () => {
+            const err = audio.error;
+            let code = err ? err.code : 'unknown';
+            console.warn(`Diagnostic: Path failed: ${path} (Code: ${code})`);
             currentTry++;
             tryNext();
         };
@@ -165,27 +115,14 @@ try {
         if (msg.data.type === 'appointments_updated') {
             fetchData();
         } else if (msg.data.type === 'play_sound') {
-            console.log("Remote sound request received:", msg.data);
+            console.log("Remote sound request received:", msg.data.file);
             
-            const file = msg.data.soundId ? `audio/${msg.data.soundId}.mp3` : msg.data.file;
-            
-            // 1. Show visual confirmation so the user knows the message arrived
-            if (msg.data.test) {
-                showAnnouncement(
-                    "🔈 SOUND TEST", 
-                    _audioEnabled ? "Ein Test-Signal wurde empfangen." : "⚠️ Sound ist am Display DEAKTIVIERT! Bitte 'Sound an' klicken.", 
-                    "🔈", 
-                    8000
-                );
-            }
-
-            // 2. Diagnostic beep
+            // diagnostic: trigger a tiny beep instantly to verify audio hardware
             beep(523, 100); 
 
-            // 3. Play actual sound
-            playTimeSound(file, (status) => {
-                if (msg.data.test && !_audioEnabled) {
-                    console.warn("Sound test received but audio is disabled on this tab.");
+            playTimeSound(msg.data.file, (status) => {
+                if (msg.data.test) {
+                    showAnnouncement("SOUND TEST", `Status: ${status}\nPfad: ${msg.data.file}`, "🔈", 10000);
                 }
             });
         }
