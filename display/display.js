@@ -13,13 +13,30 @@ let _lastAlarmKey = null;        // Tracks last triggered time-based alarm (HH:m
 let _audioEnabled = true;       // Enabled by default as per user request
 
 /**
- * Automatically unlocks audio context on first user interaction.
- * Required because browsers block autoplaying audio without a click.
+ * Unlocks audio context and handles browserautoplay restrictions.
  */
-document.addEventListener('click', () => {
-    // "Unlock" audio API
+function unlockAudio() {
+    const overlay = document.getElementById('sound-unlock-overlay');
+    if (overlay) overlay.classList.remove('active');
+    
+    _audioEnabled = true;
+    
+    // "Unlock" audio API using a silent buffer
     const silent = new Audio('data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAAABkYXRhAgAAAAEA');
-    silent.play().catch(e => console.warn("Audio unlock failed:", e));
+    silent.play()
+        .then(() => console.log("Audio system unlocked successfully."))
+        .catch(e => console.warn("Audio system unlock failed:", e));
+}
+
+// Still listen for first click anywhere to handle it gracefully even without overlay
+document.addEventListener('click', () => {
+    if (document.getElementById('sound-unlock-overlay')?.classList.contains('active')) {
+        unlockAudio();
+    } else {
+        // Just silent unlock
+        const silent = new Audio('data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAAABkYXRhAgAAAAEA');
+        silent.play().catch(() => {});
+    }
 }, { once: true });
 
 function enableAudio() {
@@ -90,8 +107,14 @@ function playTimeSound(file, statusCallback = null) {
             audio.onerror = null;
             if (statusCallback) statusCallback(`✅ Geladen! Pfad: ${path}`);
             audio.play().catch(e => {
-                const msg = e.name === 'NotAllowedError' ? "🚫 Blockiert (Interaktion fehlt)" : `⚠️ Fehler: ${e.name}`;
-                if (statusCallback) statusCallback(msg);
+                if (e.name === 'NotAllowedError') {
+                    console.warn("Audio playback blocked. Requesting user interaction.");
+                    const overlay = document.getElementById('sound-unlock-overlay');
+                    if (overlay) overlay.classList.add('active');
+                    if (statusCallback) statusCallback("🚫 Blockiert (Bitte auf Tafel klicken!)");
+                } else {
+                    if (statusCallback) statusCallback(`⚠️ Fehler: ${e.name}`);
+                }
             });
         };
 
