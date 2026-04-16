@@ -10,20 +10,21 @@ let _lastCelebrationId = null;   // Tracks last seen celebration event
 let _isBlinking = false;         // Global blink state for Tamagotchi
 let _blinkStarted = false;       // Flag to prevent multiple blink loops
 let _lastAlarmKey = null;        // Tracks last triggered time-based alarm (HH:mm)
-let _audioEnabled = false;       // Browser audio permission state
+let _audioEnabled = true;       // Enabled by default as per user request
 
-function enableAudio() {
-    _audioEnabled = true;
-    const btn = document.getElementById('sound-toggle');
-    if (btn) {
-        btn.style.background = 'rgba(16,185,129,0.12)';
-        btn.style.borderColor = 'rgba(16,185,129,0.35)';
-        btn.style.color = '#10b981';
-        btn.innerHTML = '<span>🔊 Sound an</span>';
-    }
+/**
+ * Automatically unlocks audio context on first user interaction.
+ * Required because browsers block autoplaying audio without a click.
+ */
+document.addEventListener('click', () => {
     // "Unlock" audio API
     const silent = new Audio('data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAAABkYXRhAgAAAAEA');
     silent.play().catch(e => console.warn("Audio unlock failed:", e));
+}, { once: true });
+
+function enableAudio() {
+    // Keep for potential internal calls, but logic is now handled by default + auto-unlock
+    _audioEnabled = true;
 }
 
 let _audioContext = null;
