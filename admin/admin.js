@@ -386,12 +386,11 @@ async function toggleTamaSleep(active) {
 }
 
 function testSound(id) {
-    const file = `../audio/${id}.mp3`;
-    console.log("Broadcasting sound test for", file);
+    console.log("Broadcasting sound test for", id);
     const bc = new BroadcastChannel('nachmi_updates');
     bc.postMessage({ 
         type: 'play_sound', 
-        file: file, 
+        soundId: id, // Send standardized ID instead of relative path
         test: true 
     });
 }

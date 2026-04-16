@@ -165,14 +165,27 @@ try {
         if (msg.data.type === 'appointments_updated') {
             fetchData();
         } else if (msg.data.type === 'play_sound') {
-            console.log("Remote sound request received:", msg.data.file);
+            console.log("Remote sound request received:", msg.data);
             
-            // diagnostic: trigger a tiny beep instantly to verify audio hardware
+            const file = msg.data.soundId ? `audio/${msg.data.soundId}.mp3` : msg.data.file;
+            
+            // 1. Show visual confirmation so the user knows the message arrived
+            if (msg.data.test) {
+                showAnnouncement(
+                    "🔈 SOUND TEST", 
+                    _audioEnabled ? "Ein Test-Signal wurde empfangen." : "⚠️ Sound ist am Display DEAKTIVIERT! Bitte 'Sound an' klicken.", 
+                    "🔈", 
+                    8000
+                );
+            }
+
+            // 2. Diagnostic beep
             beep(523, 100); 
 
-            playTimeSound(msg.data.file, (status) => {
-                if (msg.data.test) {
-                    showAnnouncement("SOUND TEST", `Status: ${status}\nPfad: ${msg.data.file}`, "🔈", 10000);
+            // 3. Play actual sound
+            playTimeSound(file, (status) => {
+                if (msg.data.test && !_audioEnabled) {
+                    console.warn("Sound test received but audio is disabled on this tab.");
                 }
             });
         }
