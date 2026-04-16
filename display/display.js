@@ -26,19 +26,78 @@ function enableAudio() {
     silent.play().catch(e => console.warn("Audio unlock failed:", e));
 }
 
-function playTimeSound(file) {
+/**
+ * Triggers a simple synthesized beep to test audio hardware.
+ */
+function beep(freq = 440, duration = 150) {
+    try {
+        const ctx = new (window.AudioContext || window.webkitAudioContext)();
+        if (ctx.state === 'suspended') ctx.resume();
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(freq, ctx.currentTime);
+        gain.gain.setValueAtTime(0.1, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + duration/1000);
+        osc.start();
+        osc.stop(ctx.currentTime + duration/1000);
+    } catch (e) {
+        console.warn("Beep failed:", e);
+    }
+}
+
+function playTimeSound(file, statusCallback = null) {
     console.log("Attempting to play sound:", file, "Audio enabled:", _audioEnabled);
+    
     if (!_audioEnabled) {
         console.warn("Audio skipped: Permissions not granted yet. Click 'Sound aktivieren' first!");
+        if (statusCallback) statusCallback("🚫 Nicht aktiviert (Sound-Button klicken!)");
         return;
     }
-    const a = new Audio(file);
-    a.play().catch(e => {
-        console.error("Playback failed for " + file, e);
-        if (e.name === 'NotAllowedError') {
-            console.warn("Browser blocked audio. User must interact with the page again.");
+
+    const audio = new Audio();
+    // Path list to try: relative, root-relative, and whatever was passed
+    const paths = [
+        file, 
+        file.startsWith('../') ? file.substring(3) : file, 
+        '/' + (file.startsWith('../') ? file.substring(3) : file)
+    ];
+    
+    let currentTry = 0;
+
+    const tryNext = () => {
+        if (currentTry >= paths.length) {
+            console.error("All audio paths failed.");
+            if (statusCallback) statusCallback("❌ 404 - Datei nicht gefunden (alle Pfade getestet)");
+            return;
         }
-    });
+        
+        const path = paths[currentTry];
+        audio.src = path;
+        
+        audio.oncanplaythrough = () => {
+            audio.oncanplaythrough = null;
+            audio.onerror = null;
+            console.log("Diagnostic: Success! File loaded from", path);
+            if (statusCallback) statusCallback(`✅ Erfolg! (Pfad: ${path})`);
+            audio.play().catch(e => {
+                console.error("Diagnostic: Playback blocked", e);
+                if (statusCallback) statusCallback(`⚠️ Gefunden, aber blockiert: ${e.name}`);
+            });
+        };
+
+        audio.onerror = () => {
+            console.warn(`Diagnostic: Path failed: ${path}`);
+            currentTry++;
+            tryNext();
+        };
+        
+        audio.load();
+    };
+
+    tryNext();
 }
 
 // Broadcast listener for instant updates from Admin
@@ -49,10 +108,15 @@ try {
             fetchData();
         } else if (msg.data.type === 'play_sound') {
             console.log("Remote sound request received:", msg.data.file);
-            playTimeSound(msg.data.file);
-            if (msg.data.test) {
-                showAnnouncement("SOUND TEST", "Audio Datei wird abgespielt...", "🔈", 5000);
-            }
+            
+            // diagnostic: trigger a tiny beep instantly to verify audio hardware
+            beep(523, 100); 
+
+            playTimeSound(msg.data.file, (status) => {
+                if (msg.data.test) {
+                    showAnnouncement("SOUND TEST", `Status: ${status}\nPfad: ${msg.data.file}`, "🔈", 10000);
+                }
+            });
         }
     };
 } catch (e) {}
