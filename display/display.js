@@ -27,12 +27,18 @@ function enableAudio() {
 }
 
 function playTimeSound(file) {
+    console.log("Attempting to play sound:", file, "Audio enabled:", _audioEnabled);
     if (!_audioEnabled) {
-        console.warn("Audio skipped: Permissions not granted yet.");
+        console.warn("Audio skipped: Permissions not granted yet. Click 'Sound aktivieren' first!");
         return;
     }
     const a = new Audio(file);
-    a.play().catch(e => console.error("Playback failed for " + file, e));
+    a.play().catch(e => {
+        console.error("Playback failed for " + file, e);
+        if (e.name === 'NotAllowedError') {
+            console.warn("Browser blocked audio. User must interact with the page again.");
+        }
+    });
 }
 
 // Broadcast listener for instant updates from Admin
@@ -41,6 +47,12 @@ try {
     bc.onmessage = (msg) => {
         if (msg.data.type === 'appointments_updated') {
             fetchData();
+        } else if (msg.data.type === 'play_sound') {
+            console.log("Remote sound request received:", msg.data.file);
+            playTimeSound(msg.data.file);
+            if (msg.data.test) {
+                showAnnouncement("SOUND TEST", "Audio Datei wird abgespielt...", "🔈", 5000);
+            }
         }
     };
 } catch (e) {}

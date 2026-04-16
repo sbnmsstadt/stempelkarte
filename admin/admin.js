@@ -385,6 +385,17 @@ async function toggleTamaSleep(active) {
     } catch (err) { }
 }
 
+function testSound(id) {
+    const file = `../audio/${id}.mp3`;
+    console.log("Broadcasting sound test for", file);
+    const bc = new BroadcastChannel('nachmi_updates');
+    bc.postMessage({ 
+        type: 'play_sound', 
+        file: file, 
+        test: true 
+    });
+}
+
 async function fetchStudentsSilent() {
     if (document.hidden) return;
     try {
