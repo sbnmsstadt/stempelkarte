@@ -1563,50 +1563,6 @@
             filter: grayscale(1);
             transition: all 1s ease;
         }
-
-        /* ── SOUND UNLOCK OVERLAY ────────── */
-        .sound-unlock-overlay {
-            position: fixed;
-            inset: 0;
-            background: rgba(10, 20, 40, 0.85);
-            backdrop-filter: blur(15px);
-            z-index: 20000;
-            display: none; /* Hidden by default */
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            animation: fadeIn 0.5s ease-out;
-        }
-        .sound-unlock-overlay.active {
-            display: flex;
-        }
-        .sound-unlock-card {
-            background: var(--glass);
-            border: 2px solid var(--primary);
-            padding: 40px 60px;
-            border-radius: 30px;
-            text-align: center;
-            box-shadow: 0 0 50px rgba(59, 130, 246, 0.3);
-            max-width: 500px;
-            animation: celebratePop 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-        }
-        .sound-unlock-icon {
-            font-size: 5rem;
-            margin-bottom: 20px;
-            display: block;
-            animation: vipPulse 2s ease-in-out infinite;
-        }
-        .sound-unlock-title {
-            font-size: 1.8rem;
-            font-weight: 900;
-            color: white;
-            margin-bottom: 10px;
-        }
-        .sound-unlock-text {
-            font-size: 1rem;
-            color: rgba(255,255,255,0.8);
-            font-weight: 600;
-        }
     </style>
 </head>
 <body>
@@ -1884,15 +1840,6 @@
             <span id="announcement-emoji" class="announcement-icon">👋</span>
             <h2 id="announcement-title" class="announcement-title">TITEL</h2>
             <p id="announcement-text" class="announcement-text">Nachrichtentext...</p>
-        </div>
-    </div>
-
-    <!-- Sound Unlock Overlay -->
-    <div id="sound-unlock-overlay" class="sound-unlock-overlay" onclick="unlockAudio()">
-        <div class="sound-unlock-card">
-            <span class="sound-unlock-icon">🔊</span>
-            <div class="sound-unlock-title">SOUND AKTIVIEREN</div>
-            <div class="sound-unlock-text">Bitte einmal klicken, um die Töne für heute freizuschalten.</div>
         </div>
     </div>
 
