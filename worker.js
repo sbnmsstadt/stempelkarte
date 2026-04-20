@@ -1507,7 +1507,23 @@ Deine Aufgabe: Schreibe eine kurze, energiegeladene Message (ca. 40-60 Wörter):
                 const apiKey = (env.KI_API || "").trim().replace(/^"|"$/g, '');
                 if (!apiKey || apiKey.length < 10) return new Response("Ungültiger API Key (KI_API fehlt)", { status: 500, headers: corsHeaders });
 
-                const result = await callGemini(prompt, apiKey, { temperature: 0.8, maxTokens: 1500 });
+                let result = await callGemini(prompt, apiKey, { temperature: 0.6, maxTokens: 1500 });
+
+                // --- SMART RETRY: Check for incomplete sentences ---
+                if (result.success && result.text) {
+                    const trimmed = result.text.trim();
+                    const lastChar = trimmed.slice(-1);
+                    const sentenceEndings = ['.', '!', '?', '"', '”', '…'];
+                    
+                    if (!sentenceEndings.includes(lastChar)) {
+                        console.log("NACHMI: Truncated message detected, retrying with lower temperature...");
+                        // Second attempt with lower temperature (0.4) for more determinism
+                        const retryResult = await callGemini(prompt + "\n\nWICHTIG: Deine letzte Nachricht war abgeschnitten. Beende deinen Text UNBEDINGT mit einem vollständigen Satz und Punkt!", apiKey, { temperature: 0.4, maxTokens: 1500 });
+                        if (retryResult.success && retryResult.text) {
+                            result = retryResult;
+                        }
+                    }
+                }
 
                 if (result.success) {
                     // --- Store in KV for 24 hours ---
