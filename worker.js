@@ -787,6 +787,67 @@ export default {
                 });
             }
 
+            // PUT /api/students/:id/logs/:logId — update a pedagogical log entry
+            if (path.match(/^\/api\/students\/[^/]+\/logs\/[^/]+$/) && method === "PUT") {
+                const parts = path.split("/").filter(Boolean);
+                const studentId = parts[2];
+                const logId = parts[4];
+                const { type, text } = await request.json();
+                
+                const studentsRaw = await getKV("students");
+                let students = JSON.parse(studentsRaw || "[]");
+                const studentIdx = students.findIndex(s => String(s.id) === String(studentId));
+                
+                if (studentIdx === -1) return new Response("Student Not Found", { status: 404, headers: corsHeaders });
+                
+                const logs = students[studentIdx].pedagogical_logs || [];
+                const logIdx = logs.findIndex(l => String(l.id) === String(logId));
+                
+                if (logIdx === -1) return new Response("Log Not Found", { status: 404, headers: corsHeaders });
+                
+                const oldDate = logs[logIdx].date;
+                logs[logIdx] = { ...logs[logIdx], type: type || logs[logIdx].type, text: text || logs[logIdx].text };
+                
+                await putKV("students", JSON.stringify(students));
+                
+                // Invalidate AI summary cache for the date of the log
+                await env.DB.prepare("DELETE FROM kv_data WHERE id = ?").bind(`day_summary_${oldDate}`).run();
+                
+                return new Response(JSON.stringify(students[studentIdx]), {
+                    headers: { ...corsHeaders, "Content-Type": "application/json" }
+                });
+            }
+
+            // DELETE /api/students/:id/logs/:logId — delete a pedagogical log entry
+            if (path.match(/^\/api\/students\/[^/]+\/logs\/[^/]+$/) && method === "DELETE") {
+                const parts = path.split("/").filter(Boolean);
+                const studentId = parts[2];
+                const logId = parts[4];
+                
+                const studentsRaw = await getKV("students");
+                let students = JSON.parse(studentsRaw || "[]");
+                const studentIdx = students.findIndex(s => String(s.id) === String(studentId));
+                
+                if (studentIdx === -1) return new Response("Student Not Found", { status: 404, headers: corsHeaders });
+                
+                const logs = students[studentIdx].pedagogical_logs || [];
+                const logIdx = logs.findIndex(l => String(l.id) === String(logId));
+                
+                if (logIdx === -1) return new Response("Log Not Found", { status: 404, headers: corsHeaders });
+                
+                const oldDate = logs[logIdx].date;
+                students[studentIdx].pedagogical_logs = logs.filter(l => String(l.id) !== String(logId));
+                
+                await putKV("students", JSON.stringify(students));
+                
+                // Invalidate AI summary cache for the date of the log
+                await env.DB.prepare("DELETE FROM kv_data WHERE id = ?").bind(`day_summary_${oldDate}`).run();
+                
+                return new Response(JSON.stringify(students[studentIdx]), {
+                    headers: { ...corsHeaders, "Content-Type": "application/json" }
+                });
+            }
+
 
 
             // Handle Redeem Endpoints

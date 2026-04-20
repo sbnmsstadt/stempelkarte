@@ -336,15 +336,129 @@ const Logbook = {
             const typeClass = log.type || 'neu';
             
             return `
-                <div class="history-item ${typeClass}">
+                <div class="history-item ${typeClass}" id="log-item-${log.id}">
                     <div class="history-date">
                         <span>${dateStr}</span>
-                        <span class="badge-log badge-${typeClass}">${typeLabel}</span>
+                        <div style="display:flex; gap:8px; align-items:center;">
+                            <span class="badge-log badge-${typeClass}">${typeLabel}</span>
+                            <div class="log-item-controls">
+                                <button onclick="Logbook.editEntry('${studentId}', '${log.id}')" class="icon-btn-history" title="Bearbeiten">
+                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                                </button>
+                                <button onclick="Logbook.deleteEntry(this, '${studentId}', '${log.id}')" class="icon-btn-history" title="Löschen" style="color:#ff6b6b;">
+                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                                </button>
+                            </div>
+                        </div>
                     </div>
-                    <div style="font-size:0.95rem; line-height:1.4;">${log.text}</div>
+                    <div id="log-content-${log.id}" style="font-size:0.95rem; line-height:1.4;">${log.text}</div>
                 </div>
             `;
         }).join('');
+    },
+
+    editEntry(studentId, logId) {
+        const student = window.students.find(s => s.id === studentId);
+        const log = student.pedagogical_logs.find(l => l.id === logId);
+        if (!log) return;
+
+        const contentEl = document.getElementById(`log-content-${logId}`);
+        const itemEl = document.getElementById(`log-item-${logId}`);
+        
+        // Hide standard controls
+        const controls = itemEl.querySelector('.log-item-controls');
+        if (controls) controls.style.display = 'none';
+
+        const currentType = log.type || 'neu';
+
+        contentEl.innerHTML = `
+            <textarea id="edit-text-${logId}" class="log-textarea" style="height:80px; margin-top:10px;">${log.text}</textarea>
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-top:10px;">
+                <div class="log-type-buttons" style="flex:1; max-width:180px;">
+                    <button onclick="Logbook.setEditType('${logId}', 'pos')" id="edit-btn-pos-${logId}" class="type-btn btn-pos ${currentType === 'pos' ? 'active' : ''}">👍</button>
+                    <button onclick="Logbook.setEditType('${logId}', 'neu')" id="edit-btn-neu-${logId}" class="type-btn btn-neu ${currentType === 'neu' ? 'active' : ''}">💬</button>
+                    <button onclick="Logbook.setEditType('${logId}', 'neg')" id="edit-btn-neg-${logId}" class="type-btn btn-neg ${currentType === 'neg' ? 'active' : ''}">👎</button>
+                </div>
+                <div style="display:flex; gap:8px;">
+                    <button onclick="Logbook.saveEdit(this, '${studentId}', '${logId}')" class="log-save-btn" style="padding:6px 12px; font-size:0.8rem; background:var(--success);">Speichern</button>
+                    <button onclick="Logbook.showHistory('${studentId}')" class="log-save-btn" style="padding:6px 12px; font-size:0.8rem; background:rgba(255,255,255,0.1);">Abbrechen</button>
+                </div>
+            </div>
+            <input type="hidden" id="edit-type-${logId}" value="${currentType}">
+        `;
+    },
+
+    setEditType(logId, type) {
+        document.getElementById(`edit-type-${logId}`).value = type;
+        ['pos', 'neg', 'neu'].forEach(t => {
+            const btn = document.getElementById(`edit-btn-${t}-${logId}`);
+            if (btn) btn.classList.toggle('active', t === type);
+        });
+    },
+
+    async saveEdit(btn, studentId, logId) {
+        const text = document.getElementById(`edit-text-${logId}`).value;
+        const type = document.getElementById(`edit-type-${logId}`).value;
+        
+        if (!text.trim()) {
+            alert("Bitte Text eingeben.");
+            return;
+        }
+
+        btn.disabled = true;
+        const originalText = btn.innerText;
+        btn.innerHTML = `<div class="spinner-small"></div>`;
+
+        try {
+            const response = await fetch(`${API_URL}/students/${studentId}/logs/${logId}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ type, text })
+            });
+
+            if (response.ok) {
+                const updatedStudent = await response.json();
+                const idx = window.students.findIndex(s => s.id === studentId);
+                if (idx !== -1) window.students[idx] = updatedStudent;
+                this.showHistory(studentId); // Refresh view
+            } else {
+                alert("Fehler beim Speichern.");
+                btn.disabled = false;
+                btn.innerText = originalText;
+            }
+        } catch (err) {
+            alert("Verbindungsfehler.");
+            btn.disabled = false;
+            btn.innerText = originalText;
+        }
+    },
+
+    async deleteEntry(btn, studentId, logId) {
+        if (!confirm("Diesen Eintrag wirklich löschen?")) return;
+        const originalContent = btn.innerHTML;
+        btn.disabled = true;
+        btn.innerHTML = `<div class="spinner-small" style="border-top-color:#ff6b6b"></div>`;
+
+        try {
+            const response = await fetch(`${API_URL}/students/${studentId}/logs/${logId}`, {
+                method: 'DELETE'
+            });
+
+            if (response.ok) {
+                const updatedStudent = await response.json();
+                const idx = window.students.findIndex(s => s.id === studentId);
+                if (idx !== -1) window.students[idx] = updatedStudent;
+                this.showHistory(studentId); // Refresh view
+            } else {
+                alert("Fehler beim Löschen.");
+                btn.disabled = false;
+                btn.innerHTML = originalContent;
+            }
+        } catch (err) {
+            alert("Verbindungsfehler.");
+            btn.disabled = false;
+            btn.innerHTML = originalContent;
+        }
     },
 
     closeHistory() {
