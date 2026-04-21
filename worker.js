@@ -1,8 +1,26 @@
+async function getKV(env, key) {
+    // Try D1 first
+    const res = await env.DB.prepare("SELECT value FROM kv_data WHERE id = ?").bind(key).first("value");
+    if (res) return res;
+    
+    // Fallback to KV for migration (if it exists and is not 429'd for reads)
+    if (env.DATABASE) {
+        try {
+            return await env.DATABASE.get(key);
+        } catch (e) { console.error("KV read failed:", e); }
+    }
+    return null;
+}
+
+async function putKV(env, key, value, options = {}) {
+    await env.DB.prepare("INSERT OR REPLACE INTO kv_data (id, value) VALUES (?, ?)").bind(key, value).run();
+}
+
 export default {
     async fetch(request, env) {
         // ── WEATHER SYNC HELPER (Hallein: 47.68, 13.17) ──────────────────
         // ── STORAGE HELPERS (Migrating from KV to D1) ─────────────────
-        async function getKV(key) {
+        async function getKV(key, options = {}) {
             // Try D1 first
             const res = await env.DB.prepare("SELECT value FROM kv_data WHERE id = ?").bind(key).first("value");
             if (res) return res;
@@ -16,8 +34,15 @@ export default {
             return null;
         }
 
-        async function putKV(key, value) {
+        async function putKV(key, value, options = {}) {
             await env.DB.prepare("INSERT OR REPLACE INTO kv_data (id, value) VALUES (?, ?)").bind(key, value).run();
+            
+            // Mirror to KV if database binding exists (for migration/fallback)
+            if (env.DATABASE) {
+                try {
+                    await env.DATABASE.put(key, value, options);
+                } catch (e) { console.error("KV write failed:", e); }
+            }
         }
 
         // ── TAMAGOTCHI DECAY HELPER ──────────────────────────────────
@@ -1371,7 +1396,17 @@ export default {
                     return `[${typeLabel}] ${l.studentName}: ${l.text}`;
                 }).join('\n');
 
-                const prompt = `Du bist NACHMI, ein erfahrener pädagogischer Assistent. \nHier sind die Beobachtungen für den Tag (${date}):\n${logsText}\n\nErstelle daraus eine strukturierte Zusammenfassung (ca. 100-150 Wörter).\n1. Was war heute besonders positiv?\n2. Welche Herausforderungen gab es?\n3. Ein kurzes Fazit für das Team.\n\nSchreibe professionell, aber herzlich auf Deutsch. Benutze Emojis.`;
+                const prompt = `Du bist NACHMI, ein fachkundiger pädagogischer Berater.
+Hier sind die Beobachtungen für den Tag (${date}):
+${logsText}
+
+Erstelle daraus eine präzise pädagogische Analyse (ca. 150-200 Wörter) mit folgender Struktur:
+1. POSITIV-ANALYSE: Welche Fortschritte oder positiven Gruppendynamiken waren zu beobachten?
+2. HERAUSFORDERUNGEN: Sachliche Analyse von Konflikten oder schwierigen Situationen.
+3. PÄDAGOGISCHE EMPFEHLUNG: Fachlich fundierte Handlungsvorschläge für das Team (z.B. spezifische Methoden, Interventionen oder Fokus-Themen für morgen).
+4. FAZIT: Kurze, professionelle Zusammenfassung für das Team.
+
+Schreibstil: Fachlich fundiert, klar und analytisch. Vermeide übermäßig emotionale oder 'kitschige' Formulierungen. Nutze Emojis nur dezent zur Strukturierung.`;
 
                 const apiKey = (env.KI_API || "").trim().replace(/^"|"$/g, '');
                 if (!apiKey || apiKey.length < 10) return new Response("Ungültiger API Key (KI_API fehlt)", { status: 500, headers: corsHeaders });
@@ -1414,12 +1449,25 @@ export default {
             }
             
             if (path === "/api/ai/day-summary/archive" && method === "POST") {
-                const body = await request.json();
-                if (!body.date || !body.text) return new Response("Missing date or text", { status: 400, headers: corsHeaders });
-                await putKV(`archived_summary_${body.date}`, body.text);
-                return new Response(JSON.stringify({ success: true }), {
-                    headers: { ...corsHeaders, "Content-Type": "application/json" }
-                });
+                try {
+                    const body = await request.json();
+                    if (!body.date || !body.text) {
+                        return new Response(JSON.stringify({ error: "Missing date or text" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+                    }
+                    
+                    console.log(`Archiving report for ${body.date} (Length: ${body.text.length})`);
+                    await putKV(`archived_summary_${body.date}`, body.text);
+                    
+                    // Also clear the fast cache to stay in sync
+                    await putKV(`day_summary_${body.date}`, body.text);
+
+                    return new Response(JSON.stringify({ success: true }), {
+                        headers: { ...corsHeaders, "Content-Type": "application/json" }
+                    });
+                } catch (err) {
+                    console.error("Archive POST error:", err);
+                    return new Response(JSON.stringify({ error: err.message }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+                }
             }
 
             if (path === "/api/ai/day-summary/list" && method === "GET") {
@@ -1633,11 +1681,11 @@ Deine Aufgabe: Schreibe eine ausführliche, begeisterte Nachricht für die Infot
         }
 
         try {
-            const studentsRaw = await getKV("students");
+            const studentsRaw = await getKV(env, "students");
             if (!studentsRaw) return;
             let students = JSON.parse(studentsRaw);
 
-            const settingsRaw = await getKV("settings");
+            const settingsRaw = await getKV(env, "settings");
             const settings = settingsRaw ? JSON.parse(settingsRaw) : {};
             const vipDuration = settings.vipDurationDays || 3;
 
@@ -1674,7 +1722,7 @@ Deine Aufgabe: Schreibe eine ausführliche, begeisterte Nachricht für die Infot
             }
 
             if (studentsChanged) {
-                await putKV("students", JSON.stringify(students));
+                await putKV(env, "students", JSON.stringify(students));
             }
 
             // --- 2. Check Birthdays (this week) ---
@@ -1741,14 +1789,14 @@ async function getAISummary(events, apiKey) {
         return '';
     }).join('\n');
 
-    const prompt = `Du bist ein freundlicher Schulassistent für eine Grundschule. 
-Erstelle eine kurze, motivierende tägliche Zusammenfassung für den Betreuer auf Deutsch.
-Nutze Emojis passend. Maximal 200 Wörter. Sei herzlich und professionell.
+    const prompt = `Du bist ein professioneller Schulassistent. 
+Erstelle eine präzise tägliche Zusammenfassung der wichtigsten Ereignisse für das Team auf Deutsch.
+Fokus: VIP-Status, Geburtstage und ausstehende Anfragen.
 
 Heutige Ereignisse:
 ${eventsText}
 
-Schreibe die Zusammenfassung jetzt:`;
+Schreibe die Zusammenfassung jetzt (sachlich, professionell, Emojis nur zur Gliederung):`;
 
     const result = await callGemini(prompt, apiKey, { maxTokens: 300, temperature: 0.7 });
     return result.success ? result.text : buildFallbackMessage(events);

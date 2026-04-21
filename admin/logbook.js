@@ -253,15 +253,21 @@ const Logbook = {
                     regenBtn?.classList.remove('hidden');
                     notice?.classList.remove('hidden');
                 } else {
-                    // Only show archive button if there are actually logs summarize
-                    if (isEmpty) {
-                        archiveBtn?.classList.add('hidden');
-                        regenBtn?.classList.remove('hidden'); // allow regeneration if empty
-                    } else {
-                        archiveBtn?.classList.remove('hidden');
-                        regenBtn?.classList.add('hidden');
-                    }
+                    // This is a fresh generation (or regeneration)
+                    archiveBtn?.classList.remove('hidden');
+                    regenBtn?.classList.add('hidden');
                     notice?.classList.add('hidden');
+                    
+                    // Reset archive button state in case it was stuck on "Speichere..."
+                    if (archiveBtn) {
+                        archiveBtn.disabled = false;
+                        archiveBtn.innerText = "✅ Dieses Archiv speichern";
+                    }
+                }
+                
+                // Always allow regeneration if it's not empty, even if just archived
+                if (!isEmpty && data.isArchived) {
+                    regenBtn?.classList.remove('hidden');
                 }
             } else {
                 content.innerHTML = `<p style='color:#ff6b6b'><b>Fehler bei der KI-Generierung:</b><br>${data.text || response.statusText}</p>`;
@@ -292,13 +298,17 @@ const Logbook = {
             if (res.ok) {
                 btn.classList.add('hidden');
                 notice.classList.remove('hidden');
+                // Show regeneration button again so they can overwrite if needed
+                document.getElementById('regenerate-summary-btn')?.classList.remove('hidden');
             } else {
-                alert("Fehler beim Archivieren.");
+                const errData = await res.json().catch(() => ({}));
+                alert(`Fehler beim Archivieren: ${errData.message || res.statusText}`);
                 btn.disabled = false;
                 btn.innerText = "✅ Dieses Archiv speichern";
             }
         } catch (err) {
-            alert("Verbindungsfehler.");
+            console.error("Archive error:", err);
+            alert("Verbindungsfehler bei der Übertragun zum Server.");
             btn.disabled = false;
             btn.innerText = "✅ Dieses Archiv speichern";
         }
