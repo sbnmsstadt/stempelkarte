@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Schach-Turnier — Stempelkarte</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;800;900&display=swap" rel="stylesheet">
+    
+    <!-- Core Application CSS -->
+    <link rel="stylesheet" href="../style.css">
+    <!-- Tournament Specific CSS -->
+    <link rel="stylesheet" href="chess.css">
+</head>
+<body class="chess-body">
+
+    <div id="chess-app">
+        <!-- Back Navigation & Status -->
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
+            <a href="../index.html" class="back-btn" style="margin-bottom:0;">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+                Übersicht
+            </a>
+            
+            <div style="display:flex; align-items:center; gap:10px;">
+                <span id="edit-status-label" style="font-size:0.75rem; font-weight:700; color:var(--text-muted);"></span>
+                <button id="unlock-edit-btn" class="badge-edit-status">🔒 Schreibgeschützt</button>
+            </div>
+        </div>
+
+        <!-- Header -->
+        <header class="chess-header">
+            <div class="brand-tag">Nachmi Schach</div>
+            <h1>Turnier-Planer</h1>
+            <p style="color:var(--text-muted); font-size:0.9rem; margin-top:-5px;">Erstelle und verwalte das laufende Schachturnier</p>
+        </header>
+
+        <!-- 1. SETUP VIEW -->
+        <div id="view-setup" class="chess-view setup-grid hidden">
+            <!-- Left Panel: Available Students -->
+            <div class="glass-card">
+                <h2 style="font-size:1.3rem; font-weight:800; margin-bottom:1rem; display:flex; align-items:center; gap:8px;">
+                    <span>👥</span> Schüler auswählen
+                </h2>
+                
+                <div class="player-search-box">
+                    <input type="text" id="search-players" class="player-search-input" placeholder="Schüler suchen...">
+                </div>
+
+                <div id="available-players-list" class="player-selection-list">
+                    <!-- Injected by JS -->
+                </div>
+
+                <div style="margin-top:1.5rem; padding-top:1.2rem; border-top:1px solid rgba(255,255,255,0.08);">
+                    <h3 style="font-size:0.85rem; font-weight:900; text-transform:uppercase; letter-spacing:0.05em; color:var(--text-muted); margin-bottom:0.5rem;">Externen Spieler hinzufügen</h3>
+                    <div class="custom-player-box">
+                        <input type="text" id="custom-player-name" class="custom-player-input" placeholder="Name eingeben...">
+                        <button id="custom-player-add" class="custom-player-btn">＋ Hinzufügen</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Panel: Selection Summary & Actions -->
+            <div class="glass-card" style="display:flex; flex-direction:column; justify-content:space-between;">
+                <div>
+                    <h2 style="font-size:1.3rem; font-weight:800; margin-bottom:1rem; display:flex; align-items:center; justify-content:space-between;">
+                        <span>Teilnehmer</span>
+                        <span id="selected-count" style="font-size:0.9rem; background:var(--primary); padding:2px 10px; border-radius:12px; color:white;">0</span>
+                    </h2>
+                    
+                    <div id="selected-players-list" class="selected-players-container">
+                        <!-- Injected by JS -->
+                    </div>
+                </div>
+
+                <div style="margin-top:2rem;">
+                    <div style="display:flex; align-items:center; gap:10px; margin-bottom:1rem; background:rgba(255,255,255,0.03); border:1px solid var(--glass-border); padding:10px 14px; border-radius:12px;">
+                        <input type="checkbox" id="randomize-seeding" style="width:18px; height:18px; cursor:pointer;" checked>
+                        <label for="randomize-seeding" style="font-size:0.85rem; font-weight:700; color:var(--text-main); cursor:pointer; user-select:none;">
+                            Zufällige Anordnung im Baum 🎲
+                        </label>
+                    </div>
+                    <button id="start-tournament-btn" class="add-stamp-btn" style="width:100%;">
+                        Turnier starten! 🏆
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 2. ACTIVE BRACKET VIEW -->
+        <div id="view-bracket" class="chess-view bracket-wrapper hidden">
+            <div class="glass-card" style="padding:1.5rem 1rem;">
+                <h2 style="font-size:1.3rem; font-weight:800; margin-bottom:1.5rem; text-align:center; display:flex; align-items:center; justify-content:center; gap:8px;">
+                    <span>⚔️</span> Turnierbaum
+                </h2>
+
+                <div class="bracket-scroll-container">
+                    <div id="bracket-columns-container" class="bracket-tree">
+                        <!-- Injected by JS -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Consolation Round (Spiel um Platz 3) Container -->
+            <div id="consolation-match-container">
+                <!-- Injected by JS -->
+            </div>
+
+            <!-- Reset Actions -->
+            <button id="reset-tournament-btn" class="add-stamp-btn hidden" style="background:linear-gradient(135deg, #ef4444, #b91c1c); max-width:280px; align-self:center; margin: 1rem 0 3rem 0;">
+                Turnier zurücksetzen 🔄
+            </button>
+        </div>
+
+        <!-- 3. FINISHED VIEW (PODIUM) -->
+        <div id="view-finished" class="chess-view finished-card glass-card hidden">
+            <h2 style="font-size:2rem; font-weight:900; background:linear-gradient(135deg, gold 0%, white 100%); -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent; margin-bottom:0.5rem;">
+                Turnier Beendet! 🎉
+            </h2>
+            <p style="color:var(--text-muted); font-size:1rem;">Herzlichen Glückwunsch an die Gewinner!</p>
+
+            <!-- Visual Podium -->
+            <div class="podium-container">
+                <!-- 2nd Place -->
+                <div class="podium-step second">
+                    <div id="winner-avatar-2" class="podium-avatar">🥈</div>
+                    <div class="podium-block">
+                        <div class="podium-placement">2</div>
+                        <div id="winner-name-2" class="podium-name">Spieler 2</div>
+                    </div>
+                </div>
+
+                <!-- 1st Place -->
+                <div class="podium-step first">
+                    <div class="trophy-badge">👑</div>
+                    <div id="winner-avatar-1" class="podium-avatar">🥇</div>
+                    <div class="podium-block">
+                        <div class="podium-placement">1</div>
+                        <div id="winner-name-1" class="podium-name">Spieler 1</div>
+                    </div>
+                </div>
+
+                <!-- 3rd Place -->
+                <div id="podium-step-3" class="podium-step third">
+                    <div id="winner-avatar-3" class="podium-avatar">🥉</div>
+                    <div class="podium-block">
+                        <div class="podium-placement">3</div>
+                        <div id="winner-name-3" class="podium-name">Spieler 3</div>
+                    </div>
+                </div>
+            </div>
+
+            <div style="display:flex; flex-direction:column; align-items:center; gap:12px; margin-top:2rem;">
+                <button onclick="fireConfettiAnimation()" class="add-stamp-btn" style="max-width:240px; background:var(--primary);">
+                    Konfetti werfen! 🎉
+                </button>
+                <button onclick="resetTournament()" class="add-stamp-btn" style="max-width:240px; background:linear-gradient(135deg, #ef4444, #b91c1c);">
+                    Neues Turnier starten 🔄
+                </button>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <footer class="app-footer">
+            <p>Stempelkarte System · Schach-Turnier Modul v1.0</p>
+        </footer>
+    </div>
+
+    <!-- External Confetti Library -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <!-- Tournament JS Logic -->
+    <script src="chess.js"></script>
+</body>
+</html>
