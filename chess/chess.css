@@ -10,7 +10,8 @@
 }
 
 #chess-app {
-    max-width: 1200px;
+    max-width: 100%;
+    width: 96%;
     margin: 0 auto;
     padding: 1.5rem;
     min-height: 100vh;
@@ -201,15 +202,17 @@
 
 .bracket-tree {
     display: flex;
-    gap: 50px;
+    gap: 40px;
     align-items: stretch;
+    width: 100%;
 }
 
 .round-column {
     display: flex;
     flex-direction: column;
     justify-content: space-around;
-    min-width: 240px;
+    flex: 1;
+    min-width: 160px;
     position: relative;
 }
 
@@ -328,9 +331,9 @@
 .match-card::after {
     content: '';
     position: absolute;
-    right: -26px;
+    right: -40px;
     top: 50%;
-    width: 26px;
+    width: 40px;
     height: 2px;
     background: rgba(255, 255, 255, 0.08);
     z-index: -1;
@@ -477,10 +480,10 @@
 .third .podium-placement { color: #cd7f32; }
 
 .podium-name {
-    font-size: 0.9rem;
-    font-weight: 700;
+    font-size: 1.25rem;
+    font-weight: 800;
     text-align: center;
-    padding: 0 10px;
+    padding: 4px 10px;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;

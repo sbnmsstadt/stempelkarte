@@ -61,14 +61,16 @@ function updateLockUI() {
         // We always show the select panels, but disable start button or editing action.
     }
     
-    const resetBtn = document.getElementById("reset-tournament-btn");
-    if (resetBtn) {
-        if (isEditingUnlocked && tournamentState) {
-            resetBtn.classList.remove("hidden");
-        } else {
-            resetBtn.classList.add("hidden");
+    const resetBtns = [document.getElementById("reset-tournament-btn"), document.getElementById("podium-reset-btn")];
+    resetBtns.forEach(btn => {
+        if (btn) {
+            if (isEditingUnlocked && tournamentState) {
+                btn.classList.remove("hidden");
+            } else {
+                btn.classList.add("hidden");
+            }
         }
-    }
+    });
 
     // Re-render brackets to apply/remove hover effects and clickability
     if (tournamentState) {
@@ -157,23 +159,30 @@ function startSilentSync() {
 function renderView() {
     const viewSetup = document.getElementById("view-setup");
     const viewBracket = document.getElementById("view-bracket");
-    const viewFinished = document.getElementById("view-finished");
 
     // Hide all
     viewSetup.classList.add("hidden");
     viewBracket.classList.add("hidden");
-    viewFinished.classList.add("hidden");
 
     if (!tournamentState || tournamentState.status === "setup") {
         viewSetup.classList.remove("hidden");
         renderPlayerSelection();
         renderSelectedPlayers();
-    } else if (tournamentState.status === "active") {
+    } else {
+        // Status is active or finished
         viewBracket.classList.remove("hidden");
         renderBracket();
-    } else if (tournamentState.status === "finished") {
-        viewFinished.classList.remove("hidden");
-        renderPodium();
+        
+        // Show/hide podium container inside bracket view
+        const podiumContainer = document.getElementById("bracket-podium-container");
+        if (podiumContainer) {
+            if (tournamentState.status === "finished") {
+                podiumContainer.classList.remove("hidden");
+                renderPodium();
+            } else {
+                podiumContainer.classList.add("hidden");
+            }
+        }
     }
 
     updateLockUI();
@@ -414,7 +423,7 @@ function setMatchWinner(roundIdx, matchIdx, winnerNum) {
     // Recalculate everything downstream from this match
     recalculateDownstream(roundIdx, matchIdx);
     saveStateToServer();
-    renderBracket();
+    renderView();
 }
 
 function recalculateDownstream(startRoundIdx, startMatchIdx) {
@@ -541,7 +550,7 @@ function setThirdPlaceWinner(winnerNum) {
 
     checkTournamentCompletion();
     saveStateToServer();
-    renderBracket();
+    renderView();
 }
 
 function checkTournamentCompletion() {

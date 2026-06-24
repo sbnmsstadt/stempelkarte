@@ -91,6 +91,55 @@
 
         <!-- 2. ACTIVE BRACKET VIEW -->
         <div id="view-bracket" class="chess-view bracket-wrapper hidden">
+            <!-- Bracket Podium Container (visible when status is finished) -->
+            <div id="bracket-podium-container" class="glass-card finished-card hidden" style="margin-bottom: 1.5rem; padding: 2rem 1.5rem;">
+                <h2 style="font-size:2rem; font-weight:900; background:linear-gradient(135deg, gold 0%, white 100%); -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent; margin-bottom:0.5rem; text-align:center;">
+                    Turnier Beendet! 🎉
+                </h2>
+                <p style="color:var(--text-muted); font-size:1rem; text-align:center;">Herzlichen Glückwunsch an die Gewinner!</p>
+
+                <!-- Visual Podium -->
+                <div class="podium-container" style="margin: 1.5rem auto; max-width: 600px;">
+                    <!-- 2nd Place -->
+                    <div class="podium-step second">
+                        <div id="winner-avatar-2" class="podium-avatar">🥈</div>
+                        <div class="podium-block">
+                            <div class="podium-placement">2</div>
+                            <div id="winner-name-2" class="podium-name">Spieler 2</div>
+                        </div>
+                    </div>
+
+                    <!-- 1st Place -->
+                    <div class="podium-step first">
+                        <div class="trophy-badge">👑</div>
+                        <div id="winner-avatar-1" class="podium-avatar">🥇</div>
+                        <div class="podium-block">
+                            <div class="podium-placement">1</div>
+                            <div id="winner-name-1" class="podium-name">Spieler 1</div>
+                        </div>
+                    </div>
+
+                    <!-- 3rd Place -->
+                    <div id="podium-step-3" class="podium-step third">
+                        <div id="winner-avatar-3" class="podium-avatar">🥉</div>
+                        <div class="podium-block">
+                            <div class="podium-placement">3</div>
+                            <div id="winner-name-3" class="podium-name">Spieler 3</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div style="display:flex; justify-content:center; gap:12px; margin-top:1.5rem;">
+                    <button onclick="fireConfettiAnimation()" class="add-stamp-btn" style="max-width:200px; background:var(--primary); padding: 8px 16px; font-size: 0.85rem;">
+                        Konfetti werfen! 🎉
+                    </button>
+                    <button id="podium-reset-btn" onclick="resetTournament()" class="add-stamp-btn hidden" style="max-width:200px; background:linear-gradient(135deg, #ef4444, #b91c1c); padding: 8px 16px; font-size: 0.85rem;">
+                        Turnier zurücksetzen 🔄
+                    </button>
+                </div>
+            </div>
+
+            <!-- Active Tournament Tree -->
             <div class="glass-card" style="padding:1.5rem 1rem;">
                 <h2 style="font-size:1.3rem; font-weight:800; margin-bottom:1.5rem; text-align:center; display:flex; align-items:center; justify-content:center; gap:8px;">
                     <span>⚔️</span> Turnierbaum
@@ -112,54 +161,6 @@
             <button id="reset-tournament-btn" class="add-stamp-btn hidden" style="background:linear-gradient(135deg, #ef4444, #b91c1c); max-width:280px; align-self:center; margin: 1rem 0 3rem 0;">
                 Turnier zurücksetzen 🔄
             </button>
-        </div>
-
-        <!-- 3. FINISHED VIEW (PODIUM) -->
-        <div id="view-finished" class="chess-view finished-card glass-card hidden">
-            <h2 style="font-size:2rem; font-weight:900; background:linear-gradient(135deg, gold 0%, white 100%); -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent; margin-bottom:0.5rem;">
-                Turnier Beendet! 🎉
-            </h2>
-            <p style="color:var(--text-muted); font-size:1rem;">Herzlichen Glückwunsch an die Gewinner!</p>
-
-            <!-- Visual Podium -->
-            <div class="podium-container">
-                <!-- 2nd Place -->
-                <div class="podium-step second">
-                    <div id="winner-avatar-2" class="podium-avatar">🥈</div>
-                    <div class="podium-block">
-                        <div class="podium-placement">2</div>
-                        <div id="winner-name-2" class="podium-name">Spieler 2</div>
-                    </div>
-                </div>
-
-                <!-- 1st Place -->
-                <div class="podium-step first">
-                    <div class="trophy-badge">👑</div>
-                    <div id="winner-avatar-1" class="podium-avatar">🥇</div>
-                    <div class="podium-block">
-                        <div class="podium-placement">1</div>
-                        <div id="winner-name-1" class="podium-name">Spieler 1</div>
-                    </div>
-                </div>
-
-                <!-- 3rd Place -->
-                <div id="podium-step-3" class="podium-step third">
-                    <div id="winner-avatar-3" class="podium-avatar">🥉</div>
-                    <div class="podium-block">
-                        <div class="podium-placement">3</div>
-                        <div id="winner-name-3" class="podium-name">Spieler 3</div>
-                    </div>
-                </div>
-            </div>
-
-            <div style="display:flex; flex-direction:column; align-items:center; gap:12px; margin-top:2rem;">
-                <button onclick="fireConfettiAnimation()" class="add-stamp-btn" style="max-width:240px; background:var(--primary);">
-                    Konfetti werfen! 🎉
-                </button>
-                <button onclick="resetTournament()" class="add-stamp-btn" style="max-width:240px; background:linear-gradient(135deg, #ef4444, #b91c1c);">
-                    Neues Turnier starten 🔄
-                </button>
-            </div>
         </div>
 
         <!-- Footer -->
