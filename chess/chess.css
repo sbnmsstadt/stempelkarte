@@ -1,7 +1,11 @@
 /* Chess Tournament Stylesheet */
 
 .chess-body {
-    background-color: var(--bg-dark);
+    background-color: #080a10;
+    background-image: 
+        radial-gradient(at 0% 0%, rgba(59, 130, 246, 0.08) 0px, transparent 50%),
+        radial-gradient(at 100% 0%, rgba(139, 92, 246, 0.08) 0px, transparent 50%),
+        radial-gradient(at 50% 100%, rgba(16, 185, 129, 0.05) 0px, transparent 50%);
     font-family: 'Inter', sans-serif;
     color: var(--text-main);
     min-height: 100vh;
@@ -232,8 +236,8 @@
 
 /* Match Card Glassmorphism */
 .match-card {
-    background: var(--bg-card);
-    border: 1px solid var(--glass-border);
+    background: linear-gradient(135deg, hsla(222, 47%, 8%, 0.95) 0%, hsla(222, 47%, 16%, 0.85) 100%);
+    border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: 20px;
     padding: 14px;
     position: relative;
@@ -245,8 +249,8 @@
 }
 
 .match-card.active-match {
-    border-color: var(--primary-light);
-    box-shadow: 0 0 20px rgba(59, 130, 246, 0.25);
+    border-color: rgba(59, 130, 246, 0.45);
+    box-shadow: 0 0 25px rgba(59, 130, 246, 0.2), inset 0 0 15px rgba(59, 130, 246, 0.05);
 }
 
 .match-card.active-match.editable-match {
@@ -254,9 +258,9 @@
 }
 
 .match-card.active-match.editable-match:hover {
-    transform: translateY(-3px) scale(1.02);
+    transform: translateY(-4px) scale(1.02);
     border-color: var(--accent);
-    box-shadow: 0 0 25px rgba(168, 85, 247, 0.3);
+    box-shadow: 0 0 30px rgba(168, 85, 247, 0.35), inset 0 0 20px rgba(168, 85, 247, 0.1);
 }
 
 .match-info-tag {
@@ -274,19 +278,21 @@
     display: flex;
     align-items: center;
     padding: 10px 14px;
+    border-left: 4px solid transparent;
     border-radius: 12px;
-    transition: background 0.2s;
+    transition: all 0.2s ease;
     position: relative;
 }
 
 .match-player-row.winner {
-    background: rgba(16, 185, 129, 0.12);
+    background: linear-gradient(90deg, rgba(52, 211, 153, 0.15) 0%, rgba(52, 211, 153, 0.02) 100%);
+    border-left-color: #34d399;
     font-weight: 700;
     color: #34d399;
 }
 
 .match-player-row.loser {
-    opacity: 0.4;
+    opacity: 0.3;
 }
 
 .match-player-row.bye-row {
@@ -329,48 +335,99 @@
     margin: 4px 0;
 }
 
-/* Bracket Connectors - simple visual representation */
+/* Bracket Connectors - glowing esports/championship style */
 .match-card::after {
     content: '';
     position: absolute;
     right: -40px;
     top: 50%;
     width: 40px;
-    height: 2px;
-    background: rgba(255, 255, 255, 0.08);
+    height: 3px;
+    background: linear-gradient(90deg, rgba(59, 130, 246, 0.4) 0%, rgba(139, 92, 246, 0.2) 100%);
+    box-shadow: 0 0 6px rgba(59, 130, 246, 0.2);
+    border-radius: 2px;
     z-index: -1;
+    transition: all 0.3s;
+}
+
+.match-card.has-winner::after {
+    background: linear-gradient(90deg, var(--success) 0%, rgba(52, 211, 153, 0.2) 100%);
+    box-shadow: 0 0 10px rgba(52, 211, 153, 0.5);
 }
 
 .round-column:last-child .match-card::after {
     display: none;
 }
 
+/* Special Gold/Bronze highlights for Championship Finals */
+/* The final round card is the last match-card in the last column */
+.round-column:last-child .match-card {
+    border: 2px solid rgba(245, 158, 11, 0.4);
+    background: linear-gradient(135deg, rgba(245, 158, 11, 0.12) 0%, rgba(15, 23, 42, 0.95) 100%);
+    box-shadow: 0 0 35px rgba(245, 158, 11, 0.2), inset 0 0 20px rgba(245, 158, 11, 0.05);
+}
+
+.round-column:last-child .match-card.active-match.editable-match:hover {
+    border-color: rgba(245, 158, 11, 0.8);
+    box-shadow: 0 0 45px rgba(245, 158, 11, 0.35), inset 0 0 25px rgba(245, 158, 11, 0.1);
+}
+
 /* Third Place Play-off Area */
 .consolation-area {
-    margin-top: 1rem;
-    padding: 1.5rem;
-    background: rgba(255, 255, 255, 0.02);
+    margin-top: 2rem;
+    padding: 2rem;
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.02) 0%, rgba(255, 255, 255, 0.01) 100%);
     border: 1px solid var(--glass-border);
-    border-radius: 20px;
+    border-radius: 24px;
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 12px;
+    gap: 16px;
+    box-shadow: var(--shadow);
+}
+
+.consolation-area .match-card {
+    border: 2px solid rgba(205, 127, 50, 0.35); /* Bronze tint */
+    background: linear-gradient(135deg, rgba(205, 127, 50, 0.08) 0%, rgba(15, 23, 42, 0.95) 100%);
+    box-shadow: 0 0 25px rgba(205, 127, 50, 0.15), inset 0 0 15px rgba(205, 127, 50, 0.03);
+}
+
+.consolation-area .match-card.active-match.editable-match:hover {
+    border-color: rgba(205, 127, 50, 0.7);
+    box-shadow: 0 0 35px rgba(205, 127, 50, 0.25), inset 0 0 20px rgba(205, 127, 50, 0.08);
 }
 
 /* FINISHED VIEW - PODIUM */
 .finished-card {
     text-align: center;
     padding: 3rem 1.5rem;
+    position: relative;
+    overflow: hidden;
+}
+
+/* Add an ambient light glow to the podium area */
+.finished-card::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 300px;
+    height: 300px;
+    background: radial-gradient(circle, rgba(245, 158, 11, 0.1) 0%, rgba(0,0,0,0) 70%);
+    z-index: 1;
+    pointer-events: none;
 }
 
 .podium-container {
     display: flex;
     justify-content: center;
     align-items: flex-end;
-    gap: 20px;
+    gap: 24px;
     margin: 3rem 0;
     min-height: 280px;
+    position: relative;
+    z-index: 2;
 }
 
 @media (max-width: 600px) {
@@ -385,8 +442,13 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    width: 150px;
+    width: 160px;
     position: relative;
+    transition: all 0.3s ease;
+}
+
+.podium-step:hover {
+    transform: translateY(-5px);
 }
 
 .podium-step.first {
@@ -408,10 +470,10 @@
 }
 
 .podium-avatar {
-    width: 70px;
-    height: 70px;
+    width: 76px;
+    height: 76px;
     border-radius: 50%;
-    font-size: 2.2rem;
+    font-size: 2.4rem;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -420,24 +482,26 @@
     margin-bottom: 12px;
     box-shadow: var(--shadow);
     z-index: 2;
+    transition: all 0.3s;
 }
 
 .first .podium-avatar {
-    border-color: gold;
-    box-shadow: 0 0 20px rgba(255, 215, 0, 0.4);
-    width: 86px;
-    height: 86px;
-    font-size: 2.8rem;
+    border-color: #f59e0b;
+    box-shadow: 0 0 30px rgba(245, 158, 11, 0.5), inset 0 0 15px rgba(245, 158, 11, 0.3);
+    width: 96px;
+    height: 96px;
+    font-size: 3.2rem;
+    animation: championGlow 3s ease-in-out infinite alternate;
 }
 
 .second .podium-avatar {
     border-color: #cbd5e1;
-    box-shadow: 0 0 15px rgba(203, 213, 225, 0.3);
+    box-shadow: 0 0 20px rgba(203, 213, 225, 0.3), inset 0 0 10px rgba(203, 213, 225, 0.15);
 }
 
 .third .podium-avatar {
     border-color: #cd7f32;
-    box-shadow: 0 0 15px rgba(205, 127, 50, 0.3);
+    box-shadow: 0 0 20px rgba(205, 127, 50, 0.3), inset 0 0 10px rgba(205, 127, 50, 0.15);
 }
 
 .podium-block {
@@ -445,39 +509,40 @@
     background: linear-gradient(180deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0.02) 100%);
     border: 1px solid var(--glass-border);
     border-bottom: none;
-    border-radius: 16px 16px 0 0;
+    border-radius: 20px 20px 0 0;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
     font-weight: 800;
+    box-shadow: 0 -10px 25px rgba(0, 0, 0, 0.2);
 }
 
 .first .podium-block {
-    height: 160px;
-    background: linear-gradient(180deg, rgba(255, 215, 0, 0.15) 0%, rgba(255, 215, 0, 0.02) 100%);
-    border-color: rgba(255, 215, 0, 0.3);
+    height: 180px;
+    background: linear-gradient(180deg, rgba(245, 158, 11, 0.15) 0%, rgba(245, 158, 11, 0.02) 100%);
+    border-color: rgba(245, 158, 11, 0.3);
 }
 
 .second .podium-block {
-    height: 120px;
+    height: 140px;
     background: linear-gradient(180deg, rgba(203, 213, 225, 0.15) 0%, rgba(203, 213, 225, 0.02) 100%);
     border-color: rgba(203, 213, 225, 0.2);
 }
 
 .third .podium-block {
-    height: 90px;
+    height: 100px;
     background: linear-gradient(180deg, rgba(205, 127, 50, 0.15) 0%, rgba(205, 127, 50, 0.02) 100%);
     border-color: rgba(205, 127, 50, 0.2);
 }
 
 .podium-placement {
-    font-size: 2rem;
+    font-size: 2.2rem;
     font-weight: 900;
     margin-bottom: 4px;
 }
 
-.first .podium-placement { color: gold; font-size: 2.5rem; }
+.first .podium-placement { color: #f59e0b; font-size: 2.8rem; }
 .second .podium-placement { color: #cbd5e1; }
 .third .podium-placement { color: #cd7f32; }
 
@@ -494,10 +559,19 @@
 
 .trophy-badge {
     position: absolute;
-    top: -15px;
-    font-size: 1.5rem;
+    top: -20px;
+    font-size: 1.8rem;
     z-index: 3;
     animation: bounce 2s infinite;
+}
+
+@keyframes championGlow {
+    0% {
+        box-shadow: 0 0 20px rgba(245, 158, 11, 0.4), inset 0 0 10px rgba(245, 158, 11, 0.2);
+    }
+    100% {
+        box-shadow: 0 0 35px rgba(245, 158, 11, 0.8), inset 0 0 20px rgba(245, 158, 11, 0.4);
+    }
 }
 
 @keyframes bounce {

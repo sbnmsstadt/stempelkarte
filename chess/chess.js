@@ -603,13 +603,13 @@ function renderBracket() {
             
             // Check if active
             const isReady = match.player1 !== null && match.player2 !== null;
-            const cardClass = `match-card ${isReady ? 'active-match' : ''} ${isEditingUnlocked && isReady ? 'editable-match' : ''}`;
+            const hasWinner = match.winner !== null;
+            const cardClass = `match-card ${isReady ? 'active-match' : ''} ${isEditingUnlocked && isReady ? 'editable-match' : ''} ${hasWinner ? 'has-winner' : ''}`;
             card.className = cardClass;
 
             const p1Winner = match.winner && match.player1 && match.winner.id === match.player1.id;
             const p2Winner = match.winner && match.player2 && match.winner.id === match.player2.id;
-            const hasWinner = match.winner !== null;
-
+            
             card.innerHTML = `
                 <div class="match-info-tag">
                     <span>Spiel ${mIdx + 1}</span>
@@ -619,9 +619,9 @@ function renderBracket() {
                 <!-- Player 1 -->
                 <div class="match-player-row ${p1Winner ? 'winner' : ''} ${hasWinner && !p1Winner ? 'loser' : ''} ${!match.player1 ? 'bye-row' : ''}" 
                      onclick="${isEditingUnlocked && isReady ? `setMatchWinner(${r}, ${mIdx}, 1)` : ''}">
-                    <div class="avatar-mini">${match.player1 ? match.player1.avatar : '♟'}</div>
-                    <div class="player-name">${match.player1 ? match.player1.name : 'Offen'}</div>
-                    ${p1Winner ? '<span class="winner-check">✓</span>' : ''}
+                     <div class="avatar-mini">${match.player1 ? match.player1.avatar : '♟'}</div>
+                     <div class="player-name">${match.player1 ? match.player1.name : 'Offen'}</div>
+                     ${p1Winner ? '<span class="winner-check">✓</span>' : ''}
                 </div>
                 
                 <div class="match-divider"></div>
@@ -629,9 +629,9 @@ function renderBracket() {
                 <!-- Player 2 -->
                 <div class="match-player-row ${p2Winner ? 'winner' : ''} ${hasWinner && !p2Winner ? 'loser' : ''} ${!match.player2 ? 'bye-row' : ''}"
                      onclick="${isEditingUnlocked && isReady ? `setMatchWinner(${r}, ${mIdx}, 2)` : ''}">
-                    <div class="avatar-mini">${match.player2 ? match.player2.avatar : '♟'}</div>
-                    <div class="player-name">${match.player2 ? (match.player2.name) : (match.player1 ? 'Freilos' : 'Offen')}</div>
-                    ${p2Winner ? '<span class="winner-check">✓</span>' : ''}
+                     <div class="avatar-mini">${match.player2 ? match.player2.avatar : '♟'}</div>
+                     <div class="player-name">${match.player2 ? (match.player2.name) : (match.player1 ? 'Freilos' : 'Offen')}</div>
+                     ${p2Winner ? '<span class="winner-check">✓</span>' : ''}
                 </div>
             `;
             col.appendChild(card);
@@ -653,8 +653,8 @@ function renderBracket() {
             const hasWinner = tpm.winner !== null;
 
             const card = document.createElement("div");
-            card.className = `match-card ${isReady ? 'active-match' : ''} ${isEditingUnlocked && isReady ? 'editable-match' : ''}`;
-            card.style.width = "260px";
+            card.className = `match-card ${isReady ? 'active-match' : ''} ${isEditingUnlocked && isReady ? 'editable-match' : ''} ${hasWinner ? 'has-winner' : ''}`;
+            card.style.width = "280px";
             card.innerHTML = `
                 <div class="match-info-tag">
                     <span>Spiel um Platz 3 🥉</span>
