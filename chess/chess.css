@@ -212,19 +212,19 @@
     flex-direction: column;
     justify-content: space-around;
     flex: 1;
-    min-width: 160px;
+    min-width: 260px;
     position: relative;
 }
 
 .round-header {
-    font-size: 0.8rem;
+    font-size: 0.95rem;
     font-weight: 900;
     text-transform: uppercase;
     letter-spacing: 0.1em;
     color: var(--text-muted);
     text-align: center;
-    margin-bottom: 1rem;
-    padding: 4px 10px;
+    margin-bottom: 1.2rem;
+    padding: 6px 12px;
     border-radius: 8px;
     background: rgba(255, 255, 255, 0.03);
     border: 1px solid var(--glass-border);
@@ -234,14 +234,14 @@
 .match-card {
     background: var(--bg-card);
     border: 1px solid var(--glass-border);
-    border-radius: 18px;
-    padding: 10px;
+    border-radius: 20px;
+    padding: 14px;
     position: relative;
     box-shadow: var(--shadow);
     transition: all 0.3s cubic-bezier(0.165, 0.84, 0.44, 1);
     display: flex;
     flex-direction: column;
-    gap: 4px;
+    gap: 6px;
 }
 
 .match-card.active-match {
@@ -260,11 +260,11 @@
 }
 
 .match-info-tag {
-    font-size: 0.55rem;
+    font-size: 0.75rem;
     font-weight: 900;
     color: var(--text-muted);
     letter-spacing: 0.05em;
-    margin-bottom: 2px;
+    margin-bottom: 6px;
     text-transform: uppercase;
     display: flex;
     justify-content: space-between;
@@ -273,8 +273,8 @@
 .match-player-row {
     display: flex;
     align-items: center;
-    padding: 8px 10px;
-    border-radius: 10px;
+    padding: 10px 14px;
+    border-radius: 12px;
     transition: background 0.2s;
     position: relative;
 }
@@ -295,28 +295,30 @@
 }
 
 .match-player-row .avatar-mini {
-    width: 26px;
-    height: 26px;
-    border-radius: 6px;
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
     background: rgba(255, 255, 255, 0.05);
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 0.9rem;
-    margin-right: 8px;
+    font-size: 1.15rem;
+    margin-right: 12px;
 }
 
 .match-player-row .player-name {
-    font-size: 0.85rem;
+    font-size: 1.25rem;
+    font-weight: 600;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    max-width: 130px;
+    flex: 1;
+    min-width: 0;
 }
 
 .match-player-row .winner-check {
-    margin-left: auto;
-    font-size: 0.9rem;
+    margin-left: 8px;
+    font-size: 1.3rem;
     color: var(--success);
 }
 
@@ -324,7 +326,7 @@
 .match-divider {
     height: 1px;
     background: rgba(255, 255, 255, 0.06);
-    margin: 2px 0;
+    margin: 4px 0;
 }
 
 /* Bracket Connectors - simple visual representation */
@@ -480,7 +482,7 @@
 .third .podium-placement { color: #cd7f32; }
 
 .podium-name {
-    font-size: 1.25rem;
+    font-size: 1.5rem;
     font-weight: 800;
     text-align: center;
     padding: 4px 10px;
