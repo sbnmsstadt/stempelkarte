@@ -281,6 +281,7 @@ function renderAll() {
     renderTodayPlan();
     renderDailyNotes();
     renderVIPs();
+    renderTournamentPodium(); // NEW: Show tournament podium when completed
     renderTicker();
     renderStudentOfWeek();
     renderAttendance(); // NEW: Today's attendance list
@@ -858,6 +859,69 @@ function renderVIPs() {
                 </div>
             </div>`;
     }).join('');
+}
+
+// ── TOURNAMENT PODIUM ──────────────────────────
+function renderTournamentPodium() {
+    const card = document.getElementById('tournament-podium-card');
+    const content = document.getElementById('tournament-podium-content');
+    if (!card || !content) return;
+
+    const tState = settings.chessTournament;
+    // Show only when status is "finished" and we have valid podium data
+    if (!tState || tState.status !== "finished" || !tState.podium) {
+        card.style.display = 'none';
+        return;
+    }
+
+    const p1 = tState.podium.first;
+    const p2 = tState.podium.second;
+    const p3 = tState.podium.third;
+
+    // Check if we have at least a first place winner
+    if (!p1) {
+        card.style.display = 'none';
+        return;
+    }
+
+    card.style.display = 'block';
+
+    let html = `<div class="tournament-winners-list">`;
+
+    // 1st Place
+    html += `
+        <div class="winner-row-display place-1 fade-in">
+            <div class="winner-row-badge">🥇</div>
+            <div class="winner-row-avatar">${p1.avatar || '♟'}</div>
+            <div class="winner-row-name">${p1.name}</div>
+        </div>
+    `;
+
+    // 2nd Place
+    if (p2) {
+        html += `
+            <div class="winner-row-display place-2 fade-in">
+                <div class="winner-row-badge">🥈</div>
+                <div class="winner-row-avatar">${p2.avatar || '♟'}</div>
+                <div class="winner-row-name">${p2.name}</div>
+            </div>
+        `;
+    }
+
+    // 3rd Place
+    if (p3) {
+        html += `
+            <div class="winner-row-display place-3 fade-in">
+                <div class="winner-row-badge">🥉</div>
+                <div class="winner-row-avatar">${p3.avatar || '♟'}</div>
+                <div class="winner-row-name">${p3.name}</div>
+            </div>
+        `;
+    }
+
+    html += `</div>`;
+
+    content.innerHTML = html;
 }
 
 // ── LIST FORMATTER HELPER ──────────────────────
